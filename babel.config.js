@@ -5,6 +5,6 @@ module.exports = function (api) {
       'module:@react-native/babel-preset',
       'nativewind/babel',
     ],
-    plugins: ['react-native-reanimated/plugin'],
+    plugins: ['react-native-worklets/plugin'],
   };
 };
