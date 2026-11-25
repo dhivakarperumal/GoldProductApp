@@ -1,5 +1,12 @@
 import React from 'react';
-import { ImageBackground, Pressable, Text, View } from 'react-native';
+import {
+  Animated,
+  ImageBackground,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
+import { useEffect, useRef, useState } from 'react';
 import {
   ChartNoAxesColumn,
   CreditCard,
@@ -34,13 +41,52 @@ export default function BottomBar({
   onTabPress,
 }: BottomBarProps) {
   const insets = useSafeAreaInsets();
+  const [barWidth, setBarWidth] = useState(0);
+  const translateX = useRef(new Animated.Value(0)).current;
+  const activeIndex = Math.max(
+    0,
+    tabs.findIndex(tab => tab.label === activeTab),
+  );
+  const tabWidth = barWidth / tabs.length;
+
+  useEffect(() => {
+    if (barWidth === 0) {
+      return;
+    }
+
+    Animated.spring(translateX, {
+      toValue: activeIndex * tabWidth,
+      useNativeDriver: true,
+      tension: 80,
+      friction: 12,
+    }).start();
+  }, [activeIndex, barWidth, tabWidth, translateX]);
 
   return (
     <ImageBackground
       source={require('../../Assert/Images/bottom.png')}
       resizeMode="stretch"
       style={{ paddingBottom: insets.bottom }}>
-      <View className="h-[74px] flex-row items-center border-t border-[#EAD9B1] bg-[#FFFDF8]/80">
+      <View
+        testID="bottom-tab-bar"
+        onLayout={({ nativeEvent }) => setBarWidth(nativeEvent.layout.width)}
+        className="relative h-[78px] flex-row items-center border-t border-[#EAD9B1] bg-[#FFFDF8]/80">
+        {tabWidth > 0 && (
+          <Animated.View
+            testID="active-tab-background"
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              top: 7,
+              bottom: 7,
+              left: 4,
+              width: Math.max(tabWidth - 8, 0),
+              borderRadius: 999,
+              backgroundColor: '#B8860B',
+              transform: [{ translateX }],
+            }}
+          />
+        )}
         {tabs.map(tab => {
           const isActive = tab.label === activeTab;
           const Icon = tab.icon;
@@ -52,22 +98,19 @@ export default function BottomBar({
               accessibilityState={{ selected: isActive }}
               accessibilityLabel={tab.label}
               onPress={() => onTabPress(tab.label)}
-              className="h-full flex-1 items-center justify-center px-0.5"
+              className="z-10 h-full flex-1 items-center justify-center px-0.5"
               style={({ pressed }) => ({
                 opacity: pressed ? 0.72 : 1,
               })}>
-              {isActive && (
-                <View className="absolute top-0 h-[3px] w-7 rounded-b-md bg-[#D4AF37]" />
-              )}
               <View
                 className={
                   isActive
-                    ? 'mb-1 h-8 w-[38px] items-center justify-center rounded-2xl bg-[#F5E6A8]'
-                    : 'mb-1 h-8 w-[38px] items-center justify-center rounded-2xl'
+                    ? 'mb-1 h-8 w-9 items-center justify-center'
+                    : 'mb-1 h-8 w-9 items-center justify-center'
                 }>
                 <Icon
-                  size={20}
-                  color={isActive ? '#B8860B' : '#666666'}
+                  size={19}
+                  color={isActive ? '#FFFFFF' : '#666666'}
                   strokeWidth={isActive ? 2.5 : 2}
                 />
               </View>
@@ -75,8 +118,8 @@ export default function BottomBar({
                 numberOfLines={1}
                 className={
                   isActive
-                    ? 'max-w-full text-[10px] font-bold text-[#B8860B]'
-                    : 'max-w-full text-[10px] font-semibold text-[#666666]'
+                    ? 'max-w-full text-[10px] font-bold text-white'
+                    : 'max-w-full text-[10px] font-medium text-[#666666]'
                 }>
                 {tab.label}
               </Text>

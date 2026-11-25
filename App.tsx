@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   StatusBar,
   Text,
   useColorScheme,
@@ -18,7 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
-import { clearTokenCache } from './src/api';
+import { clearTokenCache, setTokenCache } from './src/api';
 import Login, { LoginUser } from './src/Auth/Login';
 import BottomBar, {
   SuperAdminTab,
@@ -38,8 +39,9 @@ function App() {
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<SuperAdminTab>('Home');
-  const [isSessionReady, setIsSessionReady] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  const [sessionCheckAttempt, setSessionCheckAttempt] = useState(0);
   const [adminName, setAdminName] = useState('Super Admin');
 
   useEffect(() => {
@@ -48,29 +50,26 @@ function AppContent() {
     AsyncStorage.getItem('userToken')
       .then(token => {
         if (isMounted) {
+          if (token) {
+            setTokenCache(token);
+          }
           setIsAuthenticated(Boolean(token));
         }
       })
       .catch(error => {
         if (isMounted) {
-          Alert.alert(
-            'Session error',
+          setSessionError(
             error instanceof Error
               ? error.message
               : 'Unable to restore the saved session.',
           );
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsSessionReady(true);
         }
       });
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [sessionCheckAttempt]);
 
   const handleLogin = (user: LoginUser) => {
     setAdminName(user.name?.trim() || user.email?.trim() || 'Admin');
@@ -91,7 +90,29 @@ function AppContent() {
     }
   };
 
-  if (!isSessionReady) {
+  if (isAuthenticated === null) {
+    if (sessionError) {
+      return (
+        <View className="flex-1 items-center justify-center bg-[#F8F7F2] px-8">
+          <Text className="mb-2 text-center text-lg font-bold text-[#173F35]">
+            Unable to restore your session
+          </Text>
+          <Text className="mb-5 text-center text-sm text-[#6B7280]">
+            {sessionError}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              setSessionError(null);
+              setSessionCheckAttempt(attempt => attempt + 1);
+            }}
+            className="rounded-xl bg-[#B8860B] px-6 py-3">
+            <Text className="font-bold text-white">Retry</Text>
+          </Pressable>
+        </View>
+      );
+    }
+
     return (
       <View className="flex-1 items-center justify-center bg-[#F8F7F2]">
         <ActivityIndicator color="#B8860B" />

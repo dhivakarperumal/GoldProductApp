@@ -52,7 +52,6 @@ export default function Login({ onLogin }: LoginProps) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -87,12 +86,7 @@ export default function Login({ onLogin }: LoginProps) {
         throw new Error('This app is only available to Super Admin accounts.');
       }
 
-      if (rememberMe) {
-        await AsyncStorage.setItem('userToken', token);
-      } else {
-        await AsyncStorage.removeItem('userToken');
-      }
-
+      await AsyncStorage.setItem('userToken', token);
       setTokenCache(token);
       onLogin(user);
     } catch (error) {
@@ -180,6 +174,7 @@ export default function Login({ onLogin }: LoginProps) {
                 className="flex-1 px-3 py-3.5 text-sm text-[#374151]"
               />
               <Pressable
+                testID="login-submit"
                 accessibilityRole="button"
                 accessibilityLabel={
                   showPassword ? 'Hide password' : 'Show password'
@@ -195,21 +190,11 @@ export default function Login({ onLogin }: LoginProps) {
             </View>
 
             <View className="mb-4 flex-row items-center">
-              <Pressable
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: rememberMe }}
-                onPress={() => setRememberMe(checked => !checked)}
-                className="mr-2 h-5 w-5 items-center justify-center rounded border border-[#D1D5DB]">
-                {rememberMe && (
-                  <View className="h-full w-full items-center justify-center rounded-sm bg-[#B8860B]">
-                    <Check size={14} color="#FFFFFF" strokeWidth={3} />
-                  </View>
-                )}
-              </Pressable>
-              <Text
-                onPress={() => setRememberMe(checked => !checked)}
-                className="text-sm text-[#6B7280]">
-                Remember Me
+              <View className="mr-2 h-5 w-5 items-center justify-center rounded border border-[#B8860B] bg-[#B8860B]">
+                <Check size={14} color="#FFFFFF" strokeWidth={3} />
+              </View>
+              <Text className="text-sm text-[#6B7280]">
+                Stay signed in
               </Text>
             </View>
 
