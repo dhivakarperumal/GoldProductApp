@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
+import { Bell, LogOut, UserRound } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type TopHeaderProps = {
@@ -11,7 +12,7 @@ type TopHeaderProps = {
 };
 
 export default function TopHeader({
-  adminName = 'Admin',
+  adminName = 'Super Admin',
   notificationCount = 3,
   onNotificationPress,
   onProfilePress,
@@ -46,10 +47,10 @@ export default function TopHeader({
           />
           <View>
             <Text className="text-[16px] font-extrabold leading-5 text-[#1A1A1A]">
-              Gold Products
+              Sri GoldSuite
             </Text>
             <Text className="text-[10px] font-semibold uppercase tracking-[1.5px] text-[#B8860B]">
-              Admin portal
+              Super Admin portal
             </Text>
           </View>
         </View>
@@ -64,7 +65,7 @@ export default function TopHeader({
             }
             onPress={onNotificationPress}
             className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gray-50 active:bg-gray-100">
-            <Text className="text-[20px]">🔔</Text>
+            <Bell size={20} color="#4B5563" strokeWidth={2} />
             {visibleNotificationCount > 0 && (
               <View className="absolute right-0 top-0 min-w-[17px] items-center justify-center rounded-full border-2 border-white bg-red-500 px-1">
                 <Text className="text-[9px] font-bold leading-[13px] text-white">
@@ -78,7 +79,7 @@ export default function TopHeader({
 
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Open admin menu"
+            accessibilityLabel="Open Super Admin menu"
             accessibilityState={{ expanded: isMenuOpen }}
             onPress={() => setIsMenuOpen(open => !open)}
             className="h-10 w-10 items-center justify-center rounded-full border-2 border-[#F5E6A8] bg-[#D4AF37] active:opacity-80">
@@ -99,14 +100,14 @@ export default function TopHeader({
             accessibilityRole="button"
             onPress={handleProfilePress}
             className="mt-1 flex-row items-center rounded-lg px-3 py-3 active:bg-gray-50">
-            <Text className="mr-3 text-base text-gray-600">◉</Text>
+            <UserRound size={17} color="#4B5563" />
             <Text className="text-sm font-medium text-gray-800">Profile</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
             onPress={handleLogout}
             className="flex-row items-center rounded-lg px-3 py-3 active:bg-red-50">
-            <Text className="mr-3 text-base text-red-500">↪</Text>
+            <LogOut size={17} color="#DC2626" />
             <Text className="text-sm font-medium text-red-600">Logout</Text>
           </Pressable>
         </View>

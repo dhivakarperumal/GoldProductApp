@@ -1,5 +1,12 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
+import {
+  ChartNoAxesColumn,
+  CreditCard,
+  Home,
+  Store,
+  UserRound,
+} from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export type SuperAdminTab =
@@ -14,12 +21,12 @@ type BottomBarProps = {
   onTabPress: (tab: SuperAdminTab) => void;
 };
 
-const tabs: Array<{ label: SuperAdminTab; icon: string }> = [
-  { label: 'Home', icon: '⌂' },
-  { label: 'Gold Shops', icon: '◆' },
-  { label: 'Subscription Plans', icon: '▣' },
-  { label: 'Reports', icon: '▥' },
-  { label: 'Profile', icon: '◉' },
+const tabs: Array<{ label: SuperAdminTab; icon: typeof Home }> = [
+  { label: 'Home', icon: Home },
+  { label: 'Gold Shops', icon: Store },
+  { label: 'Subscription Plans', icon: CreditCard },
+  { label: 'Reports', icon: ChartNoAxesColumn },
+  { label: 'Profile', icon: UserRound },
 ];
 
 export default function BottomBar({
@@ -35,6 +42,7 @@ export default function BottomBar({
       <View className="h-[74px] flex-row items-center border-t border-gray-200 bg-white shadow-lg">
         {tabs.map(tab => {
           const isActive = tab.label === activeTab;
+          const Icon = tab.icon;
 
           return (
             <Pressable
@@ -56,14 +64,11 @@ export default function BottomBar({
                     ? 'mb-1 h-8 w-[38px] items-center justify-center rounded-2xl bg-[#F5E6A8]'
                     : 'mb-1 h-8 w-[38px] items-center justify-center rounded-2xl'
                 }>
-                <Text
-                  className={
-                    isActive
-                      ? 'text-[21px] font-bold leading-6 text-[#B8860B]'
-                      : 'text-[21px] leading-6 text-[#666666]'
-                  }>
-                  {tab.icon}
-                </Text>
+                <Icon
+                  size={20}
+                  color={isActive ? '#B8860B' : '#666666'}
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
               </View>
               <Text
                 numberOfLines={1}
