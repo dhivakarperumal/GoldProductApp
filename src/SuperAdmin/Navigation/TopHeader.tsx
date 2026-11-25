@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Image, ImageBackground, Pressable, Text, View } from 'react-native';
 import { Bell, LogOut, UserRound } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -34,8 +34,10 @@ export default function TopHeader({
   };
 
   return (
-    <View
-      className="z-20 border-b border-gray-100 bg-white px-4 pb-3"
+    <ImageBackground
+      source={require('../../Assert/Images/bottom.png')}
+      resizeMode="stretch"
+      className="z-20 border-b border-gray-100 px-4 pb-3"
       style={{ paddingTop: insets.top + 10 }}>
       <View className="h-12 flex-row items-center justify-between">
         <View className="flex-row items-center">
@@ -112,6 +114,6 @@ export default function TopHeader({
           </Pressable>
         </View>
       )}
-    </View>
+    </ImageBackground>
   );
 }

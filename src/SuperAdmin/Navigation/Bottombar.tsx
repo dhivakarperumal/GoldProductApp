@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { ImageBackground, Pressable, Text, View } from 'react-native';
 import {
   ChartNoAxesColumn,
   CreditCard,
@@ -36,10 +36,11 @@ export default function BottomBar({
   const insets = useSafeAreaInsets();
 
   return (
-    <View
-      className="bg-white"
+    <ImageBackground
+      source={require('../../Assert/Images/bottom.png')}
+      resizeMode="stretch"
       style={{ paddingBottom: insets.bottom }}>
-      <View className="h-[74px] flex-row items-center border-t border-gray-200 bg-white shadow-lg">
+      <View className="h-[74px] flex-row items-center border-t border-[#EAD9B1] bg-[#FFFDF8]/80">
         {tabs.map(tab => {
           const isActive = tab.label === activeTab;
           const Icon = tab.icon;
@@ -83,6 +84,6 @@ export default function BottomBar({
           );
         })}
       </View>
-    </View>
+    </ImageBackground>
   );
 }
