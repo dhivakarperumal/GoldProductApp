@@ -18,8 +18,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export type SuperAdminTab =
   | 'Home'
-  | 'Gold Shops'
-  | 'Subscription Plans'
+  | 'G Shops'
+  | 'Plans'
   | 'Reports'
   | 'Profile';
 
@@ -30,8 +30,8 @@ type BottomBarProps = {
 
 const tabs: Array<{ label: SuperAdminTab; icon: typeof Home }> = [
   { label: 'Home', icon: Home },
-  { label: 'Gold Shops', icon: Store },
-  { label: 'Subscription Plans', icon: CreditCard },
+  { label: 'G Shops', icon: Store },
+  { label: 'Plans', icon: CreditCard },
   { label: 'Reports', icon: ChartNoAxesColumn },
   { label: 'Profile', icon: UserRound },
 ];

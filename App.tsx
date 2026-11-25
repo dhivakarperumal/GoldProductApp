@@ -25,6 +25,7 @@ import BottomBar, {
   SuperAdminTab,
 } from './src/SuperAdmin/Navigation/Bottombar';
 import TopHeader from './src/SuperAdmin/Navigation/TopHeader';
+import Home from './src/SuperAdmin/Home/Home';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -127,11 +128,15 @@ function AppContent() {
   return (
     <View className="flex-1 bg-white">
       <TopHeader adminName={adminName} onLogout={handleLogout} />
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-[22px] font-bold text-[#1A1A1A]">
-          {activeTab}
-        </Text>
-      </View>
+      {activeTab === 'Home' ? (
+        <Home onNavigate={setActiveTab} />
+      ) : (
+        <View className="flex-1 items-center justify-center bg-white">
+          <Text className="text-[22px] font-bold text-[#1A1A1A]">
+            {activeTab}
+          </Text>
+        </View>
+      )}
       <BottomBar activeTab={activeTab} onTabPress={setActiveTab} />
     </View>
   );

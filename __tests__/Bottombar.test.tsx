@@ -19,8 +19,8 @@ jest.mock('react-native-safe-area-context', () => {
 
 const tabLabels: SuperAdminTab[] = [
   'Home',
-  'Gold Shops',
-  'Subscription Plans',
+  'G Shops',
+  'Plans',
   'Reports',
   'Profile',
 ];
