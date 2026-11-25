@@ -70,7 +70,7 @@ export default function BottomBar({
       <View
         testID="bottom-tab-bar"
         onLayout={({ nativeEvent }) => setBarWidth(nativeEvent.layout.width)}
-        className="relative h-[78px] flex-row items-center border-t border-[#EAD9B1] bg-[#FFFDF8]/80">
+        className="relative h-[78px] flex-row items-center border-t border-[#EAD9B1]/40">
         {tabWidth > 0 && (
           <Animated.View
             testID="active-tab-background"
@@ -82,7 +82,7 @@ export default function BottomBar({
               left: 4,
               width: Math.max(tabWidth - 8, 0),
               borderRadius: 999,
-              backgroundColor: '#B8860B',
+              backgroundColor: '#07564B',
               transform: [{ translateX }],
             }}
           />
@@ -110,7 +110,7 @@ export default function BottomBar({
                 }>
                 <Icon
                   size={19}
-                  color={isActive ? '#FFFFFF' : '#666666'}
+                  color={isActive ? '#FFFFFF' : '#FFF8E7'}
                   strokeWidth={isActive ? 2.5 : 2}
                 />
               </View>
@@ -118,8 +118,8 @@ export default function BottomBar({
                 numberOfLines={1}
                 className={
                   isActive
-                    ? 'max-w-full text-[10px] font-bold text-white'
-                    : 'max-w-full text-[10px] font-medium text-[#666666]'
+                    ? 'max-w-full text-[10px] font-extrabold text-white'
+                    : 'max-w-full text-[10px] font-bold text-white'
                 }>
                 {tab.label}
               </Text>

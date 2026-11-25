@@ -4,6 +4,7 @@ const { View } = require('react-native');
 const MockIcon = () => React.createElement(View);
 
 module.exports = {
+  Activity: MockIcon,
   ArrowDownRight: MockIcon,
   ArrowUpRight: MockIcon,
   Bell: MockIcon,
@@ -18,9 +19,12 @@ module.exports = {
   Home: MockIcon,
   LockKeyhole: MockIcon,
   LogOut: MockIcon,
+  Mail: MockIcon,
+  Phone: MockIcon,
   RefreshCw: MockIcon,
   ShieldCheck: MockIcon,
   Store: MockIcon,
+  Trash2: MockIcon,
   UserRound: MockIcon,
   Users: MockIcon,
   XCircle: MockIcon,

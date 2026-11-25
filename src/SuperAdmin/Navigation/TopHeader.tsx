@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type TopHeaderProps = {
   adminName?: string;
+  adminEmail?: string;
   notificationCount?: number;
   onNotificationPress?: () => void;
   onProfilePress?: () => void;
@@ -13,6 +14,7 @@ type TopHeaderProps = {
 
 export default function TopHeader({
   adminName = 'Super Admin',
+  adminEmail = '',
   notificationCount = 3,
   onNotificationPress,
   onProfilePress,
@@ -48,10 +50,10 @@ export default function TopHeader({
             className="mr-3 h-11 w-11 rounded-lg"
           />
           <View>
-            <Text className="text-[16px] font-extrabold leading-5 text-[#1A1A1A]">
+            <Text className="text-[16px] font-extrabold leading-5 text-white">
               Sri GoldSuite
             </Text>
-            <Text className="text-[10px] font-semibold uppercase tracking-[1.5px] text-[#B8860B]">
+            <Text className="text-[10px] font-bold uppercase tracking-[1.5px] text-[#FFE08A]">
               Super Admin portal
             </Text>
           </View>
@@ -94,8 +96,13 @@ export default function TopHeader({
         <View className="absolute right-4 top-[66px] z-30 w-48 rounded-xl border border-gray-100 bg-white p-2 shadow-lg">
           <Text
             numberOfLines={1}
-            className="px-3 pb-2 pt-1 text-xs font-medium text-gray-500">
+            className="px-3 pt-1 text-xs font-semibold text-gray-800">
             {adminName}
+          </Text>
+          <Text
+            numberOfLines={1}
+            className="px-3 pb-2 pt-0.5 text-[11px] text-gray-500">
+            {adminEmail || 'Email not available'}
           </Text>
           <View className="h-px bg-gray-100" />
           <Pressable

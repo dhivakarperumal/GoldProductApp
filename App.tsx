@@ -19,13 +19,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
-import { clearTokenCache, setTokenCache } from './src/api';
+import api, { clearTokenCache, setTokenCache } from './src/api';
 import Login, { LoginUser } from './src/Auth/Login';
 import BottomBar, {
   SuperAdminTab,
 } from './src/SuperAdmin/Navigation/Bottombar';
 import TopHeader from './src/SuperAdmin/Navigation/TopHeader';
 import Home from './src/SuperAdmin/Home/Home';
+import Profile from './src/SuperAdmin/Profile/Profile';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -44,6 +45,7 @@ function AppContent() {
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionCheckAttempt, setSessionCheckAttempt] = useState(0);
   const [adminName, setAdminName] = useState('Super Admin');
+  const [adminEmail, setAdminEmail] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -72,8 +74,43 @@ function AppContent() {
     };
   }, [sessionCheckAttempt]);
 
+  useEffect(() => {
+    if (
+      !isAuthenticated ||
+      adminEmail ||
+      typeof api.get !== 'function'
+    ) {
+      return;
+    }
+
+    let isMounted = true;
+    api
+      .get('/auth/me')
+      .then(response => {
+        if (!isMounted) return;
+        const user = response.data?.user;
+        if (typeof user?.email === 'string') {
+          setAdminEmail(user.email);
+        }
+        const name = user?.name || user?.username || user?.email;
+        if (typeof name === 'string' && name.trim()) {
+          setAdminName(name.trim());
+        }
+      })
+      .catch(error => {
+        if (__DEV__) {
+          console.warn('[Profile] Could not load the saved account details:', error);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [adminEmail, isAuthenticated]);
+
   const handleLogin = (user: LoginUser) => {
     setAdminName(user.name?.trim() || user.email?.trim() || 'Admin');
+    setAdminEmail(user.email?.trim() || '');
     setIsAuthenticated(true);
   };
 
@@ -83,6 +120,7 @@ function AppContent() {
       clearTokenCache();
       setIsAuthenticated(false);
       setAdminName('Super Admin');
+      setAdminEmail('');
     } catch (error) {
       Alert.alert(
         'Logout failed',
@@ -127,9 +165,16 @@ function AppContent() {
 
   return (
     <View className="flex-1 bg-white">
-      <TopHeader adminName={adminName} onLogout={handleLogout} />
+      <TopHeader
+        adminName={adminName}
+        adminEmail={adminEmail}
+        onLogout={handleLogout}
+        onProfilePress={() => setActiveTab('Profile')}
+      />
       {activeTab === 'Home' ? (
         <Home onNavigate={setActiveTab} />
+      ) : activeTab === 'Profile' ? (
+        <Profile />
       ) : (
         <View className="flex-1 items-center justify-center bg-white">
           <Text className="text-[22px] font-bold text-[#1A1A1A]">
