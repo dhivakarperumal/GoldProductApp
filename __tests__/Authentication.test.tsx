@@ -10,6 +10,7 @@ const mockGetItem = jest.fn();
 const mockSetItem = jest.fn();
 const mockRemoveItem = jest.fn();
 const mockPost = jest.fn();
+const mockGet = jest.fn();
 const mockSetTokenCache = jest.fn();
 const mockClearTokenCache = jest.fn();
 
@@ -26,6 +27,7 @@ jest.mock('../src/api', () => ({
   __esModule: true,
   default: {
     post: (...args: unknown[]) => mockPost(...args),
+    get: (...args: unknown[]) => mockGet(...args),
   },
   clearTokenCache: (...args: unknown[]) => mockClearTokenCache(...args),
   setTokenCache: (...args: unknown[]) => mockSetTokenCache(...args),
@@ -47,6 +49,13 @@ beforeEach(() => {
   mockSetItem.mockReset().mockResolvedValue(undefined);
   mockRemoveItem.mockReset().mockResolvedValue(undefined);
   mockPost.mockReset();
+  mockGet.mockReset().mockImplementation((path: unknown) =>
+    Promise.resolve(
+      path === '/auth/me'
+        ? { data: { user: { role: 'superadmin', name: 'Super Admin' } } }
+        : { data: { data: {} } },
+    ),
+  );
   mockSetTokenCache.mockReset();
   mockClearTokenCache.mockReset();
 });
@@ -65,7 +74,7 @@ test('restores a saved session without showing the login screen', async () => {
       accessibilityLabel: 'Open Super Admin menu',
     }),
   ).toBeDefined();
-  expect(renderer.root.findAllByProps({ children: 'Super Admin Sign In' }))
+  expect(renderer.root.findAllByProps({ children: 'Admin Sign In' }))
     .toHaveLength(0);
   expect(setTokenCache).toHaveBeenCalledWith('saved-token');
   expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
@@ -84,7 +93,7 @@ test('does not redirect to login when session storage cannot be read', async () 
     renderer.root.findAllByProps({ children: 'Unable to restore your session' }),
   ).toHaveLength(1);
   expect(
-    renderer.root.findAllByProps({ children: 'Super Admin Sign In' }),
+    renderer.root.findAllByProps({ children: 'Admin Sign In' }),
   ).toHaveLength(0);
   expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
 });
@@ -131,6 +140,47 @@ test('persists the token after a successful login', async () => {
   });
 });
 
+test('routes shop admins to the admin dashboard and its API', async () => {
+  mockPost.mockResolvedValue({
+    data: {
+      token: 'admin-token',
+      user: { role: 'admin', name: 'Shop Admin', email: 'admin@example.com' },
+    },
+  });
+  mockGet.mockImplementation((path: unknown) =>
+    Promise.resolve(
+      path === '/dashboard'
+        ? { data: { stats: [], revenueTrends: [] } }
+        : { data: { user: { role: 'admin' } } },
+    ),
+  );
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<App />);
+    await new Promise<void>(resolve => setImmediate(resolve));
+  });
+
+  await act(async () => {
+    const inputs = renderer.root.findAllByType(TextInput);
+    inputs[0].props.onChangeText('admin@example.com');
+    inputs[1].props.onChangeText('password');
+  });
+
+  const submitButton = renderer.root
+    .findAllByType(Pressable)
+    .find(button => button.props.accessibilityState?.disabled !== undefined);
+  await act(async () => {
+    await submitButton?.props.onPress();
+  });
+
+  expect(renderer.root.findByProps({ children: 'Admin Dashboard' })).toBeDefined();
+  expect(renderer.root.findByProps({ testID: 'admin-home' })).toBeDefined();
+  expect(mockGet).toHaveBeenCalledWith('/dashboard', {
+    params: { datePreset: 'all', startDate: '', endDate: '' },
+  });
+});
+
 test('removes the saved token only when Logout is pressed', async () => {
   mockGetItem.mockResolvedValue('saved-token');
   let renderer!: ReactTestRenderer.ReactTestRenderer;
@@ -158,6 +208,6 @@ test('removes the saved token only when Logout is pressed', async () => {
   expect(AsyncStorage.removeItem).toHaveBeenCalledWith('userToken');
   expect(clearTokenCache).toHaveBeenCalledTimes(1);
   expect(
-    renderer.root.findByProps({ children: 'Super Admin Sign In' }),
+    renderer.root.findByProps({ children: 'Admin Sign In' }),
   ).toBeDefined();
 });
