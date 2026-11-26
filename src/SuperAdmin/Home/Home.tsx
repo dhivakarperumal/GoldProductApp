@@ -85,17 +85,21 @@ function MetricCard({
   label,
   value,
   change,
+  trend,
   icon: Icon,
   accent,
 }: {
   label: string;
   value: string;
   change?: number;
+  trend?: number[];
   icon: typeof Store;
   accent: string;
 }) {
   const isPositive = (change || 0) >= 0;
   const showChange = typeof change === 'number';
+  const recentTrend = trend?.slice(-6) || [];
+  const trendMaximum = Math.max(...recentTrend, 1);
 
   return (
     <View className="relative min-h-[148px] flex-1 basis-[145px] overflow-hidden rounded-2xl border border-[#E8E3D8] bg-white p-4 shadow-sm">
@@ -155,6 +159,24 @@ function MetricCard({
             </Text>
           </View>
         )}
+        {recentTrend.length > 0 ? (
+          <View
+            accessibilityRole="image"
+            accessibilityLabel={`Recent trend for ${label}`}
+            className="mt-3 h-7 flex-row items-end gap-1"
+          >
+            {recentTrend.map((point, index) => (
+              <View
+                key={`${label}-trend-${index}`}
+                className="flex-1 rounded-t-sm"
+                style={{
+                  height: Math.max((point / trendMaximum) * 28, 2),
+                  backgroundColor: accent,
+                }}
+              />
+            ))}
+          </View>
+        ) : null}
       </View>
     </View>
   );
@@ -266,11 +288,24 @@ export default function Home({ onNavigate }: HomeProps) {
     void loadDashboard();
   };
 
+  const monthlyRevenue = analytics?.monthlyRevenue || [];
+  const shopRegistrations = analytics?.shopRegistrations || [];
+  const subscriptionGrowth = analytics?.subscriptionGrowth || [];
+  const registrationTrend = shopRegistrations.map(
+    item => Number(item.registrations) || 0,
+  );
+  const subscriptionTrend = subscriptionGrowth.map(
+    item => Number(item.subscriptions) || 0,
+  );
+  const revenueTrend = monthlyRevenue.map(item => Number(item.revenue) || 0);
+  const activeShops = analytics?.shopStatus?.active || 0;
+  const expiredShops = analytics?.shopStatus?.expired || 0;
   const metrics = [
     {
       label: 'Gold Shops',
       value: formatCount(stats?.totalGoldShops),
       change: stats?.changes?.totalGoldShops,
+      trend: registrationTrend,
       icon: Store,
       accent: '#07564B',
     },
@@ -303,6 +338,7 @@ export default function Home({ onNavigate }: HomeProps) {
       label: 'Active Subscriptions',
       value: formatCount(stats?.activeSubscriptions),
       change: stats?.changes?.activeSubscriptions,
+      trend: subscriptionTrend,
       icon: ShieldCheck,
       accent: '#7138E8',
     },
@@ -316,16 +352,11 @@ export default function Home({ onNavigate }: HomeProps) {
       label: 'Total Revenue',
       value: formatCurrency(stats?.totalRevenue),
       change: stats?.changes?.totalRevenue,
+      trend: revenueTrend,
       icon: CreditCard,
       accent: '#C8103E',
     },
   ];
-
-  const monthlyRevenue = analytics?.monthlyRevenue || [];
-  const shopRegistrations = analytics?.shopRegistrations || [];
-  const subscriptionGrowth = analytics?.subscriptionGrowth || [];
-  const activeShops = analytics?.shopStatus?.active || 0;
-  const expiredShops = analytics?.shopStatus?.expired || 0;
   const welcomeSlides = [
     {
       image: require('../../Assert/Images/welcomehome1.png'),

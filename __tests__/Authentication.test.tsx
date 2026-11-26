@@ -3,6 +3,7 @@ import ReactTestRenderer, { act } from 'react-test-renderer';
 import { Text, TextInput } from 'react-native';
 import App from '../App';
 import Login from '../src/Auth/Login';
+import Home from '../src/SuperAdmin/Home/Home';
 import TopHeader from '../src/SuperAdmin/Navigation/TopHeader';
 
 const mockGetItem = jest.fn();
@@ -109,6 +110,63 @@ test('notification dropdown shows only shops registered today', async () => {
   ).toBe(true);
   expect(
     renderer.root.findAllByProps({ children: 'Yesterday Gold' }),
+  ).toHaveLength(0);
+});
+
+test('shows Home sparklines only for metrics with historical data', async () => {
+  mockGet.mockImplementation((url: string) =>
+    Promise.resolve({
+      data: {
+        data: url.endsWith('/stats')
+          ? {
+              totalGoldShops: 12,
+              activeSubscriptions: 8,
+              totalRevenue: 12000,
+            }
+          : {
+              shopRegistrations: [
+                { label: 'May', registrations: 3 },
+                { label: 'Jun', registrations: 7 },
+              ],
+              subscriptionGrowth: [
+                { label: 'May', subscriptions: 2 },
+                { label: 'Jun', subscriptions: 5 },
+              ],
+              monthlyRevenue: [
+                { label: 'May', revenue: 6000 },
+                { label: 'Jun', revenue: 12000 },
+              ],
+            },
+      },
+    }),
+  );
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<Home onNavigate={jest.fn()} />);
+    activeRenderers.push(renderer);
+    await new Promise<void>(resolve => setImmediate(resolve));
+  });
+
+  expect(
+    renderer.root.findByProps({
+      accessibilityLabel: 'Recent trend for Gold Shops',
+    }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findByProps({
+      accessibilityLabel: 'Recent trend for Active Subscriptions',
+    }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findByProps({
+      accessibilityLabel: 'Recent trend for Total Revenue',
+    }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findAllByProps({
+      accessibilityLabel: 'Recent trend for Active Shops',
+    }),
   ).toHaveLength(0);
 });
 
