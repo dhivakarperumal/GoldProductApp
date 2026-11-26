@@ -274,7 +274,7 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
     name: '',
     email: '',
     phone: '',
-    role: 'user',
+    role: 'admin',
     password: '',
   });
   const requestId = useRef(0);
@@ -403,7 +403,7 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
       name: '',
       email: '',
       phone: '',
-      role: 'user',
+      role: 'admin',
       password: '',
     });
     setIsEditing(false);
@@ -444,7 +444,7 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
       name: formData.name.trim() || formData.username.trim(),
       email: formData.email.trim(),
       phone: formData.phone.trim(),
-      role: formData.role.toLowerCase(),
+      role: isEditing ? formData.role.toLowerCase() : 'admin',
     };
     try {
       if (isEditing && editUserId != null) {
@@ -1058,138 +1058,181 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
         transparent
         animationType="slide"
         onRequestClose={() => setIsModalOpen(false)}
+        statusBarTranslucent
       >
         <KeyboardAvoidingView behavior="padding" className="flex-1 justify-end">
           <View className="flex-1 justify-end bg-black/50">
-            <View className="max-h-[90%] rounded-t-3xl bg-[#F8F7F2]">
-              <View className="flex-row items-center justify-between rounded-t-3xl bg-[#153B35] px-5 py-4">
-                <View>
-                  <Text className="text-[10px] font-extrabold uppercase tracking-[1.5px] text-[#F4C95D]">
-                    User Management
-                  </Text>
-                  <Text className="mt-1 text-lg font-extrabold text-white">
-                    {isEditing ? 'Edit User' : 'Add User'}
-                  </Text>
+            <View className="max-h-[92%] overflow-hidden rounded-t-3xl bg-[#F8F7F2]">
+              <View className="rounded-t-3xl bg-[#153B35] px-5 pb-4 pt-3">
+                <View className="mb-3 h-1 w-10 self-center rounded-full bg-white/40" />
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1 flex-row items-center pr-3">
+                    <View className="h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
+                      <UserPlus size={21} color="#F4C95D" />
+                    </View>
+                    <View className="ml-3 flex-1">
+                      <Text className="text-[10px] font-extrabold uppercase tracking-[1.5px] text-[#F4C95D]">
+                        User Management
+                      </Text>
+                      <Text className="mt-1 text-lg font-extrabold text-white">
+                        {isEditing ? 'Edit User' : 'Add User'}
+                      </Text>
+                      <Text className="mt-0.5 text-[10px] text-white/70">
+                        {isEditing
+                          ? 'Update account details and access'
+                          : 'Create a new admin account'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Close user form"
+                    onPress={() => setIsModalOpen(false)}
+                    className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
+                  >
+                    <X size={20} color="#FFFFFF" />
+                  </Pressable>
                 </View>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Close user form"
-                  onPress={() => setIsModalOpen(false)}
-                  className="rounded-full p-2"
-                >
-                  <X size={20} color="#FFFFFF" />
-                </Pressable>
               </View>
 
               <ScrollView
+                className="shrink"
                 keyboardShouldPersistTaps="handled"
-                contentContainerClassName="px-4 pb-6 pt-4"
+                contentContainerClassName="gap-4 px-4 py-4"
               >
-                {(
-                  [
-                    ['username', 'Username', 'Enter username'],
-                    ['name', 'Full Name', 'Enter full name'],
-                    ['email', 'Email Address', 'name@example.com'],
-                    ['phone', 'Phone Number', 'Enter phone number'],
-                  ] as const
-                ).map(([key, label, placeholder]) => (
-                  <View key={key} className="mb-3">
-                    <Text className="text-xs font-semibold text-[#374151]">
-                      {label}
-                      {key === 'username' || key === 'email' ? ' *' : ''}
-                    </Text>
-                    <TextInput
-                      accessibilityLabel={label}
-                      value={formData[key]}
-                      onChangeText={value => updateFormField(key, value)}
-                      placeholder={placeholder}
-                      placeholderTextColor="#9CA3AF"
-                      keyboardType={
-                        key === 'email'
-                          ? 'email-address'
-                          : key === 'phone'
-                          ? 'phone-pad'
-                          : 'default'
-                      }
-                      autoCapitalize={key === 'email' ? 'none' : 'words'}
-                      className="mt-1.5 min-h-11 rounded-xl border border-[#E5E7EB] bg-white px-3 text-sm text-[#1F2937]"
-                    />
+                <View className="rounded-2xl border border-[#ECE7D8] bg-white p-4">
+                  <Text className="text-xs font-extrabold uppercase tracking-wider text-[#173F35]">
+                    Account details
+                  </Text>
+                  <View className="mt-3 gap-3">
+                    {(
+                      [
+                        ['username', 'Username', 'Enter username'],
+                        ['name', 'Full Name', 'Enter full name'],
+                        ['email', 'Email Address', 'name@example.com'],
+                        ['phone', 'Phone Number', 'Enter phone number'],
+                      ] as const
+                    ).map(([key, label, placeholder]) => (
+                      <View key={key}>
+                        <Text className="text-xs font-semibold text-[#374151]">
+                          {label}
+                          {key === 'username' || key === 'email' ? ' *' : ''}
+                        </Text>
+                        <TextInput
+                          accessibilityLabel={label}
+                          value={formData[key]}
+                          onChangeText={value => updateFormField(key, value)}
+                          placeholder={placeholder}
+                          placeholderTextColor="#9CA3AF"
+                          keyboardType={
+                            key === 'email'
+                              ? 'email-address'
+                              : key === 'phone'
+                              ? 'phone-pad'
+                              : 'default'
+                          }
+                          autoCapitalize={key === 'email' ? 'none' : 'words'}
+                          className="mt-1.5 min-h-11 rounded-xl border border-[#E5E7EB] bg-[#FAFBFA] px-3 text-sm text-[#1F2937]"
+                        />
+                      </View>
+                    ))}
                   </View>
-                ))}
+                </View>
 
-                <Text className="mb-2 text-xs font-semibold text-[#374151]">
-                  Role
-                </Text>
-                <View className="mb-3 flex-row flex-wrap gap-2">
-                  {ROLES.map(([value, label]) => (
-                    <Pressable
-                      key={value}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: formData.role === value }}
-                      onPress={() => updateFormField('role', value)}
-                      className={`rounded-full px-3 py-2 ${
-                        formData.role === value ? 'bg-[#08745D]' : 'bg-white'
-                      }`}
-                    >
-                      <Text
-                        className={`text-xs font-bold ${
+                <View className="rounded-2xl border border-[#ECE7D8] bg-white p-4">
+                  <Text className="text-xs font-extrabold uppercase tracking-wider text-[#173F35]">
+                    Role & security
+                  </Text>
+                  <Text className="mb-2 mt-3 text-xs font-semibold text-[#374151]">
+                    Role
+                  </Text>
+                  <View className="flex-row flex-wrap gap-2">
+                    {ROLES.filter(
+                      ([value]) => isEditing || value === 'admin',
+                    ).map(([value, label]) => (
+                      <Pressable
+                        key={value}
+                        accessibilityRole="button"
+                        accessibilityState={{
+                          selected: formData.role === value,
+                        }}
+                        onPress={() => updateFormField('role', value)}
+                        className={`rounded-xl border px-4 py-2.5 ${
                           formData.role === value
-                            ? 'text-white'
-                            : 'text-[#4B5563]'
+                            ? 'border-[#08745D] bg-[#E7F3EF]'
+                            : 'border-[#E5E7EB] bg-white'
                         }`}
                       >
-                        {label}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-
-                {!isEditing ? (
-                  <View className="mb-3">
-                    <Text className="text-xs font-semibold text-[#374151]">
-                      Password *
-                    </Text>
-                    <TextInput
-                      accessibilityLabel="Password"
-                      value={formData.password}
-                      onChangeText={value => updateFormField('password', value)}
-                      placeholder="Create a password"
-                      placeholderTextColor="#9CA3AF"
-                      secureTextEntry
-                      autoCapitalize="none"
-                      className="mt-1.5 min-h-11 rounded-xl border border-[#E5E7EB] bg-white px-3 text-sm text-[#1F2937]"
-                    />
+                        <Text
+                          className={`text-xs font-bold ${
+                            formData.role === value
+                              ? 'text-[#075C51]'
+                              : 'text-[#4B5563]'
+                          }`}
+                        >
+                          {label}
+                        </Text>
+                      </Pressable>
+                    ))}
                   </View>
-                ) : null}
-
-                <View className="mt-2 flex-row justify-end gap-2">
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => setIsModalOpen(false)}
-                    className="min-h-11 items-center justify-center rounded-xl border border-[#D1D5DB] px-4"
-                  >
-                    <Text className="text-xs font-bold text-[#4B5563]">
-                      Cancel
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    accessibilityRole="button"
-                    disabled={submitLoading}
-                    onPress={saveUser}
-                    className={`min-h-11 min-w-28 items-center justify-center rounded-xl bg-[#08745D] px-4 ${
-                      submitLoading ? 'opacity-60' : ''
-                    }`}
-                  >
-                    {submitLoading ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                      <Text className="text-xs font-bold text-white">
-                        {isEditing ? 'Save Changes' : 'Add User'}
+                  {!isEditing ? (
+                    <View className="mt-3 rounded-xl bg-[#F3F8F5] p-3">
+                      <Text className="text-[11px] leading-4 text-[#4B5563]">
+                        New accounts created here are assigned the Admin role.
                       </Text>
-                    )}
-                  </Pressable>
+                    </View>
+                  ) : null}
+                  {!isEditing ? (
+                    <View className="mt-3">
+                      <Text className="text-xs font-semibold text-[#374151]">
+                        Password *
+                      </Text>
+                      <TextInput
+                        accessibilityLabel="Password"
+                        value={formData.password}
+                        onChangeText={value =>
+                          updateFormField('password', value)
+                        }
+                        placeholder="Create a password"
+                        placeholderTextColor="#9CA3AF"
+                        secureTextEntry
+                        autoCapitalize="none"
+                        className="mt-1.5 min-h-11 rounded-xl border border-[#E5E7EB] bg-[#FAFBFA] px-3 text-sm text-[#1F2937]"
+                      />
+                    </View>
+                  ) : null}
                 </View>
               </ScrollView>
+              <View
+                className="flex-row gap-2 border-t border-[#E8E6DC] bg-white px-4 pt-3"
+                style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+              >
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setIsModalOpen(false)}
+                  className="min-h-12 flex-1 items-center justify-center rounded-xl border border-[#D1D5DB] bg-white"
+                >
+                  <Text className="text-sm font-bold text-[#4B5563]">
+                    Cancel
+                  </Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={submitLoading}
+                  onPress={saveUser}
+                  className={`min-h-12 flex-1 items-center justify-center rounded-xl bg-[#08745D] ${
+                    submitLoading ? 'opacity-60' : ''
+                  }`}
+                >
+                  {submitLoading ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text className="text-sm font-extrabold text-white">
+                      {isEditing ? 'Save Changes' : 'Create Admin'}
+                    </Text>
+                  )}
+                </Pressable>
+              </View>
             </View>
           </View>
         </KeyboardAvoidingView>
