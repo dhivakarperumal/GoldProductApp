@@ -12,13 +12,21 @@ import { CalendarDays, Check, HandCoins, Users } from 'lucide-react-native';
 import api from '../../api';
 import CompleteLoan from './CompleteLoan';
 import GoldRelease from './GoldRelease';
+import KycReview from './KycReview';
 import LoanRenewal from './LoanRenewal';
 import OverdueLoans from './OverdueLoans';
 
-type LoanSection = 'all' | 'overdue' | 'renewal' | 'goldRelease' | 'complete';
+type LoanSection =
+  | 'all'
+  | 'kyc'
+  | 'overdue'
+  | 'renewal'
+  | 'goldRelease'
+  | 'complete';
 
 const LOAN_SECTIONS: { value: LoanSection; label: string }[] = [
   { value: 'all', label: 'All Loans' },
+  { value: 'kyc', label: 'KYC Review' },
   { value: 'overdue', label: 'Overdue' },
   { value: 'renewal', label: 'Renewal' },
   { value: 'goldRelease', label: 'Gold Release' },
@@ -398,6 +406,8 @@ export default function Loans({ onCreateLoan, onCreateCustomer }: LoansProps) {
         <OverdueLoans />
       ) : activeSection === 'renewal' ? (
         <LoanRenewal />
+      ) : activeSection === 'kyc' ? (
+        <KycReview />
       ) : activeSection === 'goldRelease' ? (
         <GoldRelease />
       ) : (
