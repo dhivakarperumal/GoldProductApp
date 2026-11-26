@@ -1,6 +1,15 @@
-import { Image, ImageBackground, Pressable, Text, View } from 'react-native';
+import { useState } from 'react';
+import {
+  Image,
+  ImageBackground,
+  Modal,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
 import { LogOut } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCustomAlert } from '../../Components/CustomAlert';
 
 type AdminHeaderProps = {
   adminName: string;
@@ -16,6 +25,8 @@ export default function AdminHeader({
   onLogout,
 }: AdminHeaderProps) {
   const insets = useSafeAreaInsets();
+  const { showAlert } = useCustomAlert();
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const initial = adminName.trim().charAt(0).toUpperCase() || 'A';
 
   return (
@@ -43,31 +54,80 @@ export default function AdminHeader({
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Open Admin profile"
-          onPress={onProfilePress}
+          accessibilityLabel={
+            isAccountMenuOpen ? 'Close account menu' : 'Open account menu'
+          }
+          accessibilityState={{ expanded: isAccountMenuOpen }}
+          onPress={() => setIsAccountMenuOpen(open => !open)}
           className="h-10 w-10 items-center justify-center rounded-full border-2 border-[#F5E6A8] bg-[#D4AF37]">
           <Text className="text-[16px] font-bold text-white">{initial}</Text>
         </Pressable>
       </View>
-      <View className="mt-3 flex-row items-center justify-between">
-        <View className="flex-1 pr-3">
-          <Text numberOfLines={1} className="text-sm font-bold text-white">
-            {adminName}
-          </Text>
-          <Text numberOfLines={1} className="text-xs text-[#FFE8AE]">
-            {adminEmail}
-          </Text>
+      <Modal
+        transparent
+        animationType="fade"
+        visible={isAccountMenuOpen}
+        statusBarTranslucent
+        onRequestClose={() => setIsAccountMenuOpen(false)}>
+        <View className="flex-1">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss account menu"
+            onPress={() => setIsAccountMenuOpen(false)}
+            className="absolute inset-0 bg-black/10"
+          />
+          <View
+            style={{ top: insets.top + 62 }}
+            className="absolute right-4 w-72 overflow-hidden rounded-2xl border border-[#ECE7D8] bg-white shadow-2xl">
+            <View className="border-b border-[#F1F2EE] px-4 py-4">
+              <Text
+                numberOfLines={1}
+                className="text-sm font-extrabold text-[#173F35]">
+                {adminName}
+              </Text>
+              <Text numberOfLines={1} className="mt-1 text-xs text-[#6B7280]">
+                {adminEmail || 'Email not available'}
+              </Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open Admin profile"
+              onPress={() => {
+                setIsAccountMenuOpen(false);
+                onProfilePress();
+              }}
+              className="px-4 py-3.5">
+              <Text className="text-sm font-semibold text-[#173F35]">
+                Profile
+              </Text>
+            </Pressable>
+            <View className="h-px bg-[#F1F2EE]" />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Log out"
+              onPress={() => {
+                setIsAccountMenuOpen(false);
+                showAlert('Log out?', 'Are you sure you want to log out?', {
+                  variant: 'warning',
+                  buttons: [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Log out',
+                      style: 'destructive',
+                      onPress: onLogout,
+                    },
+                  ],
+                });
+              }}
+              className="flex-row items-center px-4 py-3.5">
+              <LogOut size={16} color="#B42332" />
+              <Text className="ml-2 text-sm font-bold text-[#B42332]">
+                Logout
+              </Text>
+            </Pressable>
+          </View>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          onPress={onLogout}
-          className="flex-row items-center rounded-lg border border-white/30 px-3 py-2">
-          <LogOut size={15} color="#FFFFFF" />
-          <Text className="ml-1.5 text-xs font-semibold text-white">
-            Logout
-          </Text>
-        </Pressable>
-      </View>
+      </Modal>
     </ImageBackground>
   );
 }

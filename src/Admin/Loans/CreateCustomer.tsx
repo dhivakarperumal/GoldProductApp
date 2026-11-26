@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -67,6 +68,22 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
   const [photo, setPhoto] = useState<CustomerPhoto | null>(null);
   const [photoUrl, setPhotoUrl] = useState('');
   const [saving, setSaving] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSubscription = Keyboard.addListener(showEvent, event => {
+      setKeyboardHeight(event.endCoordinates.height);
+    });
+    const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const setField = (field: keyof CustomerForm, value: string) => {
     setForm(current => ({ ...current, [field]: value }));
@@ -188,7 +205,9 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
       <InnerHeader title="Create Customer" onBack={onBack} />
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerClassName="px-4 pb-8">
+        contentContainerClassName="px-4"
+        contentContainerStyle={{ paddingBottom: keyboardHeight + 32 }}
+        automaticallyAdjustKeyboardInsets>
         <Text className="mb-4 text-sm leading-5 text-[#6B7280]">
           Add the borrower’s contact, address, guarantor, and photo details.
         </Text>

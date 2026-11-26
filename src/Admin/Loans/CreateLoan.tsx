@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -98,6 +99,22 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [optionsError, setOptionsError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSubscription = Keyboard.addListener(showEvent, event => {
+      setKeyboardHeight(event.endCoordinates.height);
+    });
+    const hideSubscription = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const loadOptions = useCallback(async () => {
     setOptionsError('');
@@ -259,7 +276,9 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
       <InnerHeader title="Create Gold Loan" onBack={onBack} />
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerClassName="px-4 pb-8">
+        contentContainerClassName="px-4"
+        contentContainerStyle={{ paddingBottom: keyboardHeight + 32 }}
+        automaticallyAdjustKeyboardInsets>
         <Text className="mb-4 text-sm leading-5 text-[#6B7280]">
           Select a registered customer, record pledged jewellery, and enter the agreed loan terms.
         </Text>
