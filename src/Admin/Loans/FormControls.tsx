@@ -22,6 +22,7 @@ export function CustomDropdown({
   onSelect,
   placeholder = 'Select an option',
   required = false,
+  searchable = false,
 }: {
   label: string;
   value: string;
@@ -29,10 +30,15 @@ export function CustomDropdown({
   onSelect: (value: string) => void;
   placeholder?: string;
   required?: boolean;
+  searchable?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const insets = useSafeAreaInsets();
   const selectedLabel = options.find(option => option.value === value)?.label;
+  const filteredOptions = searchable
+    ? options.filter(option => option.label.toLowerCase().includes(search.trim().toLowerCase()))
+    : options;
   return (
     <View className="mb-4">
       <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]">
@@ -42,7 +48,10 @@ export function CustomDropdown({
         accessibilityRole="button"
         accessibilityLabel={label}
         accessibilityState={{ expanded: open }}
-        onPress={() => setOpen(true)}
+        onPress={() => {
+          setSearch('');
+          setOpen(true);
+        }}
         className="min-h-12 flex-row items-center justify-between rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3">
         <Text className={`text-sm ${selectedLabel ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`}>
           {selectedLabel || placeholder}
@@ -61,8 +70,18 @@ export function CustomDropdown({
                 <X size={20} color="#EAD78A" />
               </Pressable>
             </View>
+            {searchable ? (
+              <TextInput
+                accessibilityLabel={`Search ${label}`}
+                value={search}
+                onChangeText={setSearch}
+                placeholder={`Search ${label.toLowerCase()}`}
+                placeholderTextColor="#9AA6A1"
+                className="mx-4 my-3 min-h-11 rounded-xl border border-[#E6E9E3] bg-white px-3.5 text-sm text-[#173F35]"
+              />
+            ) : null}
             <ScrollView keyboardShouldPersistTaps="handled">
-              {options.map(option => (
+              {filteredOptions.map(option => (
                 <Pressable
                   key={option.value}
                   accessibilityRole="button"
@@ -70,6 +89,7 @@ export function CustomDropdown({
                   onPress={() => {
                     onSelect(option.value);
                     setOpen(false);
+                    setSearch('');
                   }}
                   className={`border-b border-[#F1F2EE] px-5 py-4 ${option.value === value ? 'bg-[#EFF9F5]' : 'bg-white'}`}>
                   <Text className={`text-sm ${option.value === value ? 'font-bold text-[#07564B]' : 'text-[#173F35]'}`}>
@@ -77,6 +97,9 @@ export function CustomDropdown({
                   </Text>
                 </Pressable>
               ))}
+              {filteredOptions.length === 0 ? (
+                <Text className="px-5 py-4 text-sm text-[#6B7E76]">No matching options.</Text>
+              ) : null}
             </ScrollView>
           </View>
         </View>
@@ -89,10 +112,14 @@ export function DatePicker({
   label,
   value,
   onChange,
+  minimumDate,
+  maximumDate = new Date(),
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  minimumDate?: Date;
+  maximumDate?: Date | null;
 }) {
   const [open, setOpen] = useState(false);
   const [draftDate, setDraftDate] = useState(new Date());
@@ -101,7 +128,7 @@ export function DatePicker({
     : new Date(new Date().getFullYear() - 18, 0, 1);
   const dateLabel = value
     ? new Date(`${value}T00:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
-    : 'Select date of birth';
+    : `Select ${label.toLowerCase()}`;
 
   const formatDate = (date: Date) => {
     const year = date.getFullYear();
@@ -115,7 +142,8 @@ export function DatePicker({
       DateTimePickerAndroid.open({
         value: selectedDate,
         mode: 'date',
-        maximumDate: new Date(),
+        ...(minimumDate ? { minimumDate } : {}),
+        ...(maximumDate ? { maximumDate } : {}),
         startOnYearSelection: true,
         onChange: (event, date) => {
           if (event.type === 'set' && date) onChange(formatDate(date));
@@ -148,7 +176,8 @@ export function DatePicker({
                 value={draftDate}
                 mode="date"
                 display="spinner"
-                maximumDate={new Date()}
+                minimumDate={minimumDate}
+                maximumDate={maximumDate || undefined}
                 onChange={(_event, date) => {
                   if (date) setDraftDate(date);
                 }}
@@ -183,6 +212,7 @@ export function Field({
   required = false,
   multiline = false,
   autoCapitalize = 'sentences',
+  readOnly = false,
 }: {
   label: string;
   value: string;
@@ -192,6 +222,7 @@ export function Field({
   required?: boolean;
   multiline?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  readOnly?: boolean;
 }) {
   return (
     <View className="mb-4">
@@ -207,8 +238,9 @@ export function Field({
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
         multiline={multiline}
+        editable={!readOnly}
         textAlignVertical={multiline ? 'top' : 'center'}
-        className={`rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3 text-sm text-[#173F35] ${multiline ? 'min-h-[88px]' : 'min-h-[48px]'}`}
+        className={`rounded-xl border border-[#E6E9E3] px-3.5 py-3 text-sm text-[#173F35] ${readOnly ? 'bg-[#F3F4F1]' : 'bg-white'} ${multiline ? 'min-h-[88px]' : 'min-h-[48px]'}`}
       />
     </View>
   );
