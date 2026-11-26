@@ -11,13 +11,17 @@ import {
   View,
 } from 'react-native';
 import {
+  CheckCircle,
   Copy,
   Eye,
+  Layers,
   LayoutGrid,
   List,
   Pencil,
   Search,
+  Store,
   Trash2,
+  XCircle,
   X,
 } from 'lucide-react-native';
 import api from '../../api';
@@ -79,15 +83,22 @@ function SummaryCard({
   label,
   value,
   accent,
+  icon: Icon,
 }: {
   label: string;
   value: number;
   accent: string;
+  icon: typeof Layers;
 }) {
   return (
-    <View className={`min-w-[45%] flex-1 rounded-2xl p-4 ${accent}`}>
-      <Text className="text-xs font-semibold text-white/80">{label}</Text>
-      <Text className="mt-1 text-2xl font-extrabold text-white">
+    <View className="flex-1 basis-[145px] rounded-2xl border border-[#ECE7D8] bg-white p-4">
+      <View
+        className={`mb-3 h-10 w-10 items-center justify-center rounded-xl ${accent}`}
+      >
+        <Icon size={20} color="#FFFFFF" strokeWidth={2} />
+      </View>
+      <Text className="text-xs font-semibold text-[#6B7280]">{label}</Text>
+      <Text className="mt-1 text-xl font-extrabold text-[#173F35]">
         {Number(value || 0).toLocaleString('en-IN')}
       </Text>
     </View>
@@ -100,11 +111,13 @@ function StatusBadge({ status }: { status: string }) {
     <View
       className={`rounded-full px-2.5 py-1 ${
         active ? 'bg-[#DCFCE7]' : 'bg-[#F3F4F6]'
-      }`}>
+      }`}
+    >
       <Text
         className={`text-[10px] font-bold capitalize ${
           active ? 'text-[#166534]' : 'text-[#4B5563]'
-        }`}>
+        }`}
+      >
         {status || 'unknown'}
       </Text>
     </View>
@@ -275,29 +288,25 @@ export default function Subscriptions({
   };
 
   const duplicatePlan = (plan: SubscriptionPlan) => {
-    Alert.alert(
-      'Duplicate plan?',
-      `Create a copy of ${plan.plan_name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Duplicate',
-          onPress: async () => {
-            try {
-              await api.post(
-                `/super-admin/subscription-plans/${plan.id}/duplicate`,
-              );
-              await loadPlans();
-            } catch (error) {
-              Alert.alert(
-                'Unable to duplicate plan',
-                getErrorMessage(error, 'Could not duplicate subscription plan.'),
-              );
-            }
-          },
+    Alert.alert('Duplicate plan?', `Create a copy of ${plan.plan_name}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Duplicate',
+        onPress: async () => {
+          try {
+            await api.post(
+              `/super-admin/subscription-plans/${plan.id}/duplicate`,
+            );
+            await loadPlans();
+          } catch (error) {
+            Alert.alert(
+              'Unable to duplicate plan',
+              getErrorMessage(error, 'Could not duplicate subscription plan.'),
+            );
+          }
         },
-      ],
-    );
+      },
+    ]);
   };
 
   const deletePlan = (plan: SubscriptionPlan) => {
@@ -331,21 +340,24 @@ export default function Subscriptions({
         accessibilityRole="button"
         accessibilityLabel={`View ${plan.plan_name}`}
         onPress={() => viewPlan(plan)}
-        className="rounded-lg bg-[#F3F4F6] p-2">
+        className="rounded-lg bg-[#F3F4F6] p-2"
+      >
         <Eye size={16} color="#4B5563" />
       </Pressable>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Edit ${plan.plan_name}`}
         onPress={() => openEdit(plan)}
-        className="rounded-lg bg-[#EFF6FF] p-2">
+        className="rounded-lg bg-[#EFF6FF] p-2"
+      >
         <Pencil size={16} color="#1D4ED8" />
       </Pressable>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Duplicate ${plan.plan_name}`}
         onPress={() => duplicatePlan(plan)}
-        className="rounded-lg bg-[#F5F3FF] p-2">
+        className="rounded-lg bg-[#F5F3FF] p-2"
+      >
         <Copy size={16} color="#6D28D9" />
       </Pressable>
       <Pressable
@@ -354,7 +366,8 @@ export default function Subscriptions({
           plan.status === 'active' ? 'Deactivate plan' : 'Activate plan'
         }
         onPress={() => toggleStatus(plan)}
-        className="rounded-lg bg-[#FFFBEB] px-2.5 py-2">
+        className="rounded-lg bg-[#FFFBEB] px-2.5 py-2"
+      >
         <Text className="text-[10px] font-bold text-[#92400E]">
           {plan.status === 'active' ? 'Deactivate' : 'Activate'}
         </Text>
@@ -363,7 +376,8 @@ export default function Subscriptions({
         accessibilityRole="button"
         accessibilityLabel={`Delete ${plan.plan_name}`}
         onPress={() => deletePlan(plan)}
-        className="rounded-lg bg-[#FEF2F2] p-2">
+        className="rounded-lg bg-[#FEF2F2] p-2"
+      >
         <Trash2 size={16} color="#B91C1C" />
       </Pressable>
     </View>
@@ -372,7 +386,8 @@ export default function Subscriptions({
   const renderPlan = (plan: SubscriptionPlan) => (
     <View
       key={plan.id}
-      className="mb-3 rounded-2xl border border-[#ECE7D8] bg-white p-4">
+      className="mb-3 rounded-2xl border border-[#ECE7D8] bg-white p-4"
+    >
       <View className="flex-row items-start justify-between gap-3">
         <View className="min-w-0 flex-1">
           <Text className="text-[10px] font-bold text-[#08745D]">
@@ -410,7 +425,8 @@ export default function Subscriptions({
   const renderTablePlan = (plan: SubscriptionPlan, index: number) => (
     <View
       key={plan.id}
-      className="mb-3 rounded-2xl border border-[#ECE7D8] bg-white p-4">
+      className="mb-3 rounded-2xl border border-[#ECE7D8] bg-white p-4"
+    >
       <View className="flex-row items-start justify-between">
         <Text className="text-[10px] font-bold text-[#9CA3AF]">
           #{(page - 1) * PAGE_SIZE + index + 1} · ID {String(plan.id)}
@@ -471,27 +487,32 @@ export default function Subscriptions({
             tintColor="#08745D"
           />
         }
-        contentContainerClassName="px-4 pb-24 pt-4">
+        contentContainerClassName="px-4 pb-24 pt-4"
+      >
         <View className="mb-4 flex-row flex-wrap gap-3">
           <SummaryCard
             label="Total Plans"
             value={summary.total_plans || 0}
             accent="bg-[#123B32]"
+            icon={Layers}
           />
           <SummaryCard
             label="Active Plans"
             value={summary.active_plans || 0}
             accent="bg-[#17364D]"
+            icon={CheckCircle}
           />
           <SummaryCard
             label="Inactive Plans"
             value={summary.inactive_plans || 0}
             accent="bg-[#4A2B25]"
+            icon={XCircle}
           />
           <SummaryCard
             label="Shops Using Plans"
             value={summary.total_shops_using || 0}
             accent="bg-[#443719]"
+            icon={Store}
           />
         </View>
 
@@ -514,7 +535,8 @@ export default function Subscriptions({
                 accessibilityRole="button"
                 accessibilityLabel="Clear search"
                 onPress={() => setSearch('')}
-                className="p-1">
+                className="p-1"
+              >
                 <X size={16} color="#6B7280" />
               </Pressable>
             ) : null}
@@ -532,11 +554,13 @@ export default function Subscriptions({
                   }}
                   className={`rounded-full px-3 py-1.5 ${
                     status === value ? 'bg-[#08745D]' : 'bg-[#F3F4F6]'
-                  }`}>
+                  }`}
+                >
                   <Text
                     className={`text-[11px] font-bold capitalize ${
                       status === value ? 'text-white' : 'text-[#4B5563]'
-                    }`}>
+                    }`}
+                  >
                     {value}
                   </Text>
                 </Pressable>
@@ -550,7 +574,8 @@ export default function Subscriptions({
                 onPress={() => setViewMode('card')}
                 className={`p-2 ${
                   viewMode === 'card' ? 'bg-[#E7F3EF]' : 'bg-white'
-                }`}>
+                }`}
+              >
                 <LayoutGrid
                   size={16}
                   color={viewMode === 'card' ? '#08745D' : '#9CA3AF'}
@@ -563,7 +588,8 @@ export default function Subscriptions({
                 onPress={() => setViewMode('table')}
                 className={`p-2 ${
                   viewMode === 'table' ? 'bg-[#E7F3EF]' : 'bg-white'
-                }`}>
+                }`}
+              >
                 <List
                   size={16}
                   color={viewMode === 'table' ? '#08745D' : '#9CA3AF'}
@@ -603,7 +629,8 @@ export default function Subscriptions({
               onPress={() => setPage(current => Math.max(1, current - 1))}
               className={`rounded-lg border border-[#E5E7EB] px-3 py-2 ${
                 page <= 1 || loading ? 'opacity-40' : ''
-              }`}>
+              }`}
+            >
               <Text className="text-xs font-semibold text-[#374151]">
                 Previous
               </Text>
@@ -614,10 +641,13 @@ export default function Subscriptions({
             <Pressable
               accessibilityRole="button"
               disabled={page >= totalPages || loading}
-              onPress={() => setPage(current => Math.min(totalPages, current + 1))}
+              onPress={() =>
+                setPage(current => Math.min(totalPages, current + 1))
+              }
               className={`rounded-lg border border-[#E5E7EB] px-3 py-2 ${
                 page >= totalPages || loading ? 'opacity-40' : ''
-              }`}>
+              }`}
+            >
               <Text className="text-xs font-semibold text-[#374151]">Next</Text>
             </Pressable>
           </View>
@@ -628,7 +658,8 @@ export default function Subscriptions({
         accessibilityRole="button"
         accessibilityLabel="Create subscription plan"
         onPress={openCreate}
-        className="absolute bottom-4 right-4 z-20 h-14 w-14 items-center justify-center rounded-full bg-[#08745D] shadow-lg">
+        className="absolute bottom-4 right-4 z-20 h-14 w-14 items-center justify-center rounded-full bg-[#08745D] shadow-lg"
+      >
         <Text className="text-3xl font-black leading-9 text-white">+</Text>
       </Pressable>
 
@@ -638,7 +669,8 @@ export default function Subscriptions({
           transparent
           animationType="slide"
           onRequestClose={() => setModal(null)}
-          statusBarTranslucent>
+          statusBarTranslucent
+        >
           <View className="flex-1 justify-end bg-black/50">
             <View className="max-h-[85%] rounded-t-3xl bg-white">
               <View className="flex-row items-center justify-between rounded-t-3xl bg-[#153B35] px-5 py-4">
@@ -654,7 +686,8 @@ export default function Subscriptions({
                   accessibilityRole="button"
                   accessibilityLabel="Close plan details"
                   onPress={() => setModal(null)}
-                  className="rounded-full p-2">
+                  className="rounded-full p-2"
+                >
                   <X size={20} color="#FFFFFF" />
                 </Pressable>
               </View>
@@ -664,10 +697,7 @@ export default function Subscriptions({
                     label="Description"
                     value={selected.description || '—'}
                   />
-                  <DetailRow
-                    label="Status"
-                    value={selected.status || '—'}
-                  />
+                  <DetailRow label="Status" value={selected.status || '—'} />
                   <DetailRow
                     label="Monthly"
                     value={formatAmount(selected.monthly_price)}
@@ -694,23 +724,43 @@ export default function Subscriptions({
                   />
                   <DetailRow
                     label="Branches"
-                    value={selected.max_branches == null ? 'Unlimited' : String(selected.max_branches)}
+                    value={
+                      selected.max_branches == null
+                        ? 'Unlimited'
+                        : String(selected.max_branches)
+                    }
                   />
                   <DetailRow
                     label="Staff"
-                    value={selected.max_staff == null ? 'Unlimited' : String(selected.max_staff)}
+                    value={
+                      selected.max_staff == null
+                        ? 'Unlimited'
+                        : String(selected.max_staff)
+                    }
                   />
                   <DetailRow
                     label="Users"
-                    value={selected.max_users == null ? 'Unlimited' : String(selected.max_users)}
+                    value={
+                      selected.max_users == null
+                        ? 'Unlimited'
+                        : String(selected.max_users)
+                    }
                   />
                   <DetailRow
                     label="Products"
-                    value={selected.max_products == null ? 'Unlimited' : String(selected.max_products)}
+                    value={
+                      selected.max_products == null
+                        ? 'Unlimited'
+                        : String(selected.max_products)
+                    }
                   />
                   <DetailRow
                     label="Monthly Invoices"
-                    value={selected.max_monthly_invoices == null ? 'Unlimited' : String(selected.max_monthly_invoices)}
+                    value={
+                      selected.max_monthly_invoices == null
+                        ? 'Unlimited'
+                        : String(selected.max_monthly_invoices)
+                    }
                   />
                   <DetailRow
                     label="Grace Period"
@@ -736,7 +786,8 @@ export default function Subscriptions({
                       .map(([key]) => (
                         <View
                           key={key}
-                          className="rounded-full bg-[#DCFCE7] px-3 py-1.5">
+                          className="rounded-full bg-[#DCFCE7] px-3 py-1.5"
+                        >
                           <Text className="text-xs font-semibold text-[#166534]">
                             {key.replace(/([A-Z])/g, ' $1')}
                           </Text>
@@ -758,7 +809,8 @@ export default function Subscriptions({
                     {selected.history.map(item => (
                       <Text
                         key={item.id}
-                        className="mt-2 rounded-xl border border-[#E5E7EB] p-3 text-xs text-[#6B7280]">
+                        className="mt-2 rounded-xl border border-[#E5E7EB] p-3 text-xs text-[#6B7280]"
+                      >
                         {item.changed_by_name || 'System'} ·{' '}
                         {formatDate(item.changed_at)}
                       </Text>

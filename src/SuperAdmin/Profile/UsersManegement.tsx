@@ -220,15 +220,17 @@ function StatCard({
   color: string;
 }) {
   return (
-    <View className={`w-[48%] rounded-2xl p-3.5 ${color}`}>
-      <View className="h-9 w-9 items-center justify-center rounded-xl bg-white/15">
-        <Icon size={18} color="#FFFFFF" />
+    <View className="flex-1 basis-[145px] rounded-2xl border border-[#ECE7D8] bg-white p-4">
+      <View
+        className={`mb-3 h-10 w-10 items-center justify-center rounded-xl ${color}`}
+      >
+        <Icon size={20} color="#FFFFFF" strokeWidth={2} />
       </View>
-      <Text className="mt-3 text-xs font-semibold text-white/80">{label}</Text>
-      <Text className="mt-0.5 text-2xl font-extrabold text-white">
+      <Text className="text-xs font-semibold text-[#6B7280]">{label}</Text>
+      <Text className="mt-1 text-xl font-extrabold text-[#173F35]">
         {value.toLocaleString('en-IN')}
       </Text>
-      <Text className="mt-1 text-[10px] text-white/70">{caption}</Text>
+      <Text className="mt-2 text-[10px] text-[#6B7280]">{caption}</Text>
     </View>
   );
 }
@@ -596,7 +598,7 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
             />
           }
         >
-          <View className="mb-4 flex-row flex-wrap justify-between gap-y-3">
+          <View className="mb-4 flex-row flex-wrap gap-3">
             {stats.map(stat => (
               <StatCard key={stat.label} {...stat} />
             ))}

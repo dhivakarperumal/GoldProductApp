@@ -441,14 +441,6 @@ function MetricCard({
   growth?: number;
   badge?: string;
 }) {
-  const tones: Record<string, string> = {
-    forest: 'border-t-emerald-500 bg-[#F0FDF4]',
-    gold: 'border-t-amber-500 bg-[#FFFBEB]',
-    blue: 'border-t-sky-500 bg-[#F0F9FF]',
-    indigo: 'border-t-violet-500 bg-[#F5F3FF]',
-    teal: 'border-t-teal-500 bg-[#F0FDFA]',
-    rust: 'border-t-rose-500 bg-[#FFF1F2]',
-  };
   const iconTones: Record<string, string> = {
     forest: 'bg-emerald-700',
     gold: 'bg-amber-500',
@@ -459,32 +451,22 @@ function MetricCard({
   };
   const isPositive = (growth || 0) >= 0;
   return (
-    <View
-      className={`min-w-[47%] flex-1 rounded-2xl border border-[#E5E7EB] border-t-4 p-4 ${
-        tones[tone] || tones.forest
-      }`}
-    >
-      <View className="flex-row items-start justify-between">
-        <View className="flex-1 pr-2">
-          <Text className="text-[10px] font-extrabold uppercase tracking-wider text-[#6B7280]">
-            {title}
-          </Text>
-          <Text
-            numberOfLines={1}
-            className="mt-2 text-xl font-black text-[#111827]"
-          >
-            {formatCompactCurrency(amount)}
-          </Text>
-        </View>
-        <View
-          className={`h-10 w-10 items-center justify-center rounded-xl ${
-            iconTones[tone] || iconTones.forest
-          }`}
-        >
-          <Icon size={19} color="#FFFFFF" />
-        </View>
+    <View className="flex-1 basis-[145px] rounded-2xl border border-[#ECE7D8] bg-white p-4">
+      <View
+        className={`mb-3 h-10 w-10 items-center justify-center rounded-xl ${
+          iconTones[tone] || iconTones.forest
+        }`}
+      >
+        <Icon size={20} color="#FFFFFF" strokeWidth={2} />
       </View>
-      <View className="mt-3 min-h-5 flex-row items-center gap-1">
+      <Text className="text-xs font-semibold text-[#6B7280]">{title}</Text>
+      <Text
+        numberOfLines={1}
+        className="mt-1 text-xl font-extrabold text-[#173F35]"
+      >
+        {formatCompactCurrency(amount)}
+      </Text>
+      <View className="mt-2 min-h-5 flex-row items-center gap-1">
         {growth !== undefined ? (
           isPositive ? (
             <TrendingUp size={14} color="#059669" />
@@ -505,7 +487,7 @@ function MetricCard({
           {subtext}
         </Text>
         {badge ? (
-          <Text className="rounded-full bg-white px-2 py-1 text-[9px] font-extrabold text-[#075C51]">
+          <Text className="rounded-full bg-[#F8F7F2] px-2 py-1 text-[9px] font-extrabold text-[#075C51]">
             {badge}
           </Text>
         ) : null}
@@ -1442,9 +1424,7 @@ export default function Revenue() {
                       {formatCompactCurrency(item.value)}
                     </Text>
                     <View
-                      className={`w-[58%] rounded-t-lg ${
-                        chartMode === 'growth' ? 'bg-[#0D9488]' : 'bg-[#07564B]'
-                      }`}
+                      className="w-[58%] rounded-t-lg bg-[#B8860B]"
                       style={{ height }}
                     />
                     <Text
@@ -1648,7 +1628,7 @@ export default function Revenue() {
 
         {renderFilterSummary()}
 
-        <View className="flex-row flex-wrap gap-2">
+        <View className="flex-row flex-wrap gap-3">
           {metricCards.map(card => (
             <MetricCard
               key={card.id}
