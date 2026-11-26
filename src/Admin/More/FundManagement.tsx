@@ -140,7 +140,7 @@ export function TimePickerField({ value, onChange }: { value: string; onChange: 
         <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]">Time</Text>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Choose transaction time"
+          accessibilityLabel="Choose time"
           onPress={openPicker}
           className="min-h-12 justify-center rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3">
           <Text className="text-sm text-[#173F35]">{value}</Text>

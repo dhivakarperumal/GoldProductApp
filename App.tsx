@@ -32,6 +32,10 @@ import Categories from './src/Admin/Products/Categories';
 import Metals from './src/Admin/Products/Metals';
 import type { InventoryScreen } from './src/Admin/Products/inventory';
 import AdminProfile from './src/Admin/Profile/Profile';
+import More, { MoreScreen } from './src/Admin/More/More';
+import FundManagement from './src/Admin/More/FundManagement';
+import DailyGoldRate from './src/Admin/More/DailyGoldRate';
+import InnerHeader from './src/Components/InnerHeader';
 import AdminHeader from './src/Admin/Navigation/AdminHeader';
 import AdminTabBar, { AdminTab } from './src/Admin/Navigation/AdminTabBar';
 import BottomBar, {
@@ -75,6 +79,7 @@ function AppContent() {
   const [adminProductScreen, setAdminProductScreen] =
     useState<InventoryScreen>('all');
   const [adminProductId, setAdminProductId] = useState<number | string | null>(null);
+  const [adminMoreScreen, setAdminMoreScreen] = useState<MoreScreen>('home');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionCheckAttempt, setSessionCheckAttempt] = useState(0);
@@ -216,6 +221,7 @@ function AppContent() {
     setAdminLoanScreen('list');
     setAdminProductScreen('all');
     setAdminProductId(null);
+    setAdminMoreScreen('home');
   };
 
   const navigateAdminProduct = (
@@ -224,6 +230,10 @@ function AppContent() {
   ) => {
     setAdminProductScreen(screen);
     setAdminProductId(productId ?? null);
+  };
+
+  const navigateAdminMore = (screen: MoreScreen) => {
+    setAdminMoreScreen(screen);
   };
 
   if (isAuthenticated === null) {
@@ -293,7 +303,10 @@ function AppContent() {
       adminTab === 'Loans' && adminLoanScreen !== 'list';
     const isInnerProductScreen =
       adminTab === 'Products' && adminProductScreen !== 'all';
-    const isInnerAdminScreen = isInnerLoanScreen || isInnerProductScreen;
+    const isInnerMoreScreen =
+      adminTab === 'More' && adminMoreScreen !== 'home';
+    const isInnerAdminScreen =
+      isInnerLoanScreen || isInnerProductScreen || isInnerMoreScreen;
     return (
       <View className="flex-1 bg-white">
         {!isInnerAdminScreen ? (
@@ -301,7 +314,10 @@ function AppContent() {
             adminName={adminName}
             adminEmail={adminEmail}
             onLogout={handleLogout}
-            onProfilePress={() => navigateAdminTab('More')}
+            onProfilePress={() => {
+              navigateAdminTab('More');
+              setAdminMoreScreen('profile');
+            }}
           />
         ) : null}
         {adminTab === 'Dashboard' ? (
@@ -335,8 +351,21 @@ function AppContent() {
           <Metals onBack={() => navigateAdminProduct('all')} />
         ) : adminTab === 'Products' ? (
           <Products onNavigate={navigateAdminProduct} />
+        ) : adminTab === 'More' && adminMoreScreen === 'funds' ? (
+          <FundManagement onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'dailyRates' ? (
+          <DailyGoldRate onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'profile' ? (
+          <>
+            <InnerHeader
+              title="Admin Profile"
+              sectionLabel="More"
+              onBack={() => setAdminMoreScreen('home')}
+            />
+            <AdminProfile />
+          </>
         ) : adminTab === 'More' ? (
-          <AdminProfile />
+          <More onNavigate={navigateAdminMore} />
         ) : (
           <AdminSection section={adminTab} />
         )}
