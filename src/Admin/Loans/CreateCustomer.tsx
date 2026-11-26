@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -10,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import api from '../../api';
+import { useCustomAlert } from '../../Components/CustomAlert';
 import { Field, FormHeader, ChoiceChips, SubmitButton, errorMessage } from './FormControls';
 
 type CustomerForm = {
@@ -60,6 +60,7 @@ function emptyCustomer(): CustomerForm {
 }
 
 export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProps) {
+  const { showAlert } = useCustomAlert();
   const [form, setForm] = useState<CustomerForm>(emptyCustomer);
   const [password, setPassword] = useState('');
   const [photo, setPhoto] = useState<CustomerPhoto | null>(null);
@@ -82,17 +83,17 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
       });
       if (result.didCancel) return;
       if (result.errorMessage) {
-        Alert.alert('Photo unavailable', result.errorMessage);
+        showAlert('Photo unavailable', result.errorMessage, { variant: 'error' });
         return;
       }
       const asset = result.assets?.[0];
       if (!asset?.uri) {
-        Alert.alert('Photo unavailable', 'Choose a JPG or PNG image and try again.');
+        showAlert('Photo unavailable', 'Choose a JPG or PNG image and try again.', { variant: 'error' });
         return;
       }
       const type = asset.type || 'image/jpeg';
       if (!['image/jpeg', 'image/png'].includes(type)) {
-        Alert.alert('Unsupported photo', 'Customer photos must be JPG or PNG.');
+        showAlert('Unsupported photo', 'Customer photos must be JPG or PNG.', { variant: 'warning' });
         return;
       }
       setPhoto({
@@ -102,7 +103,7 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
       });
       setPhotoUrl('');
     } catch (error) {
-      Alert.alert('Photo unavailable', errorMessage(error));
+      showAlert('Photo unavailable', errorMessage(error), { variant: 'error' });
     }
   };
 
@@ -122,19 +123,20 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
       form.guarantor_relationship,
     ];
     if (requiredValues.some(value => !value.trim())) {
-      Alert.alert('Required information', 'Complete all fields marked with *.');
+      showAlert('Required information', 'Complete all fields marked with *.', { variant: 'warning' });
       return;
     }
     const customerPassword = password.trim() || form.mobile.trim();
     if (customerPassword.length < 8) {
-      Alert.alert(
+      showAlert(
         'Password too short',
         'Enter a password with at least 8 characters. By default, the customer mobile number is used.',
+        { variant: 'warning' },
       );
       return;
     }
     if (!photoUrl && !photo) {
-      Alert.alert('Customer photo required', 'Choose a JPG or PNG customer photo.');
+      showAlert('Customer photo required', 'Choose a JPG or PNG customer photo.', { variant: 'warning' });
       return;
     }
 
@@ -166,11 +168,13 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
       if (response.status < 200 || response.status >= 300) {
         throw new Error('Customer could not be saved.');
       }
-      Alert.alert('Customer created', `${form.full_name} was added successfully.`);
-      onCreated();
+      showAlert('Customer created', `${form.full_name} was added successfully.`, {
+        variant: 'success',
+        buttons: [{ text: 'Done', onPress: onCreated }],
+      });
     } catch (error) {
       if (__DEV__) console.warn('[Loans] Could not create customer:', error);
-      Alert.alert('Could not create customer', errorMessage(error));
+      showAlert('Could not create customer', errorMessage(error), { variant: 'error' });
     } finally {
       setSaving(false);
     }

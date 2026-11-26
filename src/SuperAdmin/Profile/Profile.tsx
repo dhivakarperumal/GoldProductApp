@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -25,6 +24,7 @@ import {
   UserRound,
 } from 'lucide-react-native';
 import api from '../../api';
+import { useCustomAlert } from '../../Components/CustomAlert';
 
 type ProfileData = {
   user_id?: string;
@@ -67,6 +67,7 @@ function dateLabel(value: string | undefined) {
 }
 
 export default function Profile() {
+  const { showAlert } = useCustomAlert();
   const [profile, setProfile] = useState<ProfileData>({
     notification_preferences: { email: true, orders: true },
   });
@@ -137,7 +138,7 @@ export default function Profile() {
       !(profile.username || '').trim() ||
       !(profile.email || '').trim()
     ) {
-      Alert.alert('Missing details', 'Name, username, and email are required.');
+      showAlert('Missing details', 'Name, username, and email are required.', { variant: 'warning' });
       return;
     }
     setSaving(true);
@@ -152,11 +153,12 @@ export default function Profile() {
       if (response.data?.user) {
         setProfile(current => ({ ...current, ...response.data.user }));
       }
-      Alert.alert('Saved', 'Profile saved successfully.');
+      showAlert('Saved', 'Profile saved successfully.', { variant: 'success' });
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to save',
         getErrorMessage(error, 'Unable to save your profile.'),
+        { variant: 'error' },
       );
     } finally {
       setSaving(false);
@@ -165,18 +167,19 @@ export default function Profile() {
 
   const changePassword = async () => {
     if (!passwords.current) {
-      Alert.alert('Password required', 'Enter your current password.');
+      showAlert('Password required', 'Enter your current password.', { variant: 'warning' });
       return;
     }
     if (passwords.next.length < 8) {
-      Alert.alert(
+      showAlert(
         'Password too short',
         'New password must be at least 8 characters.',
+        { variant: 'warning' },
       );
       return;
     }
     if (passwords.next !== passwords.confirm) {
-      Alert.alert('Passwords do not match', 'Re-enter the new password.');
+      showAlert('Passwords do not match', 'Re-enter the new password.', { variant: 'warning' });
       return;
     }
     setChangingPassword(true);
@@ -186,11 +189,12 @@ export default function Profile() {
         newPassword: passwords.next,
       });
       setPasswords({ current: '', next: '', confirm: '' });
-      Alert.alert('Updated', 'Password updated successfully.');
+      showAlert('Updated', 'Password updated successfully.', { variant: 'success' });
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to update',
         getErrorMessage(error, 'Unable to update your password.'),
+        { variant: 'error' },
       );
     } finally {
       setChangingPassword(false);
@@ -198,32 +202,36 @@ export default function Profile() {
   };
 
   const removeProfilePhoto = () => {
-    Alert.alert('Remove profile photo?', 'Your profile photo will be removed.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          setRemovingPhoto(true);
-          try {
-            const response = await api.delete('/auth/me/photo');
-            if (response.data?.user) {
-              setProfile(current => ({ ...current, ...response.data.user }));
-            } else {
-              setProfile(current => ({ ...current, profile_image: undefined }));
+    showAlert('Remove profile photo?', 'Your profile photo will be removed.', {
+      variant: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            setRemovingPhoto(true);
+            try {
+              const response = await api.delete('/auth/me/photo');
+              if (response.data?.user) {
+                setProfile(current => ({ ...current, ...response.data.user }));
+              } else {
+                setProfile(current => ({ ...current, profile_image: undefined }));
+              }
+              showAlert('Removed', 'Profile photo removed.', { variant: 'success' });
+            } catch (error) {
+              showAlert(
+                'Unable to remove',
+                getErrorMessage(error, 'Unable to remove profile photo.'),
+                { variant: 'error' },
+              );
+            } finally {
+              setRemovingPhoto(false);
             }
-            Alert.alert('Removed', 'Profile photo removed.');
-          } catch (error) {
-            Alert.alert(
-              'Unable to remove',
-              getErrorMessage(error, 'Unable to remove profile photo.'),
-            );
-          } finally {
-            setRemovingPhoto(false);
-          }
+          },
         },
-      },
-    ]);
+      ],
+    });
   };
 
   const changePreference = async (
@@ -250,9 +258,10 @@ export default function Profile() {
         ...current,
         notification_preferences: previous,
       }));
-      Alert.alert(
+      showAlert(
         'Unable to save',
         getErrorMessage(error, 'Unable to save notification preference.'),
+        { variant: 'error' },
       );
     } finally {
       setSavingPreference(false);

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import api from '../../api';
+import { useCustomAlert } from '../../Components/CustomAlert';
 import { ChoiceChips, Field, FormHeader, SubmitButton, errorMessage } from './FormControls';
 
 type Customer = {
@@ -89,6 +89,7 @@ function emptyLoan(): LoanForm {
 }
 
 export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
+  const { showAlert } = useCustomAlert();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [interestTypes, setInterestTypes] = useState<InterestType[]>([]);
   const [goldRates, setGoldRates] = useState<GoldRate[]>([]);
@@ -143,19 +144,19 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
     const stoneWeight = Number(form.stone_weight || 0);
     const interestRate = Number(form.interest_rate);
     if (!form.customer_id) {
-      Alert.alert('Customer required', 'Select a customer for this loan.');
+      showAlert('Customer required', 'Select a customer for this loan.', { variant: 'warning' });
       return;
     }
     if (!form.jewellery_type.trim() || !form.gold_purity.trim()) {
-      Alert.alert('Pledged gold required', 'Enter the jewellery type and purity.');
+      showAlert('Pledged gold required', 'Enter the jewellery type and purity.', { variant: 'warning' });
       return;
     }
     if (!(grossWeight > 0) || stoneWeight < 0 || grossWeight <= stoneWeight) {
-      Alert.alert('Invalid weight', 'Gross weight must be greater than stone weight.');
+      showAlert('Invalid weight', 'Gross weight must be greater than stone weight.', { variant: 'warning' });
       return;
     }
     if (!(Number(form.principal_amount) > 0)) {
-      Alert.alert('Loan amount required', 'Enter a loan amount greater than zero.');
+      showAlert('Loan amount required', 'Enter a loan amount greater than zero.', { variant: 'warning' });
       return;
     }
     if (
@@ -163,11 +164,11 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
       (form.interest_type !== 'fixed' && !form.interest_rate.trim()) ||
       (form.interest_rate.trim() && interestRate < 0)
     ) {
-      Alert.alert('Interest rate required', 'Enter a valid non-negative interest rate.');
+      showAlert('Interest rate required', 'Enter a valid non-negative interest rate.', { variant: 'warning' });
       return;
     }
     if (!form.interest_type) {
-      Alert.alert('Interest method required', 'Choose an enabled interest method.');
+      showAlert('Interest method required', 'Choose an enabled interest method.', { variant: 'warning' });
       return;
     }
     if (
@@ -175,7 +176,7 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
       !validDate(form.maturity_date) ||
       form.maturity_date <= form.loan_date
     ) {
-      Alert.alert('Invalid loan dates', 'Maturity date must be after the loan date. Use YYYY-MM-DD.');
+      showAlert('Invalid loan dates', 'Maturity date must be after the loan date. Use YYYY-MM-DD.', { variant: 'warning' });
       return;
     }
     const activeRate = goldRates.find(
@@ -184,9 +185,10 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
         String(rate.purity) === form.gold_purity,
     );
     if (!activeRate) {
-      Alert.alert(
+      showAlert(
         'Gold rate unavailable',
         `No active ${form.metal_type.toLowerCase()} rate matches the selected purity. Configure daily rates first.`,
+        { variant: 'warning' },
       );
       return;
     }
@@ -194,7 +196,7 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
       form.interest_type === 'fixed' &&
       !(Number(form.fixed_interest_amount) > 0)
     ) {
-      Alert.alert('Fixed interest required', 'Enter the fixed interest amount per period.');
+      showAlert('Fixed interest required', 'Enter the fixed interest amount per period.', { variant: 'warning' });
       return;
     }
 
@@ -231,11 +233,13 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
         loan_status: 'Active',
         notes: '',
       });
-      Alert.alert('Loan created', 'The loan was created successfully.');
-      onCreated();
+      showAlert('Loan created', 'The loan was created successfully.', {
+        variant: 'success',
+        buttons: [{ text: 'Done', onPress: onCreated }],
+      });
     } catch (error) {
       if (__DEV__) console.warn('[Loans] Could not create loan:', error);
-      Alert.alert('Could not create loan', errorMessage(error));
+      showAlert('Could not create loan', errorMessage(error), { variant: 'error' });
     } finally {
       setSaving(false);
     }

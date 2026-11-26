@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function FormHeader({
   title,
@@ -7,20 +8,23 @@ export function FormHeader({
   title: string;
   onBack: () => void;
 }) {
+  const insets = useSafeAreaInsets();
   return (
-    <View className="mb-5 flex-row items-center border-b border-[#ECE7D8] bg-white px-4 py-4">
+    <View
+      style={{ paddingTop: insets.top + 10 }}
+      className="mb-5 flex-row items-center bg-[#173F35] px-4 pb-4">
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Back to all loans"
         onPress={onBack}
         className="mr-3 rounded-lg px-2 py-2">
-        <Text className="text-sm font-bold text-[#07564B]">Back</Text>
+        <Text className="text-sm font-bold text-[#EAD78A]">Back</Text>
       </Pressable>
       <View className="flex-1">
-        <Text className="text-xs font-bold uppercase tracking-wide text-[#A77B15]">
+        <Text className="text-xs font-bold uppercase tracking-wide text-[#EAD78A]">
           Loan Management
         </Text>
-        <Text className="mt-0.5 text-lg font-extrabold text-[#173F35]">{title}</Text>
+        <Text className="mt-0.5 text-lg font-extrabold text-white">{title}</Text>
       </View>
     </View>
   );

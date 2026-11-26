@@ -8,7 +8,6 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   StatusBar,
   Text,
@@ -35,6 +34,7 @@ import BottomBar, {
 import TopHeader from './src/SuperAdmin/Navigation/TopHeader';
 import SuperAdminHome from './src/SuperAdmin/Home/Home';
 import Profile from './src/SuperAdmin/Profile/Profile';
+import { CustomAlertProvider, useCustomAlert } from './src/Components/CustomAlert';
 
 type AccountRole = 'admin' | 'superadmin';
 type AdminLoanScreen = 'list' | 'createLoan' | 'createCustomer';
@@ -52,13 +52,16 @@ function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <CustomAlertProvider>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+        <AppContent />
+      </CustomAlertProvider>
     </SafeAreaProvider>
   );
 }
 
 function AppContent() {
+  const { showAlert } = useCustomAlert();
   const [superAdminTab, setSuperAdminTab] = useState<SuperAdminTab>('Home');
   const [adminTab, setAdminTab] = useState<AdminTab>('Dashboard');
   const [adminLoanScreen, setAdminLoanScreen] =
@@ -164,9 +167,10 @@ function AppContent() {
   const handleLogin = (user: LoginUser) => {
     const role = normalizeRole(user.role);
     if (!role) {
-      Alert.alert(
+      showAlert(
         'Sign in failed',
         'Only Admin and Super Admin accounts can access this app.',
+        { variant: 'error' },
       );
       return;
     }
@@ -190,9 +194,10 @@ function AppContent() {
       setAdminName('Super Admin');
       setAdminEmail('');
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Logout failed',
         error instanceof Error ? error.message : 'Unable to end this session.',
+        { variant: 'error' },
       );
     }
   };
@@ -265,14 +270,18 @@ function AppContent() {
   }
 
   if (accountRole === 'admin') {
+    const isInnerLoanScreen =
+      adminTab === 'Loans' && adminLoanScreen !== 'list';
     return (
       <View className="flex-1 bg-white">
-        <AdminHeader
-          adminName={adminName}
-          adminEmail={adminEmail}
-          onLogout={handleLogout}
-          onProfilePress={() => navigateAdminTab('More')}
-        />
+        {!isInnerLoanScreen ? (
+          <AdminHeader
+            adminName={adminName}
+            adminEmail={adminEmail}
+            onLogout={handleLogout}
+            onProfilePress={() => navigateAdminTab('More')}
+          />
+        ) : null}
         {adminTab === 'Dashboard' ? (
           <AdminHome onNavigate={navigateAdminTab} />
         ) : adminTab === 'Loans' && adminLoanScreen === 'createLoan' ? (
