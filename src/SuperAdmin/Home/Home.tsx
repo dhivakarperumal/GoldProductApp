@@ -72,6 +72,8 @@ const currencyFormatter = new Intl.NumberFormat('en-IN', {
   maximumFractionDigits: 0,
 });
 const WELCOME_SLIDE_HEIGHT = 205;
+const CHART_GOLD = '#B8860B';
+const CHART_GOLD_HIGHLIGHT = '#F4C95D';
 
 function formatCount(value: number | undefined) {
   return numberFormatter.format(value || 0);
@@ -171,7 +173,10 @@ function MetricCard({
                 className="flex-1 rounded-t-sm"
                 style={{
                   height: Math.max((point / trendMaximum) * 28, 2),
-                  backgroundColor: accent,
+                  backgroundColor:
+                    index === recentTrend.length - 1
+                      ? CHART_GOLD_HIGHLIGHT
+                      : CHART_GOLD,
                 }}
               />
             ))}
@@ -220,8 +225,14 @@ function MiniBarChart({
                   {currency ? formatCurrency(value) : formatCount(value)}
                 </Text>
                 <View
-                  className="w-[55%] rounded-t-lg bg-[#B8860B]"
-                  style={{ height }}
+                  className="w-[55%] rounded-t-lg"
+                  style={{
+                    height,
+                    backgroundColor:
+                      index === data.length - 1
+                        ? CHART_GOLD_HIGHLIGHT
+                        : CHART_GOLD,
+                  }}
                 />
                 <Text
                   numberOfLines={1}

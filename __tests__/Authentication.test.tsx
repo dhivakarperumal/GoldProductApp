@@ -12,7 +12,6 @@ const mockSetItem = jest.fn();
 const mockRemoveItem = jest.fn();
 const mockGet = jest.fn();
 const mockPost = jest.fn();
-const mockGet = jest.fn();
 const mockSetTokenCache = jest.fn();
 const mockClearTokenCache = jest.fn();
 const activeRenderers: ReactTestRenderer.ReactTestRenderer[] = [];
@@ -31,11 +30,30 @@ jest.mock('../src/api', () => ({
   default: {
     get: (...args: unknown[]) => mockGet(...args),
     post: (...args: unknown[]) => mockPost(...args),
-    get: (...args: unknown[]) => mockGet(...args),
   },
   clearTokenCache: (...args: unknown[]) => mockClearTokenCache(...args),
   setTokenCache: (...args: unknown[]) => mockSetTokenCache(...args),
 }));
+
+jest.mock('@react-native-documents/picker', () => ({
+  errorCodes: {},
+  isErrorWithCode: jest.fn(() => false),
+  pick: jest.fn(),
+  types: {},
+}));
+
+jest.mock('react-native-image-picker', () => ({
+  launchImageLibrary: jest.fn(),
+}));
+
+jest.mock('react-native-pdf', () => {
+  const ReactModule = require('react');
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: () => ReactModule.createElement(View),
+  };
+});
 
 jest.mock('react-native-safe-area-context', () => {
   const ReactModule = require('react');
@@ -191,6 +209,11 @@ test('shows Home sparklines only for metrics with historical data', async () => 
       accessibilityLabel: 'Recent trend for Active Shops',
     }),
   ).toHaveLength(0);
+  expect(
+    renderer.root.findAll(
+      node => node.props.style?.backgroundColor === '#F4C95D',
+    ),
+  ).toHaveLength(6);
 });
 
 test('shows Admin navigation tabs in the requested order', async () => {
@@ -310,7 +333,7 @@ test('shows the welcome screen on first launch and opens login after continuing'
     'true',
   );
   expect(
-    renderer.root.findByProps({ children: 'Super Admin Sign In' }),
+    renderer.root.findByProps({ children: 'Admin Sign In' }),
   ).toBeDefined();
 
   await act(async () => {
@@ -335,7 +358,7 @@ test('shows the welcome screen on first launch and opens login after continuing'
       .props.onPress();
   });
   expect(
-    renderer.root.findByProps({ children: 'Super Admin Sign In' }),
+    renderer.root.findByProps({ children: 'Admin Sign In' }),
   ).toBeDefined();
 });
 
@@ -383,6 +406,9 @@ test('persists the token after a successful login', async () => {
 });
 
 test('routes shop admins to the admin dashboard and its API', async () => {
+  mockGetItem.mockImplementation((key: string) =>
+    Promise.resolve(key === 'hasSeenWelcomeScreen' ? 'true' : null),
+  );
   mockPost.mockResolvedValue({
     data: {
       token: 'admin-token',
@@ -478,7 +504,10 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   expect(mockGet).not.toHaveBeenCalledWith('/products/mine');
 });
 
-test('routes shop admins to the admin dashboard and its API', async () => {
+test('preserves admin dashboard data when returning from another tab', async () => {
+  mockGetItem.mockImplementation((key: string) =>
+    Promise.resolve(key === 'hasSeenWelcomeScreen' ? 'true' : null),
+  );
   mockPost.mockResolvedValue({
     data: {
       token: 'admin-token',
@@ -573,6 +602,22 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   expect(mockGet).toHaveBeenCalledWith('/gold-rates/current');
   expect(mockGet).toHaveBeenCalledWith('/loans');
   expect(mockGet).not.toHaveBeenCalledWith('/products/mine');
+
+  const dashboardRequestCount = mockGet.mock.calls.filter(
+    ([path]) => path === '/dashboard',
+  ).length;
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Loans' }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root
+      .findByProps({ accessibilityLabel: 'Dashboard' })
+      .props.onPress();
+  });
+  expect(
+    mockGet.mock.calls.filter(([path]) => path === '/dashboard'),
+  ).toHaveLength(dashboardRequestCount);
+  expect(renderer.root.findByProps({ children: 'Dashboard Ring' })).toBeDefined();
 });
 
 test('removes the saved token only when Logout is pressed', async () => {

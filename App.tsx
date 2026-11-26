@@ -6,11 +6,14 @@
  */
 
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
+  Alert,
   ActivityIndicator,
   BackHandler,
   Pressable,
   StatusBar,
+  StyleSheet,
   Text,
   useColorScheme,
   View,
@@ -54,6 +57,34 @@ import { CustomAlertProvider, useCustomAlert } from './src/Components/CustomAler
 type AccountRole = 'admin' | 'superadmin';
 type AdminLoanScreen = 'list' | 'createLoan' | 'createCustomer';
 
+const screenStyles = StyleSheet.create({
+  visible: { flex: 1 },
+  hidden: { display: 'none' },
+});
+
+function CachedScreen({
+  cacheKey,
+  visited,
+  active,
+  children,
+}: {
+  cacheKey: string;
+  visited: boolean;
+  active: boolean;
+  children: ReactNode;
+}) {
+  if (!visited) return null;
+
+  return (
+    <View
+      testID={`cached-screen-${cacheKey}`}
+      style={active ? screenStyles.visible : screenStyles.hidden}
+    >
+      {children}
+    </View>
+  );
+}
+
 function normalizeRole(role: unknown): AccountRole | null {
   if (typeof role !== 'string') return null;
   const normalizedRole = role.trim().toLowerCase().replace(/[\s_-]/g, '');
@@ -78,6 +109,9 @@ function App() {
 function AppContent() {
   const { showAlert } = useCustomAlert();
   const [superAdminTab, setSuperAdminTab] = useState<SuperAdminTab>('Home');
+  const [visitedSuperAdminScreens, setVisitedSuperAdminScreens] = useState<
+    Set<SuperAdminTab>
+  >(() => new Set(['Home']));
   const [isPlanFormVisible, setIsPlanFormVisible] = useState(false);
   const [isShopPageFullscreenVisible, setIsShopPageFullscreenVisible] =
     useState(false);
@@ -87,6 +121,9 @@ function AppContent() {
   const [isPaymentManagementVisible, setIsPaymentManagementVisible] =
     useState(false);
   const [adminTab, setAdminTab] = useState<AdminTab>('Dashboard');
+  const [visitedAdminScreens, setVisitedAdminScreens] = useState<Set<string>>(
+    () => new Set(['Dashboard']),
+  );
   const [adminLoanScreen, setAdminLoanScreen] =
     useState<AdminLoanScreen>('list');
   const [adminProductScreen, setAdminProductScreen] =
@@ -264,7 +301,8 @@ function AppContent() {
   };
 
   const handleTabChange = (tab: SuperAdminTab) => {
-    setActiveTab(tab);
+    setSuperAdminTab(tab);
+    setVisitedSuperAdminScreens(current => new Set(current).add(tab));
     if (tab !== 'G Shops') {
       setIsShopPageFullscreenVisible(false);
     }
@@ -286,6 +324,19 @@ function AppContent() {
       setAccountRole(null);
       setAdminName('Super Admin');
       setAdminEmail('');
+      setSuperAdminTab('Home');
+      setVisitedSuperAdminScreens(new Set(['Home']));
+      setAdminTab('Dashboard');
+      setAdminLoanScreen('list');
+      setAdminProductScreen('all');
+      setAdminProductId(null);
+      setAdminMoreScreen('home');
+      setVisitedAdminScreens(new Set(['Dashboard']));
+      setIsPlanFormVisible(false);
+      setIsShopPageFullscreenVisible(false);
+      setIsMyProfileVisible(false);
+      setIsUsersManagementVisible(false);
+      setIsPaymentManagementVisible(false);
     } catch (error) {
       showAlert(
         'Logout failed',
@@ -301,6 +352,22 @@ function AppContent() {
     setAdminProductScreen('all');
     setAdminProductId(null);
     setAdminMoreScreen('home');
+    const defaultRoute =
+      tab === 'Loans'
+        ? 'Loans:list'
+        : tab === 'Products'
+          ? 'Products:all'
+          : tab === 'More'
+            ? 'More:home'
+            : tab;
+    setVisitedAdminScreens(current => new Set(current).add(defaultRoute));
+  };
+
+  const navigateAdminLoan = (screen: AdminLoanScreen) => {
+    setAdminLoanScreen(screen);
+    setVisitedAdminScreens(current =>
+      new Set(current).add(`Loans:${screen}`),
+    );
   };
 
   const navigateAdminProduct = (
@@ -309,10 +376,14 @@ function AppContent() {
   ) => {
     setAdminProductScreen(screen);
     setAdminProductId(productId ?? null);
+    setVisitedAdminScreens(current =>
+      new Set(current).add(`Products:${screen}`),
+    );
   };
 
   const navigateAdminMore = (screen: MoreScreen) => {
     setAdminMoreScreen(screen);
+    setVisitedAdminScreens(current => new Set(current).add(`More:${screen}`));
   };
 
   useEffect(() => {
@@ -471,7 +542,8 @@ function AppContent() {
                 setSessionError(null);
                 setSessionCheckAttempt(attempt => attempt + 1);
               }}
-              className="rounded-xl bg-[#B8860B] px-6 py-3">
+              className="rounded-xl bg-[#B8860B] px-6 py-3"
+            >
               <Text className="font-bold text-white">Retry</Text>
             </Pressable>
           </>
@@ -482,251 +554,226 @@ function AppContent() {
     );
   }
 
+  const activeAdminScreen =
+    adminTab === 'Loans'
+      ? `Loans:${adminLoanScreen}`
+      : adminTab === 'Products'
+        ? `Products:${adminProductScreen}`
+        : adminTab === 'More'
+          ? `More:${adminMoreScreen}`
+          : adminTab;
+
   if (accountRole === 'admin') {
-    const isInnerLoanScreen =
-      adminTab === 'Loans' && adminLoanScreen !== 'list';
-    const isInnerProductScreen =
-      adminTab === 'Products' && adminProductScreen !== 'all';
-    const isInnerMoreScreen =
-      adminTab === 'More' && adminMoreScreen !== 'home';
     const isInnerAdminScreen =
-      isInnerLoanScreen || isInnerProductScreen || isInnerMoreScreen;
+      (adminTab === 'Loans' && adminLoanScreen !== 'list') ||
+      (adminTab === 'Products' && adminProductScreen !== 'all') ||
+      (adminTab === 'More' && adminMoreScreen !== 'home');
+
     return (
       <View className="flex-1 bg-white">
-        {!isInnerAdminScreen ? (
+        <View style={isInnerAdminScreen ? screenStyles.hidden : undefined}>
           <AdminHeader
             adminName={adminName}
             adminEmail={adminEmail}
             onLogout={handleLogout}
             onProfilePress={() => {
               navigateAdminTab('More');
-              setAdminMoreScreen('profile');
+              navigateAdminMore('profile');
             }}
           />
-        ) : null}
-        {adminTab === 'Dashboard' ? (
+        </View>
+
+        <CachedScreen
+          cacheKey="admin-Dashboard"
+          visited={visitedAdminScreens.has('Dashboard')}
+          active={activeAdminScreen === 'Dashboard'}
+        >
           <AdminHome onNavigate={navigateAdminTab} />
-        ) : adminTab === 'Loans' && adminLoanScreen === 'createLoan' ? (
-          <CreateLoan
-            onBack={() => setAdminLoanScreen('list')}
-            onCreated={() => setAdminLoanScreen('list')}
-          />
-        ) : adminTab === 'Loans' && adminLoanScreen === 'createCustomer' ? (
-          <CreateCustomer
-            onBack={() => setAdminLoanScreen('list')}
-            onCreated={() => setAdminLoanScreen('list')}
-          />
-        ) : adminTab === 'Loans' ? (
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Loans-list"
+          visited={visitedAdminScreens.has('Loans:list')}
+          active={activeAdminScreen === 'Loans:list'}
+        >
           <AdminLoans
-            onCreateLoan={() => setAdminLoanScreen('createLoan')}
-            onCreateCustomer={() => setAdminLoanScreen('createCustomer')}
+            onCreateLoan={() => navigateAdminLoan('createLoan')}
+            onCreateCustomer={() => navigateAdminLoan('createCustomer')}
           />
-        ) : adminTab === 'Products' && adminProductScreen === 'addProduct' ? (
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Loans-createLoan"
+          visited={visitedAdminScreens.has('Loans:createLoan')}
+          active={activeAdminScreen === 'Loans:createLoan'}
+        >
+          <CreateLoan
+            onBack={() => navigateAdminLoan('list')}
+            onCreated={() => navigateAdminLoan('list')}
+          />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Loans-createCustomer"
+          visited={visitedAdminScreens.has('Loans:createCustomer')}
+          active={activeAdminScreen === 'Loans:createCustomer'}
+        >
+          <CreateCustomer
+            onBack={() => navigateAdminLoan('list')}
+            onCreated={() => navigateAdminLoan('list')}
+          />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Orders"
+          visited={visitedAdminScreens.has('Orders')}
+          active={activeAdminScreen === 'Orders'}
+        >
+          <AdminSection section="Orders" />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Products-all"
+          visited={visitedAdminScreens.has('Products:all')}
+          active={activeAdminScreen === 'Products:all'}
+        >
+          <Products onNavigate={navigateAdminProduct} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Products-addProduct"
+          visited={visitedAdminScreens.has('Products:addProduct')}
+          active={activeAdminScreen === 'Products:addProduct'}
+        >
           <AddProduct
             productId={adminProductId}
             onBack={() => navigateAdminProduct('all')}
             onSaved={() => navigateAdminProduct('all')}
           />
-        ) : adminTab === 'Products' && adminProductScreen === 'stock' ? (
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Products-stock"
+          visited={visitedAdminScreens.has('Products:stock')}
+          active={activeAdminScreen === 'Products:stock'}
+        >
           <StockDetails onBack={() => navigateAdminProduct('all')} />
-        ) : adminTab === 'Products' && adminProductScreen === 'categories' ? (
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Products-categories"
+          visited={visitedAdminScreens.has('Products:categories')}
+          active={activeAdminScreen === 'Products:categories'}
+        >
           <Categories onBack={() => navigateAdminProduct('all')} />
-        ) : adminTab === 'Products' && adminProductScreen === 'metals' ? (
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Products-metals"
+          visited={visitedAdminScreens.has('Products:metals')}
+          active={activeAdminScreen === 'Products:metals'}
+        >
           <Metals onBack={() => navigateAdminProduct('all')} />
-        ) : adminTab === 'Products' ? (
-          <Products onNavigate={navigateAdminProduct} />
-        ) : adminTab === 'More' && adminMoreScreen === 'funds' ? (
-          <FundManagement onBack={() => setAdminMoreScreen('home')} />
-        ) : adminTab === 'More' && adminMoreScreen === 'dailyRates' ? (
-          <DailyGoldRate onBack={() => setAdminMoreScreen('home')} />
-        ) : adminTab === 'More' && adminMoreScreen === 'profile' ? (
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-home"
+          visited={visitedAdminScreens.has('More:home')}
+          active={activeAdminScreen === 'More:home'}
+        >
+          <More onNavigate={navigateAdminMore} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-funds"
+          visited={visitedAdminScreens.has('More:funds')}
+          active={activeAdminScreen === 'More:funds'}
+        >
+          <FundManagement onBack={() => navigateAdminMore('home')} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-dailyRates"
+          visited={visitedAdminScreens.has('More:dailyRates')}
+          active={activeAdminScreen === 'More:dailyRates'}
+        >
+          <DailyGoldRate onBack={() => navigateAdminMore('home')} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-profile"
+          visited={visitedAdminScreens.has('More:profile')}
+          active={activeAdminScreen === 'More:profile'}
+        >
           <>
             <InnerHeader
               title="Admin Profile"
               sectionLabel="More"
-              onBack={() => setAdminMoreScreen('home')}
+              onBack={() => navigateAdminMore('home')}
             />
             <AdminProfile />
           </>
-        ) : adminTab === 'More' ? (
-          <More onNavigate={navigateAdminMore} />
-        ) : (
-          <AdminSection section={adminTab} />
-        )}
-        {!isInnerAdminScreen ? (
+        </CachedScreen>
+
+        <View style={isInnerAdminScreen ? screenStyles.hidden : undefined}>
           <AdminTabBar activeTab={adminTab} onTabPress={navigateAdminTab} />
-        ) : null}
+        </View>
       </View>
     );
   }
 
-  if (!accountRole) {
-    return (
-      <View className="flex-1 items-center justify-center bg-[#F8F7F2] px-8">
-        {sessionError ? (
-          <>
-            <Text className="mb-2 text-center text-lg font-bold text-[#173F35]">
-              Unable to verify your account
-            </Text>
-            <Text className="mb-5 text-center text-sm text-[#6B7280]">
-              {sessionError}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                setSessionError(null);
-                setSessionCheckAttempt(attempt => attempt + 1);
-              }}
-              className="rounded-xl bg-[#B8860B] px-6 py-3">
-              <Text className="font-bold text-white">Retry</Text>
-            </Pressable>
-          </>
-        ) : (
-          <ActivityIndicator color="#B8860B" />
-        )}
-      </View>
-    );
-  }
-
-  if (accountRole === 'admin') {
-    const isInnerLoanScreen =
-      adminTab === 'Loans' && adminLoanScreen !== 'list';
-    const isInnerProductScreen =
-      adminTab === 'Products' && adminProductScreen !== 'all';
-    const isInnerMoreScreen =
-      adminTab === 'More' && adminMoreScreen !== 'home';
-    const isInnerAdminScreen =
-      isInnerLoanScreen || isInnerProductScreen || isInnerMoreScreen;
-    return (
-      <View className="flex-1 bg-white">
-        {!isInnerAdminScreen ? (
-          <AdminHeader
-            adminName={adminName}
-            adminEmail={adminEmail}
-            onLogout={handleLogout}
-            onProfilePress={() => {
-              navigateAdminTab('More');
-              setAdminMoreScreen('profile');
-            }}
-          />
-        ) : null}
-        {adminTab === 'Dashboard' ? (
-          <AdminHome onNavigate={navigateAdminTab} />
-        ) : adminTab === 'Loans' && adminLoanScreen === 'createLoan' ? (
-          <CreateLoan
-            onBack={() => setAdminLoanScreen('list')}
-            onCreated={() => setAdminLoanScreen('list')}
-          />
-        ) : adminTab === 'Loans' && adminLoanScreen === 'createCustomer' ? (
-          <CreateCustomer
-            onBack={() => setAdminLoanScreen('list')}
-            onCreated={() => setAdminLoanScreen('list')}
-          />
-        ) : adminTab === 'Loans' ? (
-          <AdminLoans
-            onCreateLoan={() => setAdminLoanScreen('createLoan')}
-            onCreateCustomer={() => setAdminLoanScreen('createCustomer')}
-          />
-        ) : adminTab === 'Products' && adminProductScreen === 'addProduct' ? (
-          <AddProduct
-            productId={adminProductId}
-            onBack={() => navigateAdminProduct('all')}
-            onSaved={() => navigateAdminProduct('all')}
-          />
-        ) : adminTab === 'Products' && adminProductScreen === 'stock' ? (
-          <StockDetails onBack={() => navigateAdminProduct('all')} />
-        ) : adminTab === 'Products' && adminProductScreen === 'categories' ? (
-          <Categories onBack={() => navigateAdminProduct('all')} />
-        ) : adminTab === 'Products' && adminProductScreen === 'metals' ? (
-          <Metals onBack={() => navigateAdminProduct('all')} />
-        ) : adminTab === 'Products' ? (
-          <Products onNavigate={navigateAdminProduct} />
-        ) : adminTab === 'More' && adminMoreScreen === 'funds' ? (
-          <FundManagement onBack={() => setAdminMoreScreen('home')} />
-        ) : adminTab === 'More' && adminMoreScreen === 'dailyRates' ? (
-          <DailyGoldRate onBack={() => setAdminMoreScreen('home')} />
-        ) : adminTab === 'More' && adminMoreScreen === 'profile' ? (
-          <>
-            <InnerHeader
-              title="Admin Profile"
-              sectionLabel="More"
-              onBack={() => setAdminMoreScreen('home')}
-            />
-            <AdminProfile />
-          </>
-        ) : adminTab === 'More' ? (
-          <More onNavigate={navigateAdminMore} />
-        ) : (
-          <AdminSection section={adminTab} />
-        )}
-        {!isInnerAdminScreen ? (
-          <AdminTabBar activeTab={adminTab} onTabPress={navigateAdminTab} />
-        ) : null}
-      </View>
-    );
-  }
+  const isSuperAdminFullscreen =
+    (superAdminTab === 'Plans' && isPlanFormVisible) ||
+    (superAdminTab === 'G Shops' && isShopPageFullscreenVisible) ||
+    (superAdminTab === 'Profile' &&
+      (isMyProfileVisible ||
+        isUsersManagementVisible ||
+        isPaymentManagementVisible));
 
   return (
     <View className="flex-1 bg-white">
-      {!(
-        (activeTab === 'Plans' && isPlanFormVisible) ||
-        (activeTab === 'G Shops' && isShopPageFullscreenVisible) ||
-        (activeTab === 'Profile' &&
-          (isMyProfileVisible ||
-            isUsersManagementVisible ||
-            isPaymentManagementVisible))
-      ) ? (
+      <View style={isSuperAdminFullscreen ? screenStyles.hidden : undefined}>
         <TopHeader
           adminName={adminName}
           adminEmail={adminEmail}
           onLogout={handleLogout}
           onProfilePress={() => handleTabChange('Profile')}
         />
-      ) : null}
-      {activeTab === 'Home' ? (
-        <Home onNavigate={handleTabChange} />
-      ) : activeTab === 'Profile' ? (
+      </View>
+
+      <CachedScreen
+        cacheKey="superadmin-Home"
+        visited={visitedSuperAdminScreens.has('Home')}
+        active={superAdminTab === 'Home'}
+      >
+        <SuperAdminHome onNavigate={handleTabChange} />
+      </CachedScreen>
+      <CachedScreen
+        cacheKey="superadmin-G-Shops"
+        visited={visitedSuperAdminScreens.has('G Shops')}
+        active={superAdminTab === 'G Shops'}
+      >
+        <AllGoldShop
+          onFullScreenShopPageChange={setIsShopPageFullscreenVisible}
+        />
+      </CachedScreen>
+      <CachedScreen
+        cacheKey="superadmin-Plans"
+        visited={visitedSuperAdminScreens.has('Plans')}
+        active={superAdminTab === 'Plans'}
+      >
+        <Subscriptions onPlanFormVisibilityChange={setIsPlanFormVisible} />
+      </CachedScreen>
+      <CachedScreen
+        cacheKey="superadmin-Revenue"
+        visited={visitedSuperAdminScreens.has('Revenue')}
+        active={superAdminTab === 'Revenue'}
+      >
+        <Revenue />
+      </CachedScreen>
+      <CachedScreen
+        cacheKey="superadmin-Profile"
+        visited={visitedSuperAdminScreens.has('Profile')}
+        active={superAdminTab === 'Profile'}
+      >
         <Profile
           onMyProfileVisibilityChange={setIsMyProfileVisible}
           onUsersManagementVisibilityChange={setIsUsersManagementVisible}
           onPaymentManagementVisibilityChange={setIsPaymentManagementVisible}
           onLogout={handleLogout}
         />
-      ) : activeTab === 'Plans' ? (
-        <Subscriptions onPlanFormVisibilityChange={setIsPlanFormVisible} />
-      ) : activeTab === 'G Shops' ? (
-        <AllGoldShop
-          onFullScreenShopPageChange={setIsShopPageFullscreenVisible}
-        />
-      ) : activeTab === 'Revenue' ? (
-        <Revenue />
-      <TopHeader
-        adminName={adminName}
-        adminEmail={adminEmail}
-        onLogout={handleLogout}
-        onProfilePress={() => setSuperAdminTab('Profile')}
-      />
-      {superAdminTab === 'Home' ? (
-        <SuperAdminHome onNavigate={setSuperAdminTab} />
-      ) : superAdminTab === 'Profile' ? (
-        <Profile />
-      ) : (
-        <View className="flex-1 items-center justify-center bg-white">
-          <Text className="text-[22px] font-bold text-[#1A1A1A]">
-            {superAdminTab}
-          </Text>
-        </View>
-      )}
-      {!(
-        (activeTab === 'Plans' && isPlanFormVisible) ||
-        (activeTab === 'G Shops' && isShopPageFullscreenVisible) ||
-        (activeTab === 'Profile' &&
-          (isMyProfileVisible ||
-            isUsersManagementVisible ||
-            isPaymentManagementVisible))
-      ) ? (
-        <BottomBar activeTab={activeTab} onTabPress={handleTabChange} />
-      ) : null}
+      </CachedScreen>
+
+      <View style={isSuperAdminFullscreen ? screenStyles.hidden : undefined}>
+        <BottomBar activeTab={superAdminTab} onTabPress={handleTabChange} />
+      </View>
     </View>
   );
 }

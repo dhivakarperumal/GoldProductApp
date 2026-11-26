@@ -1,33 +1,18 @@
 import { useState } from 'react';
 import {
-  ArrowLeft,
-  ChevronRight,
-  CreditCard,
-  ActivityIndicator,
   Pressable,
-  RefreshControl,
   ScrollView,
-  Switch,
+  StatusBar,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import {
-  Activity,
-  Bell,
-  CalendarDays,
-  Check,
-  Eye,
-  EyeOff,
-  LockKeyhole,
-  Mail,
-  Phone,
-  ShieldCheck,
-  Trash2,
+  ArrowLeft,
+  ChevronRight,
+  CreditCard,
   UserRound,
   Users,
 } from 'lucide-react-native';
-import { Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MyProfile from './MyProfile';
 import PaymentManagement from './PaymentManagement';
