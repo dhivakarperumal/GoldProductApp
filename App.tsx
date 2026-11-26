@@ -429,6 +429,12 @@ function AppContent() {
           <Dealers onBack={() => setAdminMoreScreen('home')} />
         ) : adminTab === 'More' && adminMoreScreen === 'dealerPurchases' ? (
           <DealerPurchases onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'metals' ? (
+          <Metals onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'categories' ? (
+          <Categories onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'stockDetails' ? (
+          <StockDetails onBack={() => setAdminMoreScreen('home')} />
         ) : adminTab === 'More' && adminMoreScreen === 'profile' ? (
           <>
             <InnerHeader

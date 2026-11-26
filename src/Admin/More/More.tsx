@@ -2,7 +2,10 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import {
   CircleDollarSign,
   ClipboardList,
+  Gem,
+  Package,
   ReceiptText,
+  Shapes,
   Settings2,
   Store,
   UserRound,
@@ -15,6 +18,9 @@ export type MoreScreen =
   | 'receiptSettings'
   | 'dealers'
   | 'dealerPurchases'
+  | 'metals'
+  | 'categories'
+  | 'stockDetails'
   | 'profile';
 
 type Props = { onNavigate: (screen: MoreScreen) => void };
@@ -56,6 +62,24 @@ const OPTIONS: Array<{
     icon: ClipboardList,
   },
   {
+    screen: 'metals',
+    title: 'Metals',
+    description: 'Manage the metals used by products and inventory.',
+    icon: Gem,
+  },
+  {
+    screen: 'categories',
+    title: 'Categories',
+    description: 'Add, edit, and organize product categories.',
+    icon: Shapes,
+  },
+  {
+    screen: 'stockDetails',
+    title: 'Stock Details',
+    description: 'Review product stock and update available quantities.',
+    icon: Package,
+  },
+  {
     screen: 'profile',
     title: 'Admin Profile',
     description: 'View your account details.',
@@ -72,7 +96,7 @@ export default function More({ onNavigate }: Props) {
         </Text>
         <Text className="mt-1 text-2xl font-extrabold text-white">More</Text>
         <Text className="mt-2 text-sm text-[#DCE8E4]">
-          Funds, rates, receipts, dealers, and account settings.
+          Funds, rates, receipts, dealers, products, and account settings.
         </Text>
       </View>
       {OPTIONS.map(({ screen, title, description, icon: Icon }) => (
