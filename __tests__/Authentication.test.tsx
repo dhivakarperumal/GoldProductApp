@@ -52,7 +52,13 @@ beforeEach(() => {
     Promise.resolve(
       path === '/auth/me'
         ? { data: { user: { role: 'superadmin', name: 'Super Admin' } } }
-        : { data: { data: {} } },
+        : path === '/dashboard'
+          ? { data: { stats: [], revenueTrends: [] } }
+          : path === '/gold-rates/current'
+            ? { data: { rates: [] } }
+            : path === '/loans'
+              ? { data: [] }
+              : { data: { products: [] } },
     ),
   );
   mockSetTokenCache.mockReset();
@@ -174,7 +180,47 @@ test('routes shop admins to the admin dashboard and its API', async () => {
     Promise.resolve(
       path === '/dashboard'
         ? { data: { stats: [], revenueTrends: [] } }
-        : { data: { user: { role: 'admin' } } },
+        : path === '/gold-rates/current'
+          ? {
+              data: {
+                rates: [
+                  {
+                    metal_type: 'Gold',
+                    purity: '999',
+                    rate_per_gram: '10000.00',
+                  },
+                ],
+              },
+            }
+          : path === '/loans'
+            ? {
+                data: [
+                  {
+                    id: 1,
+                    loan_number: 'GL-001',
+                    customer_name: 'Dashboard Customer',
+                    jewellery_type: 'Ring',
+                    principal_amount: '1000.00',
+                    loan_status: 'Active',
+                    loan_date: '2026-11-25',
+                  },
+                ],
+              }
+            : path === '/products/mine'
+              ? {
+                  data: {
+                    products: [
+                      {
+                        id: 2,
+                        name: 'Dashboard Ring',
+                        category: 'Bangles',
+                        final_selling_price: '99840.00',
+                        total_stock: 2,
+                      },
+                    ],
+                  },
+                }
+              : { data: { user: { role: 'admin' } } },
     ),
   );
   let renderer!: ReactTestRenderer.ReactTestRenderer;
@@ -197,8 +243,17 @@ test('routes shop admins to the admin dashboard and its API', async () => {
 
   expect(renderer.root.findByProps({ children: 'Admin Dashboard' })).toBeDefined();
   expect(renderer.root.findByProps({ testID: 'admin-home' })).toBeDefined();
+  expect(renderer.root.findByProps({ children: 'Dashboard Customer' })).toBeDefined();
+  expect(renderer.root.findByProps({ children: 'Dashboard Ring' })).toBeDefined();
   expect(mockGet).toHaveBeenCalledWith('/dashboard', {
     params: { datePreset: 'all', startDate: '', endDate: '' },
+  });
+  expect(mockGet).toHaveBeenCalledWith('/gold-rates/current');
+  expect(mockGet).toHaveBeenCalledWith('/loans', {
+    params: { startDate: '', endDate: '' },
+  });
+  expect(mockGet).toHaveBeenCalledWith('/products/mine', {
+    params: { page: 1, limit: 5 },
   });
 });
 

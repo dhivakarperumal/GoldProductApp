@@ -17,6 +17,7 @@ module.exports = {
   Eye: MockIcon,
   EyeOff: MockIcon,
   Ellipsis: MockIcon,
+  Gem: MockIcon,
   HandCoins: MockIcon,
   Home: MockIcon,
   LayoutDashboard: MockIcon,
