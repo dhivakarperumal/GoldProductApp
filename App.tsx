@@ -27,6 +27,7 @@ import BottomBar, {
 import TopHeader from './src/SuperAdmin/Navigation/TopHeader';
 import Home from './src/SuperAdmin/Home/Home';
 import Profile from './src/SuperAdmin/Profile/Profile';
+import Subscriptions from './src/SuperAdmin/Subscription/Subscriptions';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -175,6 +176,8 @@ function AppContent() {
         <Home onNavigate={setActiveTab} />
       ) : activeTab === 'Profile' ? (
         <Profile />
+      ) : activeTab === 'Plans' ? (
+        <Subscriptions />
       ) : (
         <View className="flex-1 items-center justify-center bg-white">
           <Text className="text-[22px] font-bold text-[#1A1A1A]">
