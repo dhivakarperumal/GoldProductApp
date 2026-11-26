@@ -156,7 +156,12 @@ export default function LoanDetails({ loanId, onBack, onEdit }: Props) {
               {loan.loan_number || `Loan ${loan.id}`}
             </Text>
             <Text className="mt-2 text-sm text-[#DCE8E4]">
-              {loan.loan_status || 'Unknown'}
+              {loan.release_status === 'Released'
+                ? 'Completed · Gold Released'
+                : loan.release_status === 'Pending Release' &&
+                    Number(loan.outstanding_principal ?? loan.principal_amount) === 0
+                  ? 'Paid · Awaiting Gold Release'
+                  : loan.loan_status || 'Unknown'}
               {loan.maturity_date ? ` · Maturity ${date(loan.maturity_date)}` : ''}
             </Text>
             <View className="mt-4 flex-row gap-2">
@@ -188,6 +193,11 @@ export default function LoanDetails({ loanId, onBack, onEdit }: Props) {
             <Detail label="Customer ID" value={loan.customer_code || String(loan.customer_id || '—')} />
             <Detail label="Full Name" value={loan.customer_name || '—'} />
             <Detail label="Mobile" value={loan.customer_mobile || '—'} />
+            <Detail label="Alternate Mobile" value={loan.customer_alternate_mobile || '—'} />
+            <Detail label="Email" value={loan.customer_email || '—'} />
+            <Detail label="Date of Birth" value={date(loan.customer_date_of_birth)} />
+            <Detail label="Gender" value={loan.customer_gender || '—'} />
+            <Detail label="Occupation" value={loan.customer_occupation || '—'} />
             <Detail label="KYC Status" value={loan.customer_kyc_status || '—'} />
             <Detail
               label="Address"
@@ -205,6 +215,12 @@ export default function LoanDetails({ loanId, onBack, onEdit }: Props) {
             />
             <Detail label="Guarantor" value={loan.guarantor_name || '—'} />
             <Detail label="Guarantor Mobile" value={loan.guarantor_mobile || '—'} />
+            <Detail label="Guarantor Email" value={loan.guarantor_email || '—'} />
+            <Detail
+              label="Guarantor Relationship"
+              value={loan.guarantor_relationship || '—'}
+            />
+            <Detail label="Guarantor Address" value={loan.guarantor_address || '—'} />
           </Section>
 
           <Section title="Pledged Jewellery & Loan Amount">
@@ -224,6 +240,17 @@ export default function LoanDetails({ loanId, onBack, onEdit }: Props) {
               label="Net Weight"
               value={`${loan.net_gold_weight ?? '—'} ${loan.rate_unit === 'carat' ? 'ct' : 'g'}`}
             />
+            <Detail
+              label="Applied Rate Snapshot"
+              value={
+                loan.gold_rate_per_gram == null
+                  ? 'Not recorded'
+                  : `${currency(loan.gold_rate_per_gram)} / ${loan.rate_unit === 'carat' ? 'carat' : 'g'}`
+              }
+            />
+            {loan.gold_rate_date ? (
+              <Detail label="Rate Date" value={date(loan.gold_rate_date)} />
+            ) : null}
             <Detail label="Gold Valuation" value={currency(loan.gold_valuation)} />
             <Detail label="Principal Amount" value={currency(loan.principal_amount)} />
             <Detail
@@ -238,6 +265,15 @@ export default function LoanDetails({ loanId, onBack, onEdit }: Props) {
               label="Interest Rate"
               value={`${loan.interest_rate ?? '—'}% / ${loan.interest_frequency || '—'}`}
             />
+            {loan.fixed_interest_amount != null ? (
+              <Detail label="Fixed Interest Amount" value={currency(loan.fixed_interest_amount)} />
+            ) : null}
+            {loan.custom_period_days != null ? (
+              <Detail label="Custom Interest Period" value={`${loan.custom_period_days} days`} />
+            ) : null}
+            {loan.compounding_frequency ? (
+              <Detail label="Compounding Frequency" value={loan.compounding_frequency} />
+            ) : null}
             <Detail
               label="Calculation Start"
               value={date(loan.interest_calculation_start_date)}
@@ -256,6 +292,12 @@ export default function LoanDetails({ loanId, onBack, onEdit }: Props) {
                   : `${loan.late_payment_interest_rate}%`
               }
             />
+            {loan.minimum_interest_amount != null ? (
+              <Detail label="Minimum Interest" value={currency(loan.minimum_interest_amount)} />
+            ) : null}
+            {loan.maximum_interest_amount != null ? (
+              <Detail label="Maximum Interest" value={currency(loan.maximum_interest_amount)} />
+            ) : null}
             <Detail label="Processing Fee" value={currency(loan.processing_fee)} />
             <Detail label="Other Charges" value={currency(loan.other_charges)} />
             <Detail label="Notes" value={loan.notes || '—'} />

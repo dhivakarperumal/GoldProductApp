@@ -86,6 +86,17 @@ function formatDate(value: string | undefined) {
       });
 }
 
+function displayLoanStatus(loan: Loan) {
+      if (loan.release_status === 'Released') return 'Completed';
+      if (
+        loan.release_status === 'Pending Release' &&
+        Number(loan.outstanding_principal ?? loan.principal_amount) === 0
+      ) {
+        return 'Awaiting Gold Release';
+      }
+      return loan.loan_status || 'Unknown';
+}
+
 function actionErrorMessage(error: unknown) {
       if (
         typeof error === 'object' &&
@@ -175,7 +186,12 @@ export default function Loans({
   }, [loans, query]);
 
   const activeCount = loans.filter(
-    loan => String(loan.loan_status || '').toLowerCase() === 'active',
+    loan =>
+      String(loan.loan_status || '').toLowerCase() === 'active' &&
+      !(
+        loan.release_status === 'Pending Release' &&
+        Number(loan.outstanding_principal ?? loan.principal_amount) === 0
+      ),
   ).length;
   const completedCount = loans.filter(
     loan =>
@@ -390,9 +406,7 @@ export default function Loans({
                     </View>
                     <View className="rounded-full bg-[#EFF9F5] px-2.5 py-1.5">
                       <Text className="text-[10px] font-bold text-[#07564B]">
-                        {loan.release_status === 'Released'
-                          ? 'Completed'
-                          : loan.loan_status || 'Unknown'}
+                        {displayLoanStatus(loan)}
                       </Text>
                     </View>
                   </View>
