@@ -12,15 +12,20 @@ import {
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
-import { Field, ChoiceChips, SubmitButton, errorMessage } from './FormControls';
+import {
+  ChoiceChips,
+  CustomDropdown,
+  DatePicker,
+  Field,
+  SubmitButton,
+  errorMessage,
+} from './FormControls';
 
 type CustomerForm = {
-  customer_type: string;
   full_name: string;
   mobile: string;
   email: string;
   gender: string;
-  occupation: string;
   address: string;
   city: string;
   district: string;
@@ -30,7 +35,6 @@ type CustomerForm = {
   date_of_birth: string;
   guarantor_name: string;
   guarantor_mobile: string;
-  guarantor_email: string;
   guarantor_relationship: string;
   guarantor_address: string;
   notes: string;
@@ -53,6 +57,17 @@ const DOCUMENT_TYPES = [
   { value: 'other', label: 'Other Government ID' },
 ];
 
+const INDIAN_STATES_AND_UTS = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya',
+  'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim',
+  'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand',
+  'West Bengal', 'Andaman and Nicobar Islands', 'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir',
+  'Ladakh', 'Lakshadweep', 'Puducherry',
+];
+
 type CreateCustomerProps = {
   onBack: () => void;
   onCreated: () => void;
@@ -60,12 +75,10 @@ type CreateCustomerProps = {
 
 function emptyCustomer(): CustomerForm {
   return {
-    customer_type: 'Individual',
     full_name: '',
     mobile: '',
     email: '',
     gender: '',
-    occupation: '',
     address: '',
     city: '',
     district: '',
@@ -75,7 +88,6 @@ function emptyCustomer(): CustomerForm {
     date_of_birth: '',
     guarantor_name: '',
     guarantor_mobile: '',
-    guarantor_email: '',
     guarantor_relationship: '',
     guarantor_address: '',
     notes: '',
@@ -270,28 +282,22 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
         <Text className="mb-4 text-sm leading-5 text-[#6B7280]">
           Add the borrower’s contact, address, guarantor, and photo details.
         </Text>
-        <ChoiceChips
-          label="Customer type"
-          value={form.customer_type}
-          options={[
-            { value: 'Individual', label: 'Individual' },
-            { value: 'Business', label: 'Business' },
-          ]}
-          onSelect={value => setField('customer_type', value)}
-        />
         <Field label="Full name" value={form.full_name} onChangeText={value => setField('full_name', value)} required />
         <Field label="Mobile" value={form.mobile} onChangeText={value => setField('mobile', value)} keyboardType="phone-pad" required />
         <Field label="Alternate mobile" value={form.alternate_mobile} onChangeText={value => setField('alternate_mobile', value)} keyboardType="phone-pad" />
         <Field label="Email" value={form.email} onChangeText={value => setField('email', value)} keyboardType="email-address" autoCapitalize="none" required />
         <Field label="Password (defaults to mobile)" value={password} onChangeText={setPassword} autoCapitalize="none" placeholder="Leave blank to use mobile number" />
-        <Field label="Date of birth (YYYY-MM-DD)" value={form.date_of_birth} onChangeText={value => setField('date_of_birth', value)} placeholder="YYYY-MM-DD" />
+        <DatePicker
+          label="Date of birth"
+          value={form.date_of_birth}
+          onChange={value => setField('date_of_birth', value)}
+        />
         <ChoiceChips
           label="Gender"
           value={form.gender}
           options={['Male', 'Female', 'Other'].map(value => ({ value, label: value }))}
           onSelect={value => setField('gender', value)}
         />
-        <Field label="Occupation" value={form.occupation} onChangeText={value => setField('occupation', value)} />
         <Field label="Residential address" value={form.address} onChangeText={value => setField('address', value)} multiline required />
         <View className="flex-row gap-3">
           <View className="flex-1">
@@ -303,7 +309,14 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
         </View>
         <View className="flex-row gap-3">
           <View className="flex-1">
-            <Field label="State" value={form.state} onChangeText={value => setField('state', value)} required />
+            <CustomDropdown
+              label="State"
+              value={form.state}
+              options={INDIAN_STATES_AND_UTS.map(state => ({ value: state, label: state }))}
+              onSelect={value => setField('state', value)}
+              placeholder="Select state"
+              required
+            />
           </View>
           <View className="flex-1">
             <Field label="PIN Code" value={form.pincode} onChangeText={value => setField('pincode', value)} keyboardType="numeric" required />
@@ -314,7 +327,6 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
         </Text>
         <Field label="Guarantor name" value={form.guarantor_name} onChangeText={value => setField('guarantor_name', value)} required />
         <Field label="Guarantor mobile" value={form.guarantor_mobile} onChangeText={value => setField('guarantor_mobile', value)} keyboardType="phone-pad" required />
-        <Field label="Guarantor email" value={form.guarantor_email} onChangeText={value => setField('guarantor_email', value)} keyboardType="email-address" autoCapitalize="none" />
         <Field label="Relationship" value={form.guarantor_relationship} onChangeText={value => setField('guarantor_relationship', value)} required />
         <Field label="Guarantor address" value={form.guarantor_address} onChangeText={value => setField('guarantor_address', value)} multiline />
         <Pressable
@@ -338,11 +350,13 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
           <Text className="mb-3 mt-1 text-xs leading-5 text-[#6B7280]">
             Select a document type and upload both sides as images.
           </Text>
-          <ChoiceChips
+          <CustomDropdown
             label="Document type"
             value={documentType}
             options={DOCUMENT_TYPES}
             onSelect={setDocumentType}
+            placeholder="Select document type"
+            required
           />
           {documentType ? (
             <View className="flex-row gap-3">
@@ -362,11 +376,12 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
           ) : null}
         </View>
         <Field label="Internal notes" value={form.notes} onChangeText={value => setField('notes', value)} multiline />
-        <ChoiceChips
+        <CustomDropdown
           label="KYC status"
           value={form.kyc_status}
           options={['Pending', 'Verified', 'Rejected'].map(value => ({ value, label: value }))}
           onSelect={value => setField('kyc_status', value)}
+          required
         />
         <SubmitButton label="Create Customer" loading={saving} onPress={saveCustomer} />
       </ScrollView>

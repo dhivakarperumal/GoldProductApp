@@ -1,4 +1,174 @@
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { ChevronDown, X } from 'lucide-react-native';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+
+type SelectOption = { value: string; label: string };
+
+export function CustomDropdown({
+  label,
+  value,
+  options,
+  onSelect,
+  placeholder = 'Select an option',
+  required = false,
+}: {
+  label: string;
+  value: string;
+  options: SelectOption[];
+  onSelect: (value: string) => void;
+  placeholder?: string;
+  required?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedLabel = options.find(option => option.value === value)?.label;
+  return (
+    <View className="mb-4">
+      <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]">
+        {label}{required ? ' *' : ''}
+      </Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityState={{ expanded: open }}
+        onPress={() => setOpen(true)}
+        className="min-h-12 flex-row items-center justify-between rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3">
+        <Text className={`text-sm ${selectedLabel ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`}>
+          {selectedLabel || placeholder}
+        </Text>
+        <ChevronDown size={18} color="#6B7E76" />
+      </Pressable>
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <View className="flex-1 justify-end bg-black/40">
+          <Pressable accessibilityLabel="Close options" onPress={() => setOpen(false)} className="flex-1" />
+          <View className="max-h-[70%] rounded-t-3xl bg-white pb-8">
+            <View className="flex-row items-center justify-between border-b border-[#ECE7D8] px-5 py-4">
+              <Text className="text-base font-extrabold text-[#173F35]">Select {label}</Text>
+              <Pressable accessibilityRole="button" accessibilityLabel="Close dropdown" onPress={() => setOpen(false)}>
+                <X size={20} color="#52645F" />
+              </Pressable>
+            </View>
+            <ScrollView keyboardShouldPersistTaps="handled">
+              {options.map(option => (
+                <Pressable
+                  key={option.value}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: option.value === value }}
+                  onPress={() => {
+                    onSelect(option.value);
+                    setOpen(false);
+                  }}
+                  className={`border-b border-[#F1F2EE] px-5 py-4 ${option.value === value ? 'bg-[#EFF9F5]' : 'bg-white'}`}>
+                  <Text className={`text-sm ${option.value === value ? 'font-bold text-[#07564B]' : 'text-[#173F35]'}`}>
+                    {option.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+export function DatePicker({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draftDate, setDraftDate] = useState(new Date());
+  const selectedDate = /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Date(`${value}T00:00:00`)
+    : new Date(new Date().getFullYear() - 18, 0, 1);
+  const dateLabel = value
+    ? new Date(`${value}T00:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
+    : 'Select date of birth';
+
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const openPicker = () => {
+    if (Platform.OS === 'android') {
+      DateTimePickerAndroid.open({
+        value: selectedDate,
+        mode: 'date',
+        maximumDate: new Date(),
+        startOnYearSelection: true,
+        onChange: (event, date) => {
+          if (event.type === 'set' && date) onChange(formatDate(date));
+        },
+      });
+      return;
+    }
+
+    setDraftDate(selectedDate);
+    setOpen(true);
+  };
+
+  return (
+    <View className="mb-4">
+      <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]">{label}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        onPress={openPicker}
+        className="min-h-12 flex-row items-center justify-between rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3">
+        <Text className={`text-sm ${value ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`}>{dateLabel}</Text>
+        <Text className="text-sm text-[#07564B]">▦</Text>
+      </Pressable>
+      {Platform.OS === 'ios' ? (
+        <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+          <View className="flex-1 items-center justify-center bg-black/40 px-5">
+            <View className="w-full rounded-3xl bg-white p-5">
+              <Text className="mb-4 text-lg font-extrabold text-[#173F35]">Date of birth</Text>
+              <DateTimePicker
+                value={draftDate}
+                mode="date"
+                display="spinner"
+                maximumDate={new Date()}
+                onChange={(_event, date) => {
+                  if (date) setDraftDate(date);
+                }}
+              />
+              <View className="mt-5 flex-row justify-end gap-2">
+                <Pressable onPress={() => setOpen(false)} className="rounded-xl bg-[#F3F4F1] px-4 py-3">
+                  <Text className="font-bold text-[#52645F]">Cancel</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    onChange(formatDate(draftDate));
+                    setOpen(false);
+                  }}
+                  className="rounded-xl bg-[#07564B] px-4 py-3">
+                  <Text className="font-bold text-white">Confirm</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      ) : null}
+    </View>
+  );
+}
 
 export function Field({
   label,
