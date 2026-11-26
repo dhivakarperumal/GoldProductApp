@@ -23,6 +23,7 @@ import api, { clearTokenCache, setTokenCache } from './src/api';
 import Login, { LoginUser } from './src/Auth/Login';
 import AdminHome from './src/Admin/Home/Home';
 import AdminSection from './src/Admin/Pages/AdminSection';
+import AdminLoans from './src/Admin/Loans/Loans';
 import AdminProfile from './src/Admin/Profile/Profile';
 import AdminHeader from './src/Admin/Navigation/AdminHeader';
 import AdminTabBar, { AdminTab } from './src/Admin/Navigation/AdminTabBar';
@@ -264,6 +265,8 @@ function AppContent() {
         />
         {adminTab === 'Dashboard' ? (
           <AdminHome onNavigate={setAdminTab} />
+        ) : adminTab === 'Loans' ? (
+          <AdminLoans />
         ) : adminTab === 'More' ? (
           <AdminProfile />
         ) : (
