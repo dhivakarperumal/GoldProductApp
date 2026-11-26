@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react';
 import {
   Alert,
-  Modal,
   Pressable,
   ScrollView,
+  StatusBar,
   Switch,
   Text,
   TextInput,
   View,
 } from 'react-native';
-import { X } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const FEATURE_OPTIONS = [
   ['goldInventory', 'Gold Inventory'],
@@ -193,6 +194,7 @@ function Field({
         keyboardType={keyboardType}
         textAlignVertical={multiline ? 'top' : 'auto'}
         maxLength={multiline ? 5000 : 80}
+        placeholderTextColor="#9CA3AF"
         className={`${inputClass} ${multiline ? 'min-h-24' : ''}`}
       />
     </View>
@@ -224,12 +226,16 @@ export default function AddSubscriptionPlan({
       yearlyPrice: numberValue(form.yearlyPrice),
       setupFee: numberValue(form.setupFee),
       freeTrialDays: numberValue(form.freeTrialDays),
-      maxBranches: form.maxBranches === '' ? null : numberValue(form.maxBranches),
+      maxBranches:
+        form.maxBranches === '' ? null : numberValue(form.maxBranches),
       maxStaff: form.maxStaff === '' ? null : numberValue(form.maxStaff),
       maxUsers: form.maxUsers === '' ? null : numberValue(form.maxUsers),
-      maxProducts: form.maxProducts === '' ? null : numberValue(form.maxProducts),
+      maxProducts:
+        form.maxProducts === '' ? null : numberValue(form.maxProducts),
       maxMonthlyInvoices:
-        form.maxMonthlyInvoices === '' ? null : numberValue(form.maxMonthlyInvoices),
+        form.maxMonthlyInvoices === ''
+          ? null
+          : numberValue(form.maxMonthlyInvoices),
       gracePeriodDays: numberValue(form.gracePeriodDays),
       status: form.status,
       isFeatured: form.isFeatured,
@@ -239,196 +245,196 @@ export default function AddSubscriptionPlan({
     [form],
   );
 
-  const updateField = <K extends keyof FormValues>(key: K, value: FormValues[K]) =>
-    setForm(current => ({ ...current, [key]: value }));
+  const updateField = <K extends keyof FormValues>(
+    key: K,
+    value: FormValues[K],
+  ) => setForm(current => ({ ...current, [key]: value }));
 
   const handleSubmit = () => {
     if (!form.planName.trim()) {
-      Alert.alert('Plan name required', 'Enter a name for this subscription plan.');
+      Alert.alert(
+        'Plan name required',
+        'Enter a name for this subscription plan.',
+      );
       return;
     }
     onSubmit(payload);
   };
 
   const numericFields = [
-    ['Monthly Price (₹)', 'monthlyPrice', 'decimal-pad'],
-    ['Quarterly Price (₹)', 'quarterlyPrice', 'decimal-pad'],
-    ['Half-Yearly Price (₹)', 'halfYearlyPrice', 'decimal-pad'],
-    ['Yearly Price (₹)', 'yearlyPrice', 'decimal-pad'],
-    ['Setup Fee (₹)', 'setupFee', 'decimal-pad'],
-    ['Free Trial Days', 'freeTrialDays', 'numeric'],
-    ['Maximum Branches (blank = unlimited)', 'maxBranches', 'numeric'],
-    ['Maximum Staff (blank = unlimited)', 'maxStaff', 'numeric'],
-    ['Maximum Users (blank = unlimited)', 'maxUsers', 'numeric'],
-    ['Maximum Products (blank = unlimited)', 'maxProducts', 'numeric'],
-    ['Maximum Monthly Invoices (blank = unlimited)', 'maxMonthlyInvoices', 'numeric'],
-    ['Grace Period Days', 'gracePeriodDays', 'numeric'],
-    ['Display Order', 'displayOrder', 'numeric'],
+    ['Monthly Price (₹)', 'monthlyPrice', 'decimal-pad', 'e.g. 999.00'],
+    ['Quarterly Price (₹)', 'quarterlyPrice', 'decimal-pad', 'e.g. 2699.00'],
+    ['Half-Yearly Price (₹)', 'halfYearlyPrice', 'decimal-pad', 'e.g. 4999.00'],
+    ['Yearly Price (₹)', 'yearlyPrice', 'decimal-pad', 'e.g. 8999.00'],
+    ['Setup Fee (₹)', 'setupFee', 'decimal-pad', 'e.g. 500.00'],
+    ['Free Trial (days)', 'freeTrialDays', 'numeric', 'e.g. 7'],
+    ['Grace Period (days)', 'gracePeriodDays', 'numeric', 'e.g. 3'],
   ] as const;
 
   return (
-    <Modal
-      visible
-      transparent
-      animationType="slide"
-      onRequestClose={onCancel}
-      statusBarTranslucent>
-      <View className="flex-1 justify-end bg-black/50">
-        <View className="max-h-[92%] rounded-t-3xl bg-[#F8F7F2]">
-          <View className="flex-row items-center justify-between rounded-t-3xl bg-[#153B35] px-5 py-4">
-            <View>
-              <Text className="text-[10px] font-extrabold uppercase tracking-[2px] text-[#F4C95D]">
-                Subscription Plans
-              </Text>
-              <Text className="mt-1 text-xl font-extrabold text-white">
-                {mode === 'edit' ? 'Edit Subscription Plan' : 'Create New Plan'}
-              </Text>
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Close plan form"
-              onPress={onCancel}
-              className="rounded-full p-2">
-              <X size={21} color="#FFFFFF" />
-            </Pressable>
+    <View className="flex-1 bg-[#F8F7F2]">
+      <StatusBar barStyle="light-content" />
+      <SafeAreaView edges={['top']} className="bg-[#153B35]">
+        <View className="w-full flex-row items-center bg-[#153B35] px-5 py-4">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back to subscription plans"
+            onPress={onCancel}
+            className="mr-3 h-11 w-11 items-center justify-center rounded-full bg-white/10"
+          >
+            <ArrowLeft size={21} color="#FFFFFF" />
+          </Pressable>
+          <View className="flex-1">
+            <Text className="text-[10px] font-extrabold uppercase tracking-[2px] text-[#F4C95D]">
+              Subscription Plans
+            </Text>
+            <Text className="mt-1 text-xl font-extrabold text-white">
+              {mode === 'edit'
+                ? 'Edit Subscription Plan'
+                : 'Add Subscription Plan'}
+            </Text>
+          </View>
+        </View>
+      </SafeAreaView>
+
+      <SafeAreaView edges={['bottom']} className="flex-1 bg-[#F8F7F2]">
+        <ScrollView
+          className="flex-1"
+          keyboardShouldPersistTaps="handled"
+          contentContainerClassName="px-4 pb-8 pt-4"
+        >
+          <View className="mb-4 rounded-2xl bg-white p-4">
+            <Text className="mb-4 text-base font-extrabold text-[#173F35]">
+              Basic Information
+            </Text>
+            <Field
+              label="Plan Name *"
+              value={form.planName}
+              onChangeText={value => updateField('planName', value)}
+              placeholder="e.g. Gold Premium"
+            />
+            <Field
+              label="Description"
+              value={form.description}
+              onChangeText={value => updateField('description', value)}
+              placeholder="Briefly describe what this plan includes..."
+              multiline
+            />
           </View>
 
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerClassName="px-4 pb-8 pt-4">
-            <View className="mb-4 rounded-2xl bg-white p-4">
-              <Text className="mb-4 text-base font-extrabold text-[#173F35]">
-                Basic Information
-              </Text>
+          <View className="mb-4 rounded-2xl bg-white p-4">
+            <Text className="mb-4 text-base font-extrabold text-[#173F35]">
+              Pricing and Limits
+            </Text>
+            {numericFields.map(([label, key, keyboardType, placeholder]) => (
               <Field
-                label="Plan Name *"
-                value={form.planName}
-                onChangeText={value => updateField('planName', value)}
-                placeholder="Enterprise"
+                key={key}
+                label={label}
+                value={form[key]}
+                onChangeText={value => updateField(key, value)}
+                keyboardType={keyboardType}
+                placeholder={placeholder}
               />
-              <Field
-                label="Plan Code (auto-generated if blank)"
-                value={form.planCode}
-                onChangeText={value => updateField('planCode', value)}
-                placeholder="ENTERPRISE-01"
-              />
-              <Field
-                label="Description"
-                value={form.description}
-                onChangeText={value => updateField('description', value)}
-                placeholder="Describe this subscription plan..."
-                multiline
-              />
-            </View>
+            ))}
+          </View>
 
-            <View className="mb-4 rounded-2xl bg-white p-4">
-              <Text className="mb-4 text-base font-extrabold text-[#173F35]">
-                Pricing and Limits
+          <View className="mb-4 rounded-2xl bg-white p-4">
+            <Text className="mb-3 text-base font-extrabold text-[#173F35]">
+              Plan Settings
+            </Text>
+            <View className="mb-3">
+              <Text className="mb-2 text-xs font-bold text-[#4B5563]">
+                Plan Status
               </Text>
-              {numericFields.map(([label, key, keyboardType]) => (
-                <Field
-                  key={key}
-                  label={label}
-                  value={form[key]}
-                  onChangeText={value => updateField(key, value)}
-                  keyboardType={keyboardType}
-                />
-              ))}
-            </View>
-
-            <View className="mb-4 rounded-2xl bg-white p-4">
-              <Text className="mb-3 text-base font-extrabold text-[#173F35]">
-                Plan Settings
-              </Text>
-              <View className="mb-3">
-                <Text className="mb-2 text-xs font-bold text-[#4B5563]">
-                  Plan Status
-                </Text>
-                <View className="flex-row gap-2">
-                  {(['active', 'inactive'] as const).map(status => (
-                    <Pressable
-                      key={status}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: form.status === status }}
-                      onPress={() => updateField('status', status)}
-                      className={`rounded-xl px-4 py-2.5 ${
-                        form.status === status ? 'bg-[#08745D]' : 'bg-[#F3F4F6]'
-                      }`}>
-                      <Text
-                        className={`text-sm font-bold capitalize ${
-                          form.status === status ? 'text-white' : 'text-[#4B5563]'
-                        }`}>
-                        {status}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
+              <View className="flex-row gap-2">
+                {(['active', 'inactive'] as const).map(status => (
+                  <Pressable
+                    key={status}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: form.status === status }}
+                    onPress={() => updateField('status', status)}
+                    className={`rounded-xl px-4 py-2.5 ${
+                      form.status === status ? 'bg-[#08745D]' : 'bg-[#F3F4F6]'
+                    }`}
+                  >
+                    <Text
+                      className={`text-sm font-bold capitalize ${
+                        form.status === status ? 'text-white' : 'text-[#4B5563]'
+                      }`}
+                    >
+                      {status}
+                    </Text>
+                  </Pressable>
+                ))}
               </View>
-              <View className="flex-row items-center justify-between border-t border-[#F3F4F6] py-3">
-                <Text className="text-sm font-semibold text-[#374151]">
-                  Featured Plan
-                </Text>
+            </View>
+            <View className="flex-row items-center justify-between border-t border-[#F3F4F6] py-3">
+              <Text className="text-sm font-semibold text-[#374151]">
+                Featured Plan
+              </Text>
+              <Switch
+                value={form.isFeatured}
+                onValueChange={value => updateField('isFeatured', value)}
+                trackColor={{ false: '#D1D5DB', true: '#82BDAE' }}
+                thumbColor={form.isFeatured ? '#08745D' : '#F9FAFB'}
+              />
+            </View>
+          </View>
+
+          <View className="mb-4 rounded-2xl bg-white p-4">
+            <Text className="mb-2 text-base font-extrabold text-[#173F35]">
+              Feature Permissions
+            </Text>
+            {FEATURE_OPTIONS.map(([key, label]) => (
+              <View
+                key={key}
+                className="flex-row items-center justify-between border-b border-[#F3F4F6] py-2.5"
+              >
+                <Text className="flex-1 text-sm text-[#374151]">{label}</Text>
                 <Switch
-                  value={form.isFeatured}
-                  onValueChange={value => updateField('isFeatured', value)}
+                  accessibilityLabel={label}
+                  value={Boolean(form.features[key])}
+                  onValueChange={value =>
+                    setForm(current => ({
+                      ...current,
+                      features: { ...current.features, [key]: value },
+                    }))
+                  }
                   trackColor={{ false: '#D1D5DB', true: '#82BDAE' }}
-                  thumbColor={form.isFeatured ? '#08745D' : '#F9FAFB'}
+                  thumbColor={form.features[key] ? '#08745D' : '#F9FAFB'}
                 />
               </View>
-            </View>
+            ))}
+          </View>
 
-            <View className="mb-4 rounded-2xl bg-white p-4">
-              <Text className="mb-2 text-base font-extrabold text-[#173F35]">
-                Feature Permissions
+          <View className="mb-2 flex-row justify-end gap-3">
+            <Pressable
+              accessibilityRole="button"
+              onPress={onCancel}
+              className="min-h-11 items-center justify-center rounded-xl border border-[#D1D5DB] px-5"
+            >
+              <Text className="text-sm font-bold text-[#4B5563]">Cancel</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled: submitting }}
+              disabled={submitting}
+              onPress={handleSubmit}
+              className={`min-h-11 items-center justify-center rounded-xl bg-[#08745D] px-5 ${
+                submitting ? 'opacity-50' : ''
+              }`}
+            >
+              <Text className="text-sm font-bold text-white">
+                {submitting
+                  ? 'Saving...'
+                  : mode === 'edit'
+                  ? 'Save Changes'
+                  : 'Create Plan'}
               </Text>
-              {FEATURE_OPTIONS.map(([key, label]) => (
-                <View
-                  key={key}
-                  className="flex-row items-center justify-between border-b border-[#F3F4F6] py-2.5">
-                  <Text className="flex-1 text-sm text-[#374151]">{label}</Text>
-                  <Switch
-                    accessibilityLabel={label}
-                    value={Boolean(form.features[key])}
-                    onValueChange={value =>
-                      setForm(current => ({
-                        ...current,
-                        features: { ...current.features, [key]: value },
-                      }))
-                    }
-                    trackColor={{ false: '#D1D5DB', true: '#82BDAE' }}
-                    thumbColor={form.features[key] ? '#08745D' : '#F9FAFB'}
-                  />
-                </View>
-              ))}
-            </View>
-
-            <View className="flex-row justify-end gap-3">
-              <Pressable
-                accessibilityRole="button"
-                onPress={onCancel}
-                className="min-h-11 items-center justify-center rounded-xl border border-[#D1D5DB] px-5">
-                <Text className="text-sm font-bold text-[#4B5563]">Cancel</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ disabled: submitting }}
-                disabled={submitting}
-                onPress={handleSubmit}
-                className={`min-h-11 items-center justify-center rounded-xl bg-[#08745D] px-5 ${
-                  submitting ? 'opacity-50' : ''
-                }`}>
-                <Text className="text-sm font-bold text-white">
-                  {submitting
-                    ? 'Saving...'
-                    : mode === 'edit'
-                      ? 'Save Changes'
-                      : 'Create Plan'}
-                </Text>
-              </Pressable>
-            </View>
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }

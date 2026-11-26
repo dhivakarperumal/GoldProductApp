@@ -42,6 +42,7 @@ function App() {
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<SuperAdminTab>('Home');
+  const [isPlanFormVisible, setIsPlanFormVisible] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionCheckAttempt, setSessionCheckAttempt] = useState(0);
@@ -115,6 +116,13 @@ function AppContent() {
     setIsAuthenticated(true);
   };
 
+  const handleTabChange = (tab: SuperAdminTab) => {
+    setActiveTab(tab);
+    if (tab !== 'Plans') {
+      setIsPlanFormVisible(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('userToken');
@@ -166,18 +174,20 @@ function AppContent() {
 
   return (
     <View className="flex-1 bg-white">
-      <TopHeader
-        adminName={adminName}
-        adminEmail={adminEmail}
-        onLogout={handleLogout}
-        onProfilePress={() => setActiveTab('Profile')}
-      />
+      {!(activeTab === 'Plans' && isPlanFormVisible) ? (
+        <TopHeader
+          adminName={adminName}
+          adminEmail={adminEmail}
+          onLogout={handleLogout}
+          onProfilePress={() => handleTabChange('Profile')}
+        />
+      ) : null}
       {activeTab === 'Home' ? (
-        <Home onNavigate={setActiveTab} />
+        <Home onNavigate={handleTabChange} />
       ) : activeTab === 'Profile' ? (
         <Profile />
       ) : activeTab === 'Plans' ? (
-        <Subscriptions />
+        <Subscriptions onPlanFormVisibilityChange={setIsPlanFormVisible} />
       ) : (
         <View className="flex-1 items-center justify-center bg-white">
           <Text className="text-[22px] font-bold text-[#1A1A1A]">
@@ -185,7 +195,9 @@ function AppContent() {
           </Text>
         </View>
       )}
-      <BottomBar activeTab={activeTab} onTabPress={setActiveTab} />
+      {!(activeTab === 'Plans' && isPlanFormVisible) ? (
+        <BottomBar activeTab={activeTab} onTabPress={handleTabChange} />
+      ) : null}
     </View>
   );
 }

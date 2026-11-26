@@ -16,7 +16,6 @@ import {
   LayoutGrid,
   List,
   Pencil,
-  Plus,
   Search,
   Trash2,
   X,
@@ -43,6 +42,10 @@ type Pagination = {
 type ModalState = 'create' | 'edit' | 'view' | null;
 type ViewMode = 'table' | 'card';
 const PAGE_SIZE = 10;
+
+type SubscriptionsProps = {
+  onPlanFormVisibilityChange: (visible: boolean) => void;
+};
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (
@@ -121,7 +124,9 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function Subscriptions() {
+export default function Subscriptions({
+  onPlanFormVisibilityChange,
+}: SubscriptionsProps) {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [summary, setSummary] = useState<Summary>({});
   const [pagination, setPagination] = useState<Pagination>({
@@ -185,11 +190,13 @@ export default function Subscriptions() {
   const openCreate = () => {
     setSelected(null);
     setModal('create');
+    onPlanFormVisibilityChange(true);
   };
 
   const openEdit = (plan: SubscriptionPlan) => {
     setSelected(plan);
     setModal('edit');
+    onPlanFormVisibilityChange(true);
   };
 
   const savePlan = async (payload: SubscriptionPlanPayload) => {
@@ -207,6 +214,7 @@ export default function Subscriptions() {
         response.data?.message || 'Subscription plan saved successfully.',
       );
       setModal(null);
+      onPlanFormVisibilityChange(false);
       await loadPlans();
     } catch (error) {
       Alert.alert(
@@ -432,6 +440,22 @@ export default function Subscriptions() {
 
   const totalPages = Math.max(1, pagination.totalPages);
 
+  if (modal === 'create' || modal === 'edit') {
+    return (
+      <AddSubscriptionPlan
+        key={`${modal}-${selected?.id ?? 'new'}`}
+        mode={modal}
+        initialPlan={selected}
+        submitting={submitting}
+        onCancel={() => {
+          setModal(null);
+          onPlanFormVisibilityChange(false);
+        }}
+        onSubmit={savePlan}
+      />
+    );
+  }
+
   return (
     <View className="flex-1 bg-[#F8F7F2]">
       <ScrollView
@@ -447,7 +471,7 @@ export default function Subscriptions() {
             tintColor="#08745D"
           />
         }
-        contentContainerClassName="px-4 pb-5 pt-4">
+        contentContainerClassName="px-4 pb-24 pt-4">
         <View className="mb-4 flex-row flex-wrap gap-3">
           <SummaryCard
             label="Total Plans"
@@ -549,14 +573,6 @@ export default function Subscriptions() {
           </View>
         </View>
 
-        <Pressable
-          accessibilityRole="button"
-          onPress={openCreate}
-          className="mb-4 min-h-11 flex-row items-center justify-center gap-2 rounded-xl bg-[#08745D] px-4">
-          <Plus size={17} color="#FFFFFF" />
-          <Text className="text-sm font-bold text-white">Create Plan</Text>
-        </Pressable>
-
         {loading && plans.length === 0 ? (
           <View className="items-center py-12">
             <ActivityIndicator size="large" color="#08745D" />
@@ -608,16 +624,13 @@ export default function Subscriptions() {
         </View>
       </ScrollView>
 
-      {(modal === 'create' || modal === 'edit') && (
-        <AddSubscriptionPlan
-          key={`${modal}-${selected?.id ?? 'new'}`}
-          mode={modal}
-          initialPlan={selected}
-          submitting={submitting}
-          onCancel={() => setModal(null)}
-          onSubmit={savePlan}
-        />
-      )}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Create subscription plan"
+        onPress={openCreate}
+        className="absolute bottom-4 right-4 z-20 h-14 w-14 items-center justify-center rounded-full bg-[#08745D] shadow-lg">
+        <Text className="text-3xl font-black leading-9 text-white">+</Text>
+      </Pressable>
 
       {modal === 'view' && selected ? (
         <Modal
