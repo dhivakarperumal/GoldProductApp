@@ -166,7 +166,13 @@ export default function MetalForm({ visible, metal, onClose, onSaved }: Props) {
             </Pressable>
           </View>
           <Pressable disabled={saving} onPress={save} className="min-h-12 items-center justify-center rounded-xl bg-[#07564B]">
-            {saving ? <ActivityIndicator color="white" /> : <Text className="font-extrabold text-white">Save Metal</Text>}
+            {saving ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="font-extrabold text-white">
+                {metal ? 'Update Metal' : 'Save Metal'}
+              </Text>
+            )}
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

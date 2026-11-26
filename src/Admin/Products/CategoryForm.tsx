@@ -250,7 +250,13 @@ export default function CategoryForm({ visible, category, onClose, onSaved }: Pr
             disabled={saving}
             onPress={save}
             className="min-h-12 items-center justify-center rounded-xl bg-[#07564B]">
-            {saving ? <ActivityIndicator color="white" /> : <Text className="font-extrabold text-white">Save Category</Text>}
+            {saving ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="font-extrabold text-white">
+                {category ? 'Update Category' : 'Save Category'}
+              </Text>
+            )}
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Plus, Search, Trash2 } from 'lucide-react-native';
+import { Pencil, Plus, Search, Trash2 } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
@@ -140,6 +140,17 @@ export default function Categories({ onBack }: Props) {
                   </Text>
                   <Text className="mt-1 text-xs font-semibold text-[#07564B]">{parseArray(category.subcategory).length} subcategories · {category.status || 'Active'}</Text>
                 </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Edit ${category.name}`}
+                  onPress={event => {
+                    event.stopPropagation();
+                    setSelected(category);
+                    setFormVisible(true);
+                  }}
+                  className="p-2">
+                  <Pencil size={18} color="#07564B" />
+                </Pressable>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`Delete ${category.name}`}

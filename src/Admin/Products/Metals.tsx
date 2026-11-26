@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Plus, Search, Trash2 } from 'lucide-react-native';
+import { Pencil, Plus, Search, Trash2 } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
@@ -131,6 +131,17 @@ export default function Metals({ onBack }: Props) {
                 <Text className="mt-1 text-xs text-[#6B7E76]">{metal.purity || 'Purity not set'}</Text>
                 <Text className="mt-1 text-xs font-semibold text-[#07564B]">{metal.status || 'Active'}</Text>
               </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Edit ${metal.name}`}
+                onPress={event => {
+                  event.stopPropagation();
+                  setSelected(metal);
+                  setFormVisible(true);
+                }}
+                className="p-2">
+                <Pencil size={18} color="#07564B" />
+              </Pressable>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Delete ${metal.name}`}
