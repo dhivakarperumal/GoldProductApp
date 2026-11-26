@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { ImageBackground, Pressable, Text, View } from 'react-native';
 import {
   ChartNoAxesColumn,
-  HandCoins,
+  CreditCard,
   Home,
-  Package,
+  Store,
   UserRound,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,8 +18,8 @@ type AdminTabBarProps = {
 
 const tabs: Array<{ label: AdminTab; icon: typeof Home }> = [
   { label: 'Home', icon: Home },
-  { label: 'Loans', icon: HandCoins },
-  { label: 'Products', icon: Package },
+  { label: 'Loans', icon: Store },
+  { label: 'Products', icon: CreditCard },
   { label: 'Reports', icon: ChartNoAxesColumn },
   { label: 'Profile', icon: UserRound },
 ];

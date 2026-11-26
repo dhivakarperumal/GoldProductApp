@@ -174,7 +174,6 @@ export default function Login({ onLogin }: LoginProps) {
                 className="flex-1 px-3 py-3.5 text-sm text-[#374151]"
               />
               <Pressable
-                testID="login-submit"
                 accessibilityRole="button"
                 accessibilityLabel={
                   showPassword ? 'Hide password' : 'Show password'
@@ -207,6 +206,7 @@ export default function Login({ onLogin }: LoginProps) {
             ) : null}
 
             <Pressable
+              testID="login-submit"
               accessibilityRole="button"
               accessibilityState={{ disabled: isSubmitting }}
               disabled={isSubmitting}

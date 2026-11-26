@@ -1,8 +1,6 @@
 import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
-import { Pressable, TextInput } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import api, { clearTokenCache, setTokenCache } from '../src/api';
+import { TextInput } from 'react-native';
 import App from '../App';
 import Login from '../src/Auth/Login';
 
@@ -76,8 +74,8 @@ test('restores a saved session without showing the login screen', async () => {
   ).toBeDefined();
   expect(renderer.root.findAllByProps({ children: 'Admin Sign In' }))
     .toHaveLength(0);
-  expect(setTokenCache).toHaveBeenCalledWith('saved-token');
-  expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
+  expect(mockSetTokenCache).toHaveBeenCalledWith('saved-token');
+  expect(mockRemoveItem).not.toHaveBeenCalled();
 });
 
 test('does not redirect to login when session storage cannot be read', async () => {
@@ -90,12 +88,12 @@ test('does not redirect to login when session storage cannot be read', async () 
   });
 
   expect(
-    renderer.root.findAllByProps({ children: 'Unable to restore your session' }),
-  ).toHaveLength(1);
+    renderer.root.findByProps({ children: 'Unable to restore your session' }),
+  ).toBeDefined();
   expect(
     renderer.root.findAllByProps({ children: 'Admin Sign In' }),
   ).toHaveLength(0);
-  expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
+  expect(mockRemoveItem).not.toHaveBeenCalled();
 });
 
 test('persists the token after a successful login', async () => {
@@ -118,22 +116,20 @@ test('persists the token after a successful login', async () => {
     inputs[1].props.onChangeText('password');
   });
 
-  const submitButton = renderer.root
-    .findAllByType(Pressable)
-    .find(button => button.props.accessibilityState?.disabled !== undefined);
+  const submitButton = renderer.root.findByProps({ testID: 'login-submit' });
   expect(submitButton).toBeDefined();
 
   await act(async () => {
     await submitButton?.props.onPress();
   });
 
-  expect(api.post).toHaveBeenCalledWith('/auth/login', {
+  expect(mockPost).toHaveBeenCalledWith('/auth/login', {
     identifier: 'admin@example.com',
     password: 'password',
   });
-  expect(AsyncStorage.setItem).toHaveBeenCalledWith('userToken', 'new-token');
+  expect(mockSetItem).toHaveBeenCalledWith('userToken', 'new-token');
   expect(mockSetTokenCache).toHaveBeenCalledWith('new-token');
-  expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
+  expect(mockRemoveItem).not.toHaveBeenCalled();
   expect(onLogin).toHaveBeenCalledWith({
     role: 'superadmin',
     name: 'Super Admin',
@@ -167,9 +163,7 @@ test('routes shop admins to the admin dashboard and its API', async () => {
     inputs[1].props.onChangeText('password');
   });
 
-  const submitButton = renderer.root
-    .findAllByType(Pressable)
-    .find(button => button.props.accessibilityState?.disabled !== undefined);
+  const submitButton = renderer.root.findByProps({ testID: 'login-submit' });
   await act(async () => {
     await submitButton?.props.onPress();
   });
@@ -197,16 +191,16 @@ test('removes the saved token only when Logout is pressed', async () => {
   });
 
   const logoutButton = renderer.root
-    .findAllByType(Pressable)
-    .find(button => button.findAllByProps({ children: 'Logout' }).length > 0);
+    .findByProps({ children: 'Logout' })
+    .parent?.parent?.parent;
   expect(logoutButton).toBeDefined();
 
   await act(async () => {
     await logoutButton?.props.onPress();
   });
 
-  expect(AsyncStorage.removeItem).toHaveBeenCalledWith('userToken');
-  expect(clearTokenCache).toHaveBeenCalledTimes(1);
+  expect(mockRemoveItem).toHaveBeenCalledWith('userToken');
+  expect(mockClearTokenCache).toHaveBeenCalledTimes(1);
   expect(
     renderer.root.findByProps({ children: 'Admin Sign In' }),
   ).toBeDefined();

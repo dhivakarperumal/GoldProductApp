@@ -8,15 +8,15 @@ import {
   View,
 } from 'react-native';
 import {
-  AlertTriangle,
-  BadgeCheck,
-  Box,
+  Building2,
+  CalendarDays,
   ChartNoAxesColumn,
-  HandCoins,
-  Layers3,
+  CreditCard,
   RefreshCw,
   ShieldCheck,
+  Store,
   Users,
+  XCircle,
 } from 'lucide-react-native';
 import api from '../../api';
 import type { AdminTab } from '../Navigation/AdminTabBar';
@@ -56,13 +56,13 @@ type HomeProps = {
 
 const metricIcons = {
   total_customers: Users,
-  active_gold_loans: HandCoins,
+  active_gold_loans: ShieldCheck,
   today_collection: ChartNoAxesColumn,
   gold_stock_value: ShieldCheck,
-  total_products: Box,
-  total_categories: Layers3,
-  completed_loans: BadgeCheck,
-  low_stock_products: AlertTriangle,
+  total_products: Building2,
+  total_categories: Store,
+  completed_loans: CalendarDays,
+  low_stock_products: XCircle,
 } as const;
 
 const metricAccents: Record<string, string> = {
@@ -89,7 +89,7 @@ function getErrorMessage(error: unknown) {
 }
 
 function MetricCard({ metric }: { metric: DashboardMetric }) {
-  const Icon = metricIcons[metric.id as keyof typeof metricIcons] || Box;
+  const Icon = metricIcons[metric.id as keyof typeof metricIcons] || Store;
   const accent = metricAccents[metric.id] || '#07564B';
   return (
     <View className="min-h-[142px] flex-1 basis-[145px] rounded-2xl border border-[#ECE7D8] bg-white p-4">
@@ -313,8 +313,8 @@ export default function Home({ onNavigate }: HomeProps) {
 
       <View className="mb-2 flex-row flex-wrap gap-3">
         {[
-          { label: 'Loans', tab: 'Loans' as const, icon: HandCoins },
-          { label: 'Products', tab: 'Products' as const, icon: Box },
+          { label: 'Loans', tab: 'Loans' as const, icon: Store },
+          { label: 'Products', tab: 'Products' as const, icon: CreditCard },
           {
             label: 'Reports',
             tab: 'Reports' as const,
