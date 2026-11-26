@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  BackHandler,
   Pressable,
   StatusBar,
   Text,
@@ -235,6 +236,70 @@ function AppContent() {
   const navigateAdminMore = (screen: MoreScreen) => {
     setAdminMoreScreen(screen);
   };
+
+  useEffect(() => {
+    if (!isAuthenticated || !accountRole) return undefined;
+
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        if (accountRole === 'admin') {
+          if (adminTab === 'Loans' && adminLoanScreen !== 'list') {
+            setAdminLoanScreen('list');
+            return true;
+          }
+          if (adminTab === 'Products' && adminProductScreen !== 'all') {
+            setAdminProductScreen('all');
+            setAdminProductId(null);
+            return true;
+          }
+          if (adminTab === 'More' && adminMoreScreen !== 'home') {
+            setAdminMoreScreen('home');
+            return true;
+          }
+          if (adminTab !== 'Dashboard') {
+            setAdminTab('Dashboard');
+            setAdminLoanScreen('list');
+            setAdminProductScreen('all');
+            setAdminProductId(null);
+            setAdminMoreScreen('home');
+            return true;
+          }
+        } else if (superAdminTab !== 'Home') {
+          setSuperAdminTab('Home');
+          return true;
+        }
+
+        showAlert(
+          'Exit app?',
+          'Are you sure you want to exit the app?',
+          {
+            variant: 'warning',
+            buttons: [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Exit',
+                style: 'destructive',
+                onPress: () => BackHandler.exitApp(),
+              },
+            ],
+          },
+        );
+        return true;
+      },
+    );
+
+    return () => subscription.remove();
+  }, [
+    accountRole,
+    adminLoanScreen,
+    adminMoreScreen,
+    adminProductScreen,
+    adminTab,
+    isAuthenticated,
+    showAlert,
+    superAdminTab,
+  ]);
 
   if (isAuthenticated === null) {
     if (sessionError) {
