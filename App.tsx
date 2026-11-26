@@ -26,6 +26,7 @@ import AdminSection from './src/Admin/Pages/AdminSection';
 import AdminLoans from './src/Admin/Loans/Loans';
 import CreateLoan from './src/Admin/Loans/CreateLoan';
 import CreateCustomer from './src/Admin/Loans/CreateCustomer';
+import LoanDetails from './src/Admin/Loans/LoanDetails';
 import Products from './src/Admin/Products/Products';
 import AddProduct from './src/Admin/Products/AddProduct';
 import StockDetails from './src/Admin/Products/StockDetails';
@@ -52,7 +53,12 @@ import Profile from './src/SuperAdmin/Profile/Profile';
 import { CustomAlertProvider, useCustomAlert } from './src/Components/CustomAlert';
 
 type AccountRole = 'admin' | 'superadmin';
-type AdminLoanScreen = 'list' | 'createLoan' | 'createCustomer';
+type AdminLoanScreen =
+  | 'list'
+  | 'createLoan'
+  | 'createCustomer'
+  | 'viewLoan'
+  | 'editLoan';
 
 function normalizeRole(role: unknown): AccountRole | null {
   if (typeof role !== 'string') return null;
@@ -81,6 +87,7 @@ function AppContent() {
   const [adminTab, setAdminTab] = useState<AdminTab>('Dashboard');
   const [adminLoanScreen, setAdminLoanScreen] =
     useState<AdminLoanScreen>('list');
+  const [adminLoanId, setAdminLoanId] = useState<number | string | null>(null);
   const [adminProductScreen, setAdminProductScreen] =
     useState<InventoryScreen>('all');
   const [adminProductId, setAdminProductId] = useState<number | string | null>(null);
@@ -224,6 +231,7 @@ function AppContent() {
   const navigateAdminTab = (tab: AdminTab) => {
     setAdminTab(tab);
     setAdminLoanScreen('list');
+    setAdminLoanId(null);
     setAdminProductScreen('all');
     setAdminProductId(null);
     setAdminMoreScreen('home');
@@ -250,6 +258,7 @@ function AppContent() {
         if (accountRole === 'admin') {
           if (adminTab === 'Loans' && adminLoanScreen !== 'list') {
             setAdminLoanScreen('list');
+            setAdminLoanId(null);
             return true;
           }
           if (adminTab === 'Products' && adminProductScreen !== 'all') {
@@ -264,6 +273,7 @@ function AppContent() {
           if (adminTab !== 'Dashboard') {
             setAdminTab('Dashboard');
             setAdminLoanScreen('list');
+            setAdminLoanId(null);
             setAdminProductScreen('all');
             setAdminProductId(null);
             setAdminMoreScreen('home');
@@ -391,10 +401,31 @@ function AppContent() {
         ) : null}
         {adminTab === 'Dashboard' ? (
           <AdminHome onNavigate={navigateAdminTab} />
+        ) : adminTab === 'Loans' && adminLoanScreen === 'viewLoan' && adminLoanId !== null ? (
+          <LoanDetails
+            loanId={adminLoanId}
+            onBack={() => {
+              setAdminLoanScreen('list');
+              setAdminLoanId(null);
+            }}
+            onEdit={() => setAdminLoanScreen('editLoan')}
+          />
+        ) : adminTab === 'Loans' && adminLoanScreen === 'editLoan' && adminLoanId !== null ? (
+          <CreateLoan
+            loanId={adminLoanId}
+            onBack={() => setAdminLoanScreen('viewLoan')}
+            onCreated={() => {
+              setAdminLoanScreen('list');
+              setAdminLoanId(null);
+            }}
+          />
         ) : adminTab === 'Loans' && adminLoanScreen === 'createLoan' ? (
           <CreateLoan
             onBack={() => setAdminLoanScreen('list')}
-            onCreated={() => setAdminLoanScreen('list')}
+            onCreated={() => {
+              setAdminLoanScreen('list');
+              setAdminLoanId(null);
+            }}
           />
         ) : adminTab === 'Loans' && adminLoanScreen === 'createCustomer' ? (
           <CreateCustomer
@@ -405,6 +436,14 @@ function AppContent() {
           <AdminLoans
             onCreateLoan={() => setAdminLoanScreen('createLoan')}
             onCreateCustomer={() => setAdminLoanScreen('createCustomer')}
+            onViewLoan={loanId => {
+              setAdminLoanId(loanId);
+              setAdminLoanScreen('viewLoan');
+            }}
+            onEditLoan={loanId => {
+              setAdminLoanId(loanId);
+              setAdminLoanScreen('editLoan');
+            }}
           />
         ) : adminTab === 'Products' && adminProductScreen === 'addProduct' ? (
           <AddProduct
