@@ -21,6 +21,9 @@ export type LoginUser = {
 
 type LoginProps = {
   onLogin: (user: LoginUser) => void;
+  onRegister?: () => void;
+  initialIdentifier?: string;
+  registrationMessage?: string;
 };
 
 function isLoginUser(value: unknown): value is LoginUser {
@@ -48,8 +51,13 @@ function getErrorMessage(error: unknown) {
   return 'Unable to sign in. Please try again.';
 }
 
-export default function Login({ onLogin }: LoginProps) {
-  const [identifier, setIdentifier] = useState('');
+export default function Login({
+  onLogin,
+  onRegister,
+  initialIdentifier = '',
+  registrationMessage = '',
+}: LoginProps) {
+  const [identifier, setIdentifier] = useState(initialIdentifier);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -204,6 +212,13 @@ export default function Login({ onLogin }: LoginProps) {
                 {errorMessage}
               </Text>
             ) : null}
+            {registrationMessage ? (
+              <Text
+                accessibilityRole="alert"
+                className="mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                {registrationMessage}
+              </Text>
+            ) : null}
 
             <Pressable
               testID="login-submit"
@@ -229,6 +244,17 @@ export default function Login({ onLogin }: LoginProps) {
               </Text>
               <View className="h-px flex-1 bg-[#E5E7EB]" />
             </View>
+            {onRegister ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={onRegister}
+                className="mt-5 items-center py-2">
+                <Text className="text-sm text-[#6B7280]">
+                  New gold shop?{' '}
+                  <Text className="font-bold text-[#07564B]">Register here</Text>
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         </View>
       </ScrollView>

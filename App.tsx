@@ -21,6 +21,7 @@ import {
 } from 'react-native-safe-area-context';
 import api, { clearTokenCache, setTokenCache } from './src/api';
 import Login, { LoginUser } from './src/Auth/Login';
+import Register from './src/Auth/Register';
 import AdminHome from './src/Admin/Home/Home';
 import AdminSection from './src/Admin/Pages/AdminSection';
 import AdminLoans from './src/Admin/Loans/Loans';
@@ -53,6 +54,7 @@ import Profile from './src/SuperAdmin/Profile/Profile';
 import { CustomAlertProvider, useCustomAlert } from './src/Components/CustomAlert';
 
 type AccountRole = 'admin' | 'superadmin';
+type AuthScreen = 'login' | 'register';
 type AdminLoanScreen =
   | 'list'
   | 'createLoan'
@@ -92,6 +94,9 @@ function AppContent() {
     useState<InventoryScreen>('all');
   const [adminProductId, setAdminProductId] = useState<number | string | null>(null);
   const [adminMoreScreen, setAdminMoreScreen] = useState<MoreScreen>('home');
+  const [authScreen, setAuthScreen] = useState<AuthScreen>('login');
+  const [registrationEmail, setRegistrationEmail] = useState('');
+  const [registrationMessage, setRegistrationMessage] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionCheckAttempt, setSessionCheckAttempt] = useState(0);
@@ -346,7 +351,31 @@ function AppContent() {
   }
 
   if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
+    if (authScreen === 'register') {
+      return (
+        <Register
+          onBack={() => setAuthScreen('login')}
+          onSubmitted={email => {
+            setRegistrationEmail(email);
+            setRegistrationMessage(
+              'Registration submitted. You can sign in after approval.',
+            );
+            setAuthScreen('login');
+          }}
+        />
+      );
+    }
+    return (
+      <Login
+        onLogin={handleLogin}
+        onRegister={() => {
+          setRegistrationMessage('');
+          setAuthScreen('register');
+        }}
+        initialIdentifier={registrationEmail}
+        registrationMessage={registrationMessage}
+      />
+    );
   }
 
   if (!accountRole) {
