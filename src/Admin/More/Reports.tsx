@@ -161,7 +161,7 @@ function createReportCsv(data: ReportsData, rangeLabel: string) {
       loan.id,
       loan.customer,
       loan.jewellery,
-      loan.rawAmount ?? loan.amount,
+      loan.rawAmount || loan.amount,
       loan.status,
       loan.date,
     ]),
@@ -272,7 +272,6 @@ export default function Reports({ onBack }: Props) {
             tintColor="#07564B"
           />
         }>
-        <Text className="mb-1 text-2xl font-extrabold text-[#173F35]">Reports</Text>
         <Text className="mb-4 text-sm leading-5 text-[#6B7E76]">
           Sales trends, customers, inventory and gold loan activity.
         </Text>
@@ -294,6 +293,7 @@ export default function Reports({ onBack }: Props) {
                 label="Start date"
                 value={customRange.startDate}
                 maximumDate={null}
+                initialDate={new Date()}
                 onChange={value => setCustomRange(current => ({ ...current, startDate: value }))}
               />
               <DatePicker
@@ -305,6 +305,7 @@ export default function Reports({ onBack }: Props) {
                     : undefined
                 }
                 maximumDate={null}
+                initialDate={new Date()}
                 onChange={value => setCustomRange(current => ({ ...current, endDate: value }))}
               />
               {rangeError ? (
@@ -463,7 +464,7 @@ export default function Reports({ onBack }: Props) {
                       </View>
                       <View className="items-end">
                         <Text className="font-extrabold text-[#07564B]">
-                          {displayCurrency(loan.rawAmount ?? loan.amount)}
+                          {displayCurrency(loan.amount ?? loan.rawAmount)}
                         </Text>
                         <Text className="mt-1 text-xs font-semibold text-[#A77B15]">
                           {loan.status || '—'}
