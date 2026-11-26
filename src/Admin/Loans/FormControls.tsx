@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { ChevronDown, X } from 'lucide-react-native';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type SelectOption = { value: string; label: string };
 
@@ -30,6 +31,7 @@ export function CustomDropdown({
   required?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const insets = useSafeAreaInsets();
   const selectedLabel = options.find(option => option.value === value)?.label;
   return (
     <View className="mb-4">
@@ -50,11 +52,13 @@ export function CustomDropdown({
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <View className="flex-1 justify-end bg-black/40">
           <Pressable accessibilityLabel="Close options" onPress={() => setOpen(false)} className="flex-1" />
-          <View className="max-h-[70%] rounded-t-3xl bg-white pb-8">
-            <View className="flex-row items-center justify-between border-b border-[#ECE7D8] px-5 py-4">
-              <Text className="text-base font-extrabold text-[#173F35]">Select {label}</Text>
+          <View
+            style={{ paddingBottom: Math.max(insets.bottom, 32) }}
+            className="max-h-[70%] rounded-t-3xl bg-white">
+            <View className="flex-row items-center justify-between rounded-t-3xl bg-[#173F35] px-5 py-4">
+              <Text className="text-base font-extrabold text-white">Select {label}</Text>
               <Pressable accessibilityRole="button" accessibilityLabel="Close dropdown" onPress={() => setOpen(false)}>
-                <X size={20} color="#52645F" />
+                <X size={20} color="#EAD78A" />
               </Pressable>
             </View>
             <ScrollView keyboardShouldPersistTaps="handled">
