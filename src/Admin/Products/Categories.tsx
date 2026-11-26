@@ -34,7 +34,10 @@ export default function Categories({ onBack }: Props) {
     setError('');
     try {
       const response = await api.get<Category[]>('/categories/manage');
-      setCategories(Array.isArray(response.data) ? response.data : []);
+      if (!Array.isArray(response.data)) {
+        throw new Error('The server returned an invalid category list.');
+      }
+      setCategories(response.data);
     } catch (requestError) {
       setError(inventoryError(requestError));
       if (__DEV__) console.warn('[Categories] Could not load categories:', requestError);
@@ -67,8 +70,8 @@ export default function Categories({ onBack }: Props) {
               await api.delete(`/categories/${encodeURIComponent(category.catId)}`);
               await load();
               showAlert('Category deleted', `${category.name} was removed.`, { variant: 'success' });
-            } catch (error) {
-              showAlert('Could not delete category', inventoryError(error), { variant: 'error' });
+            } catch (deleteError) {
+              showAlert('Could not delete category', inventoryError(deleteError), { variant: 'error' });
             }
           },
         },
@@ -83,7 +86,7 @@ export default function Categories({ onBack }: Props) {
         <View className="flex-1 items-center justify-center"><ActivityIndicator color="#07564B" /></View>
       ) : (
         <ScrollView
-          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+          contentContainerClassName="p-4 pb-8"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor="#07564B" />}
           keyboardShouldPersistTaps="handled">
           <View className="mb-4 flex-row items-center justify-between">
@@ -129,7 +132,12 @@ export default function Categories({ onBack }: Props) {
                 )}
                 <View className="ml-3 flex-1">
                   <Text className="font-extrabold text-[#173F35]">{category.name}</Text>
-                  <Text className="mt-1 text-xs text-[#6B7E76]">ID: {category.catId} · {Number(category.totalProducts) || 0} products</Text>
+                  <Text className="mt-1 text-xs text-[#6B7E76]">
+                    ID: {category.catId}
+                    {typeof category.totalProducts === 'number'
+                      ? ` · ${category.totalProducts} products`
+                      : ''}
+                  </Text>
                   <Text className="mt-1 text-xs font-semibold text-[#07564B]">{parseArray(category.subcategory).length} subcategories · {category.status || 'Active'}</Text>
                 </View>
                 <Pressable

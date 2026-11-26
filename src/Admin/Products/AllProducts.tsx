@@ -68,6 +68,7 @@ export default function AllProducts({ onNavigate }: Props) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [categoryError, setCategoryError] = useState('');
   const [selected, setSelected] = useState<Product | null>(null);
 
   const loadProducts = useCallback(async () => {
@@ -83,7 +84,10 @@ export default function AllProducts({ onNavigate }: Props) {
       params.sortOrder = sortOrder;
       const productResponse = await api.get<ProductResponse>('/products/mine', { params });
       const data = productResponse.data;
-      setProducts(Array.isArray(data.products) ? data.products : []);
+      if (!Array.isArray(data.products)) {
+        throw new Error('The server returned an invalid product list.');
+      }
+      setProducts(data.products);
       setStats({
         totalProducts: Number(data.stats?.total) || 0,
         inStock: Math.max(
@@ -110,9 +114,13 @@ export default function AllProducts({ onNavigate }: Props) {
   const loadCategories = useCallback(async () => {
     try {
       const response = await api.get<Category[]>('/categories/manage');
-      setCategories(Array.isArray(response.data) ? response.data : []);
+      if (!Array.isArray(response.data)) {
+        throw new Error('The server returned an invalid category list.');
+      }
+      setCategories(response.data);
+      setCategoryError('');
     } catch (requestError) {
-      setError(inventoryError(requestError));
+      setCategoryError(inventoryError(requestError));
       if (__DEV__) console.warn('[Products] Could not load categories:', requestError);
     }
   }, []);
@@ -175,7 +183,7 @@ export default function AllProducts({ onNavigate }: Props) {
     <View className="flex-1">
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 16, paddingBottom: 112 }}
+        contentContainerClassName="p-4 pb-28"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -305,10 +313,15 @@ export default function AllProducts({ onNavigate }: Props) {
           }}
         />
 
-        {error ? (
+        {error || categoryError ? (
           <View className="mb-3 rounded-xl bg-[#FFF1F0] p-3">
-            <Text className="text-sm text-[#B42332]">{error}</Text>
-            <Pressable onPress={loadProducts} className="mt-2 self-start">
+            <Text className="text-sm text-[#B42332]">{error || categoryError}</Text>
+            <Pressable
+              onPress={() => {
+                loadProducts();
+                loadCategories();
+              }}
+              className="mt-2 self-start">
               <Text className="font-bold text-[#07564B]">Try again</Text>
             </Pressable>
           </View>
@@ -414,7 +427,7 @@ export default function AllProducts({ onNavigate }: Props) {
                 ['Care instructions', selected.care_instructions],
               ].map(([label, value]) => (
                 <View key={String(label)} className="border-b border-[#F1F2EE] py-2">
-                  <Text className="text-xs font-bold uppercase text-[#6B7E76]">{label}</Text>
+                  <Text className="text-xs font-bold uppercase text-[#6B7E76]">{String(label)}</Text>
                   <Text className="mt-1 text-sm text-[#173F35]">{String(value || '—')}</Text>
                 </View>
               ))}

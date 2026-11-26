@@ -162,7 +162,7 @@ export default function CategoryForm({ visible, category, onClose, onSaved }: Pr
           </Pressable>
         </View>
         <ScrollView
-          contentContainerStyle={{ padding: 18, paddingBottom: 40 }}
+          contentContainerClassName="p-[18px] pb-10"
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets>
           <View className="mb-4 rounded-2xl bg-white p-4">

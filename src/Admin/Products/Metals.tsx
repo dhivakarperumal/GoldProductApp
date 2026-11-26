@@ -34,7 +34,10 @@ export default function Metals({ onBack }: Props) {
     setError('');
     try {
       const response = await api.get<Metal[]>('/metals/manage');
-      setMetals(Array.isArray(response.data) ? response.data : []);
+      if (!Array.isArray(response.data)) {
+        throw new Error('The server returned an invalid metal list.');
+      }
+      setMetals(response.data);
     } catch (requestError) {
       setError(inventoryError(requestError));
       if (__DEV__) console.warn('[Metals] Could not load metals:', requestError);
@@ -65,8 +68,8 @@ export default function Metals({ onBack }: Props) {
               await api.delete(`/metals/${metal.id}`);
               await load();
               showAlert('Metal deleted', `${metal.name} was removed.`, { variant: 'success' });
-            } catch (error) {
-              showAlert('Could not delete metal', inventoryError(error), { variant: 'error' });
+            } catch (deleteError) {
+              showAlert('Could not delete metal', inventoryError(deleteError), { variant: 'error' });
             }
           },
         },
@@ -81,7 +84,7 @@ export default function Metals({ onBack }: Props) {
         <View className="flex-1 items-center justify-center"><ActivityIndicator color="#07564B" /></View>
       ) : (
         <ScrollView
-          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+          contentContainerClassName="p-4 pb-8"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor="#07564B" />}
           keyboardShouldPersistTaps="handled">
           <View className="mb-4 flex-row items-center justify-between">

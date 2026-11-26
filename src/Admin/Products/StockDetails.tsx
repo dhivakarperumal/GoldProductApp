@@ -63,7 +63,10 @@ export default function StockDetails({ onBack }: Props) {
       const response = await api.get<ProductListResponse>('/products/mine', {
         params: { page: 1, limit: 30, search: query.trim() || undefined },
       });
-      setProducts(Array.isArray(response.data.products) ? response.data.products : []);
+      if (!Array.isArray(response.data.products)) {
+        throw new Error('The server returned an invalid product list.');
+      }
+      setProducts(response.data.products);
     } catch (requestError) {
       setError(inventoryError(requestError));
       if (__DEV__) console.warn('[StockDetails] Could not load products:', requestError);
@@ -154,7 +157,7 @@ export default function StockDetails({ onBack }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <InnerHeader title="Stock Details" sectionLabel="Shop Inventory" onBack={onBack} />
       <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 36 }}
+        contentContainerClassName="p-4 pb-9"
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets>
         <Text className="mb-1 text-xl font-extrabold text-[#173F35]">Add New Stock</Text>
@@ -176,7 +179,14 @@ export default function StockDetails({ onBack }: Props) {
         {loading || loadingProduct ? (
           <View className="py-5"><ActivityIndicator color="#07564B" /></View>
         ) : null}
-        {error ? <Text className="mb-3 rounded-xl bg-[#FFF1F0] p-3 text-sm text-[#B42332]">{error}</Text> : null}
+        {error ? (
+          <View className="mb-3 rounded-xl bg-[#FFF1F0] p-3">
+            <Text className="text-sm text-[#B42332]">{error}</Text>
+            <Pressable onPress={loadProducts} className="mt-2 self-start">
+              <Text className="font-bold text-[#07564B]">Try again</Text>
+            </Pressable>
+          </View>
+        ) : null}
         {!selected && !loading && !loadingProduct ? (
           <View className="mb-4 max-h-72 rounded-2xl bg-white p-2">
             <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">

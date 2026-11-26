@@ -306,10 +306,11 @@ export default function AddProduct({ productId, onBack, onSaved }: Props) {
         api.get<Category[]>('/categories/manage'),
         api.get<Metal[]>('/metals/manage'),
       ]);
-      const categoryList = Array.isArray(categoryResponse.data) ? categoryResponse.data : [];
-      const metalList = Array.isArray(metalResponse.data)
-        ? metalResponse.data.filter(item => item.status === 'Active')
-        : [];
+      if (!Array.isArray(categoryResponse.data) || !Array.isArray(metalResponse.data)) {
+        throw new Error('The server returned invalid category or metal options.');
+      }
+      const categoryList = categoryResponse.data;
+      const metalList = metalResponse.data.filter(item => item.status === 'Active');
       setCategories(categoryList);
       setMetals(metalList);
       let loadedRates: RateSet | null = null;
@@ -325,6 +326,9 @@ export default function AddProduct({ productId, onBack, onSaved }: Props) {
         setForm(readProduct(productResponse.data));
       } else {
         const productResponse = await api.get<{ latestCode?: string }>('/products/latest-code');
+        if (!productResponse.data.latestCode) {
+          throw new Error('The server did not return a product code.');
+        }
         const preferredCategory = categoryList.find(item => item.name === 'Gold Jewellery') || categoryList[0];
         const preferredMetal = metalList.find(item => item.name.toLowerCase() === 'gold') || metalList[0];
         setForm({
@@ -332,7 +336,7 @@ export default function AddProduct({ productId, onBack, onSaved }: Props) {
           category: preferredCategory?.name || '',
           subcategory: parseArray(preferredCategory?.subcategory)[0] || '',
           metal_type: preferredMetal?.name || '',
-          product_code: productResponse.data.latestCode || '',
+          product_code: productResponse.data.latestCode,
           making_charge: asString(loadedRates?.making_charge_value),
           wastage: asString(loadedRates?.wastage_percentage),
         });
@@ -402,11 +406,17 @@ export default function AddProduct({ productId, onBack, onSaved }: Props) {
       '750': '18K / 750',
       '585': '14K / 585',
     };
-    const options = [...new Set(values)].map(value => ({ value, label: labels[value] || value }));
+    const currentPurity = active.find(rate =>
+      String(rate.purity) === form.purity || labels[String(rate.purity)] === form.purity,
+    )?.purity;
+    const options = [...new Set(values)].map(value => ({
+      value: value === currentPurity ? form.purity : value,
+      label: labels[value] || value,
+    }));
     return options.length ? options : metals
       .filter(metal => metal.name === form.metal_type && metal.purity)
       .map(metal => ({ value: metal.purity || '', label: metal.purity || '' }));
-  }, [form.metal_type, metals, rates]);
+  }, [form.metal_type, form.purity, metals, rates]);
 
   const uploadFiles = async (field: 'images' | 'video' | 'size_guide_chart' | 'certificate', files: LocalFile[]) => {
     if (!files.length) return;
@@ -499,11 +509,26 @@ export default function AddProduct({ productId, onBack, onSaved }: Props) {
         showAlert('Unsupported file', 'Choose a PDF, JPG, or PNG file.', { variant: 'warning' });
         return;
       }
+      const fileName = (document.name || '').toLowerCase();
+      const allowedType = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'].includes(
+        (document.type || '').toLowerCase(),
+      );
+      const allowedExtension = ['.pdf', '.jpg', '.jpeg', '.png'].some(extension =>
+        fileName.endsWith(extension),
+      );
+      if (!allowedType && !allowedExtension) {
+        showAlert('Unsupported file', 'Choose a PDF, JPG, or PNG file.', { variant: 'warning' });
+        return;
+      }
       if ((document.size || 0) > 5 * 1024 * 1024) {
         showAlert('File is too large', 'Choose a file no larger than 5 MB.', { variant: 'warning' });
         return;
       }
-      const type = document.type || (document.name?.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+      const type = document.type || (fileName.endsWith('.pdf')
+        ? 'application/pdf'
+        : fileName.endsWith('.png')
+          ? 'image/png'
+          : 'image/jpeg');
       await uploadFiles(field, [{
         uri: document.uri,
         name: document.name || `${field}-${Date.now()}`,
@@ -603,7 +628,7 @@ export default function AddProduct({ productId, onBack, onSaved }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <InnerHeader title={productId ? 'Edit Product' : 'Add Product'} sectionLabel="Shop Inventory" onBack={onBack} />
       <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 42 }}
+        contentContainerClassName="p-4 pb-[42px]"
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets>
         <Section title="1. Basic Information">
