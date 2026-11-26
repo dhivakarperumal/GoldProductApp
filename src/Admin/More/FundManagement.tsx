@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  DateTimePickerAndroid,
   Modal,
   Platform,
   Pressable,
@@ -10,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import {
   ArrowDownLeft,
   ArrowUpRight,
