@@ -3,10 +3,12 @@ import ReactTestRenderer, { act } from 'react-test-renderer';
 import { TextInput } from 'react-native';
 import App from '../App';
 import Login from '../src/Auth/Login';
+import TopHeader from '../src/SuperAdmin/Navigation/TopHeader';
 
 const mockGetItem = jest.fn();
 const mockSetItem = jest.fn();
 const mockRemoveItem = jest.fn();
+const mockGet = jest.fn();
 const mockPost = jest.fn();
 const mockSetTokenCache = jest.fn();
 const mockClearTokenCache = jest.fn();
@@ -24,6 +26,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 jest.mock('../src/api', () => ({
   __esModule: true,
   default: {
+    get: (...args: unknown[]) => mockGet(...args),
     post: (...args: unknown[]) => mockPost(...args),
   },
   clearTokenCache: (...args: unknown[]) => mockClearTokenCache(...args),
@@ -46,6 +49,7 @@ beforeEach(() => {
   mockGetItem.mockReset().mockResolvedValue(null);
   mockSetItem.mockReset().mockResolvedValue(undefined);
   mockRemoveItem.mockReset().mockResolvedValue(undefined);
+  mockGet.mockReset().mockResolvedValue({ data: {} });
   mockPost.mockReset();
   mockSetTokenCache.mockReset();
   mockClearTokenCache.mockReset();
@@ -55,6 +59,53 @@ afterEach(async () => {
   await act(async () => {
     activeRenderers.splice(0).forEach(renderer => renderer.unmount());
   });
+});
+
+test('notification dropdown shows only shops registered today', async () => {
+  const registeredToday = new Date();
+  const registeredYesterday = new Date();
+  registeredYesterday.setDate(registeredYesterday.getDate() - 1);
+  mockGet.mockResolvedValueOnce({
+    data: {
+      shops: [
+        {
+          id: 12,
+          shop_name: 'Today Gold',
+          owner_name: 'Asha Kumar',
+          mobile: '9876543210',
+          city: 'Chennai',
+          created_at: registeredToday.toISOString(),
+        },
+        {
+          id: 13,
+          shop_name: 'Yesterday Gold',
+          created_at: registeredYesterday.toISOString(),
+        },
+      ],
+      pagination: { totalPages: 1 },
+    },
+  });
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<TopHeader />);
+    activeRenderers.push(renderer);
+  });
+
+  await act(async () => {
+    await renderer.root
+      .findByProps({ testID: 'notification-toggle' })
+      .props.onPress();
+  });
+
+  expect(mockGet).toHaveBeenCalledWith('/super-admin/gold-shops', {
+    params: { page: 1, pageSize: 50, search: '', status: 'all' },
+  });
+  expect(renderer.root.findByProps({ children: 'Today Gold' })).toBeDefined();
+  expect(renderer.root.findByProps({ children: 'Asha Kumar' })).toBeDefined();
+  expect(
+    renderer.root.findAllByProps({ children: 'Yesterday Gold' }),
+  ).toHaveLength(0);
 });
 
 test('restores a saved session without showing the login screen', async () => {
