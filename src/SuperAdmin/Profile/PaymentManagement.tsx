@@ -931,26 +931,44 @@ export default function PaymentManagement({ onBack }: PaymentManagementProps) {
         statusBarTranslucent
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="max-h-[90%] rounded-t-3xl bg-white">
-            <View className="flex-row items-center justify-between rounded-t-3xl bg-[#153B35] px-5 py-4">
-              <View className="flex-1 pr-3">
-                <Text className="text-lg font-extrabold text-white">
-                  Payment Details
-                </Text>
-                <Text className="mt-1 text-xs text-white/75">
-                  ID: {selectedPayment?.paymentId || selectedPayment?.id || '—'}
-                </Text>
+          <View className="max-h-[92%] rounded-t-3xl bg-[#F8FAF9]">
+            <View className="rounded-t-3xl bg-[#153B35] px-5 pb-4 pt-3">
+              <View className="h-1 w-10 self-center rounded-full bg-white/40" />
+              <View className="mt-4 flex-row items-center justify-between">
+                <View className="flex-1 flex-row items-center pr-3">
+                  <View className="h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
+                    <CreditCard size={21} color="#FDE68A" />
+                  </View>
+                  <View className="ml-3 flex-1">
+                    <Text className="text-lg font-extrabold text-white">
+                      Payment Details
+                    </Text>
+                    <Text
+                      numberOfLines={1}
+                      className="mt-1 text-[10px] text-white/75"
+                    >
+                      {selectedPayment?.shopName || 'Payment record'} · ID{' '}
+                      {selectedPayment?.paymentId || selectedPayment?.id || '—'}
+                    </Text>
+                  </View>
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Close payment details"
+                  onPress={() => setSelectedPayment(null)}
+                  className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
+                >
+                  <X size={19} color="#FFFFFF" />
+                </Pressable>
               </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Close payment details"
-                onPress={() => setSelectedPayment(null)}
-                className="p-2"
-              >
-                <X size={20} color="#FFFFFF" />
-              </Pressable>
             </View>
-            <ScrollView contentContainerClassName="gap-3 p-4">
+            <ScrollView
+              className="shrink"
+              contentContainerClassName="gap-3 p-4"
+              contentContainerStyle={{
+                paddingBottom: Math.max(insets.bottom, 20),
+              }}
+            >
               {detailLoading ? (
                 <View className="items-center py-10">
                   <ActivityIndicator color="#08745D" />
@@ -964,31 +982,31 @@ export default function PaymentManagement({ onBack }: PaymentManagementProps) {
                 </Text>
               ) : fullDetail ? (
                 <>
-                  <View className="flex-row items-center justify-between rounded-2xl border border-[#E5E7EB] bg-[#F9FAFB] p-4">
+                  <View className="flex-row items-center justify-between rounded-2xl bg-[#153B35] p-4">
                     <View>
-                      <Text className="text-[10px] font-bold uppercase text-[#9CA3AF]">
-                        Status
+                      <Text className="text-[10px] font-bold uppercase tracking-wider text-white/65">
+                        Payment status
                       </Text>
                       <View className="mt-1">
                         <StatusBadge status={fullDetail.paymentStatus} />
                       </View>
                     </View>
                     <View className="items-end">
-                      <Text className="text-[10px] font-bold uppercase text-[#9CA3AF]">
-                        Amount
+                      <Text className="text-[10px] font-bold uppercase tracking-wider text-white/65">
+                        Paid amount
                       </Text>
-                      <Text className="mt-1 text-lg font-extrabold text-[#111827]">
+                      <Text className="mt-1 text-xl font-extrabold text-white">
                         {formatCurrency(fullDetail.amount)}
                       </Text>
                       {Number(fullDetail.refundAmount || 0) > 0 ? (
-                        <Text className="text-[10px] font-bold text-purple-700">
+                        <Text className="text-[10px] font-bold text-amber-200">
                           Refunded: {formatCurrency(fullDetail.refundAmount)}
                         </Text>
                       ) : null}
                     </View>
                   </View>
-                  <View className="gap-2 rounded-2xl border border-[#E5E7EB] p-3">
-                    <Text className="text-xs font-extrabold uppercase text-[#374151]">
+                  <View className="gap-2 rounded-2xl border border-[#E8ECE9] bg-white p-3">
+                    <Text className="text-xs font-extrabold uppercase tracking-wider text-[#173F35]">
                       Transaction Information
                     </Text>
                     <View className="flex-row flex-wrap gap-2">
@@ -1028,8 +1046,8 @@ export default function PaymentManagement({ onBack }: PaymentManagementProps) {
                       </Text>
                     ) : null}
                   </View>
-                  <View className="gap-2 rounded-2xl border border-[#E5E7EB] p-3">
-                    <Text className="text-xs font-extrabold uppercase text-[#374151]">
+                  <View className="gap-2 rounded-2xl border border-[#E8ECE9] bg-white p-3">
+                    <Text className="text-xs font-extrabold uppercase tracking-wider text-[#173F35]">
                       Shop Information
                     </Text>
                     <View className="flex-row flex-wrap gap-2">
@@ -1053,8 +1071,8 @@ export default function PaymentManagement({ onBack }: PaymentManagementProps) {
                       <DetailRow label="GST" value={fullDetail.shop?.gst} />
                     </View>
                   </View>
-                  <View className="gap-2 rounded-2xl border border-[#E5E7EB] p-3">
-                    <Text className="text-xs font-extrabold uppercase text-[#374151]">
+                  <View className="gap-2 rounded-2xl border border-[#E8ECE9] bg-white p-3">
+                    <Text className="text-xs font-extrabold uppercase tracking-wider text-[#173F35]">
                       Subscription Details
                     </Text>
                     <View className="flex-row flex-wrap gap-2">
@@ -1089,9 +1107,9 @@ export default function PaymentManagement({ onBack }: PaymentManagementProps) {
               <Pressable
                 accessibilityRole="button"
                 onPress={() => setSelectedPayment(null)}
-                className="items-center rounded-xl border border-[#E5E7EB] py-3"
+                className="min-h-12 items-center justify-center rounded-xl bg-[#08745D]"
               >
-                <Text className="text-xs font-bold text-[#374151]">Close</Text>
+                <Text className="text-sm font-extrabold text-white">Done</Text>
               </Pressable>
             </ScrollView>
           </View>
