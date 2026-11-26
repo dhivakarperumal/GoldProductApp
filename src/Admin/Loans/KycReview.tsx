@@ -6,6 +6,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -100,6 +101,9 @@ const DOCUMENT_LABELS: Record<string, string> = {
   ration_card: 'Ration card',
   aadhaar: 'Aadhaar card',
 };
+const styles = StyleSheet.create({
+  pdfViewer: { flex: 1, width: '100%' },
+});
 
 function dateText(value?: string) {
   if (!value) return '—';
@@ -376,13 +380,10 @@ export default function KycReview() {
   const canReview = Boolean(
     selected && ['pending', 'in_review'].includes(selected.status),
   );
-  const documentSource = viewingDocument
-    ? {
-        uri: getDocumentUrl(viewingDocument.id),
-        headers: { Authorization: `Bearer ${documentToken}` },
-        cache: false,
-      }
-    : undefined;
+  const documentUrl = viewingDocument
+    ? getDocumentUrl(viewingDocument.id)
+    : '';
+  const documentHeaders = { Authorization: `Bearer ${documentToken}` };
 
   return (
     <View className="flex-1 bg-[#F8F7F2]">
@@ -674,7 +675,7 @@ export default function KycReview() {
                   <Text className="font-bold text-[#07564B]">Retry</Text>
                 </Pressable>
               </View>
-            ) : viewingDocument && documentSource ? (
+            ) : viewingDocument ? (
               <View className="flex-1 p-3">
                 {documentError ? (
                   <View className="mb-3 rounded-xl bg-[#FEF2F2] p-3">
@@ -685,15 +686,23 @@ export default function KycReview() {
                 ) : null}
                 {viewingDocument.mime_type === 'application/pdf' ? (
                   <Pdf
-                    source={documentSource}
+                    source={{
+                      uri: documentUrl,
+                      headers: documentHeaders,
+                      cache: false,
+                    }}
                     trustAllCerts={false}
                     onError={error => setDocumentError(errorMessage(error))}
                     onLoadComplete={() => setDocumentError('')}
-                    style={{ flex: 1, width: '100%' }}
+                    style={styles.pdfViewer}
                   />
                 ) : (
                   <Image
-                    source={documentSource}
+                    source={{
+                      uri: documentUrl,
+                      headers: documentHeaders,
+                      cache: 'reload',
+                    }}
                     resizeMode="contain"
                     onError={() =>
                       setDocumentError(
