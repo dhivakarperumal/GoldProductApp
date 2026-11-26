@@ -7,6 +7,7 @@ import {
   ScrollView,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import {
@@ -22,6 +23,7 @@ import {
   FileText,
   Filter,
   Layers,
+  PieChart,
   RefreshCw,
   Search,
   Store,
@@ -30,6 +32,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react-native';
+import Svg, { Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../api';
 
@@ -66,11 +69,18 @@ type RevenueOverviewData = {
 };
 type AnalyticsPoint = {
   label?: string;
+  date?: string;
   revenue?: number;
   registrations?: number;
   subscriptions?: number;
+  growthRate?: number;
 };
 type RevenueAnalytics = {
+  daily?: AnalyticsPoint[];
+  weekly?: AnalyticsPoint[];
+  monthly?: AnalyticsPoint[];
+  yearly?: AnalyticsPoint[];
+  growth?: AnalyticsPoint[];
   monthlyRevenue?: AnalyticsPoint[];
   shopRegistrations?: AnalyticsPoint[];
   subscriptionGrowth?: AnalyticsPoint[];
@@ -565,6 +575,8 @@ function Pager({
 
 export default function Revenue() {
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const isWideLayout = screenWidth >= 760;
   const [overview, setOverview] = useState<RevenueOverviewData>({});
   const [analytics, setAnalytics] = useState<RevenueAnalytics>({});
   const [subscriptions, setSubscriptions] = useState<{
@@ -809,24 +821,31 @@ export default function Revenue() {
   };
 
   const chartModeOptions = [
-    { id: 'revenue', label: 'Revenue', key: 'monthlyRevenue' },
-    { id: 'shops', label: 'Shop Growth', key: 'shopRegistrations' },
-    { id: 'subscriptions', label: 'Subscriptions', key: 'subscriptionGrowth' },
+    { id: 'monthly', label: 'Monthly Revenue' },
+    { id: 'daily', label: 'Daily (Last 30D)' },
+    { id: 'weekly', label: 'Weekly Trend' },
+    { id: 'yearly', label: 'Yearly Comparison' },
+    { id: 'growth', label: 'Growth Analytics' },
   ] as const;
   const [chartMode, setChartMode] =
-    useState<(typeof chartModeOptions)[number]['id']>('revenue');
-  const activeChart = chartModeOptions.find(item => item.id === chartMode);
+    useState<(typeof chartModeOptions)[number]['id']>('monthly');
   const chartValues = useMemo(() => {
-    if (!activeChart) return [];
-    const points = analytics[activeChart.key] || [];
+    const points =
+      analytics[chartMode] ||
+      (chartMode === 'monthly'
+        ? analytics.monthlyRevenue
+        : chartMode === 'growth'
+        ? analytics.subscriptionGrowth
+        : undefined) ||
+      [];
     return points.map(point => ({
-      label: point.label || '—',
-      value:
-        chartMode === 'revenue'
-          ? Number(point.revenue || 0)
-          : Number(point.registrations || point.subscriptions || 0),
+      label: point.label || point.date || '—',
+      value: Number(
+        point.revenue || point.registrations || point.subscriptions || 0,
+      ),
+      growthRate: Number(point.growthRate || 0),
     }));
-  }, [activeChart, analytics, chartMode]);
+  }, [analytics, chartMode]);
   const chartMax = Math.max(1, ...chartValues.map(item => item.value));
 
   const metricCards = [
@@ -1200,84 +1219,248 @@ export default function Revenue() {
     </View>
   );
 
-  const renderChart = () => (
-    <View className="rounded-2xl border border-[#ECE7D8] bg-white p-4">
-      <View className="flex-row items-center">
-        <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#E7F3EF]">
-          <BarChart3 size={19} color="#08745D" />
-        </View>
-        <View className="ml-3 flex-1">
-          <Text className="text-sm font-extrabold text-[#173F35]">
-            Revenue Analytics & Trends
-          </Text>
-          <Text className="mt-0.5 text-[10px] text-[#6B7280]">
-            Performance based on verified transactions
-          </Text>
-        </View>
-      </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerClassName="mt-3 gap-2"
+  const renderPlanDistribution = () => {
+    const revenuePlans = subscriptions.items.filter(
+      plan => Number(plan.totalRevenue || 0) > 0,
+    );
+    const distributionTotal = revenuePlans.reduce(
+      (total, plan) => total + Number(plan.totalRevenue || 0),
+      0,
+    );
+    const totalIncome =
+      Number(subscriptions.totalAllRevenue || 0) || distributionTotal;
+    const colors = [
+      '#07564B',
+      '#0D9488',
+      '#10B981',
+      '#F59E0B',
+      '#6366F1',
+      '#EC4899',
+      '#8B5CF6',
+    ];
+    const radius = 56;
+    const circumference = 2 * Math.PI * radius;
+    let dashOffset = 0;
+
+    return (
+      <View
+        className="rounded-2xl border border-[#ECE7D8] bg-white p-4"
+        style={isWideLayout ? { flex: 1 } : undefined}
       >
-        {chartModeOptions.map(option => (
+        <View className="flex-row items-center">
+          <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#EFF8FF]">
+            <PieChart size={19} color="#0369A1" />
+          </View>
+          <View className="ml-3 flex-1">
+            <Text className="text-sm font-extrabold text-[#173F35]">
+              Plan Distribution
+            </Text>
+            <Text className="mt-0.5 text-[10px] text-[#6B7280]">
+              Revenue share by subscription tier
+            </Text>
+          </View>
+        </View>
+        <View className="mt-4 items-center border-t border-[#F1F5F9] pt-4">
+          <Text className="text-[10px] text-[#6B7280]">
+            Total Subscription Income
+          </Text>
+          <Text className="mt-1 text-xl font-black text-[#111827]">
+            {formatCompactCurrency(totalIncome)}
+          </Text>
+          <View className="relative mt-3 h-48 w-48 items-center justify-center">
+            <Svg width={192} height={192} viewBox="0 0 160 160">
+              <Circle
+                cx={80}
+                cy={80}
+                r={radius}
+                fill="none"
+                stroke="#E5E7EB"
+                strokeWidth={23}
+              />
+              {distributionTotal > 0
+                ? revenuePlans.map((plan, index) => {
+                    const sliceLength =
+                      (Number(plan.totalRevenue || 0) / distributionTotal) *
+                      circumference;
+                    const circle = (
+                      <Circle
+                        key={plan.planId}
+                        cx={80}
+                        cy={80}
+                        r={radius}
+                        fill="none"
+                        stroke={colors[index % colors.length]}
+                        strokeWidth={23}
+                        strokeDasharray={`${sliceLength} ${
+                          circumference - sliceLength
+                        }`}
+                        strokeDashoffset={-dashOffset}
+                        transform="rotate(-90 80 80)"
+                      />
+                    );
+                    dashOffset += sliceLength;
+                    return circle;
+                  })
+                : null}
+            </Svg>
+            <View className="absolute h-[116px] w-[116px] items-center justify-center rounded-full bg-white">
+              <Text className="text-[9px] font-bold uppercase text-[#9CA3AF]">
+                Plans
+              </Text>
+              <Text className="mt-1 text-xl font-black text-[#173F35]">
+                {revenuePlans.length}
+              </Text>
+            </View>
+          </View>
+        </View>
+        {revenuePlans.length > 0 ? (
+          <View className="mt-2 flex-row flex-wrap gap-y-2 border-t border-[#F1F5F9] pt-3">
+            {revenuePlans.map((plan, index) => {
+              const share =
+                distributionTotal > 0
+                  ? (Number(plan.totalRevenue || 0) / distributionTotal) * 100
+                  : 0;
+              return (
+                <View
+                  key={plan.planId}
+                  className="min-w-[47%] flex-1 flex-row items-center pr-2"
+                >
+                  <View
+                    className="mr-1.5 h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: colors[index % colors.length] }}
+                  />
+                  <Text
+                    numberOfLines={1}
+                    className="flex-1 text-[10px] font-semibold text-[#4B5563]"
+                  >
+                    {plan.planName || 'Plan'}
+                  </Text>
+                  <Text className="ml-1 text-[9px] font-bold text-[#6B7280]">
+                    {share.toFixed(0)}%
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        ) : (
+          <Text className="mt-2 text-center text-[10px] text-[#6B7280]">
+            No subscription revenue available.
+          </Text>
+        )}
+      </View>
+    );
+  };
+
+  const renderChart = () => (
+    <View className={isWideLayout ? 'flex-row gap-4' : 'gap-4'}>
+      <View
+        className="rounded-2xl border border-[#ECE7D8] bg-white p-4"
+        style={isWideLayout ? { flex: 2 } : undefined}
+      >
+        <View className="flex-row items-center">
+          <View className="h-10 w-10 items-center justify-center rounded-xl bg-[#E7F3EF]">
+            <BarChart3 size={19} color="#08745D" />
+          </View>
+          <View className="ml-3 flex-1">
+            <Text className="text-sm font-extrabold text-[#173F35]">
+              Revenue Analytics & Trends
+            </Text>
+            <Text className="mt-0.5 text-[10px] text-[#6B7280]">
+              Real-time performance from verified transactions
+            </Text>
+          </View>
           <Pressable
-            key={option.id}
             accessibilityRole="button"
-            accessibilityState={{ selected: chartMode === option.id }}
-            onPress={() => setChartMode(option.id)}
-            className={`rounded-lg px-3 py-2 ${
-              chartMode === option.id ? 'bg-[#08745D]' : 'bg-[#F3F4F6]'
-            }`}
+            accessibilityLabel="Refresh revenue analytics"
+            onPress={() => loadDashboardData()}
+            className="h-9 w-9 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white"
           >
-            <Text
-              className={`text-[10px] font-bold ${
-                chartMode === option.id ? 'text-white' : 'text-[#4B5563]'
+            <RefreshCw size={15} color="#6B7280" />
+          </Pressable>
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerClassName="mt-4 gap-2"
+        >
+          {chartModeOptions.map(option => (
+            <Pressable
+              key={option.id}
+              accessibilityRole="button"
+              accessibilityState={{ selected: chartMode === option.id }}
+              onPress={() => setChartMode(option.id)}
+              className={`rounded-xl border px-3 py-2 ${
+                chartMode === option.id
+                  ? 'border-[#075C51] bg-[#075C51]'
+                  : 'border-[#E5E7EB] bg-white'
               }`}
             >
-              {option.label}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-      {loading ? (
-        <ActivityIndicator className="py-10" color="#08745D" />
-      ) : chartValues.length === 0 ? (
-        <Text className="py-10 text-center text-xs text-[#6B7280]">
-          No analytics available for this period.
-        </Text>
-      ) : (
-        <View className="mt-5 h-48 flex-row items-end justify-around border-b border-l border-[#E5E7EB] px-2">
-          {chartValues.slice(-8).map((item, index) => {
-            const height = Math.max((item.value / chartMax) * 125, 6);
-            return (
-              <View
-                key={`${item.label}-${index}`}
-                className="flex-1 items-center justify-end"
+              <Text
+                className={`text-[10px] font-bold ${
+                  chartMode === option.id ? 'text-white' : 'text-[#4B5563]'
+                }`}
               >
-                <Text
-                  numberOfLines={1}
-                  className="mb-1 text-[8px] font-semibold text-[#6B7280]"
-                >
-                  {chartMode === 'revenue'
-                    ? formatCompactCurrency(item.value)
-                    : item.value.toLocaleString('en-IN')}
-                </Text>
-                <View
-                  className="w-[55%] rounded-t-lg bg-[#0B806B]"
-                  style={{ height }}
-                />
-                <Text
-                  numberOfLines={1}
-                  className="mb-2 mt-2 text-[8px] text-[#6B7280]"
-                >
-                  {item.label}
-                </Text>
+                {option.label}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+        {loading ? (
+          <ActivityIndicator className="py-10" color="#08745D" />
+        ) : chartValues.length === 0 ? (
+          <Text className="py-10 text-center text-xs text-[#6B7280]">
+            No analytics available for this period.
+          </Text>
+        ) : (
+          <View className="mt-5">
+            <View className="h-56 flex-row items-end border-b border-l border-[#E5E7EB] px-1">
+              <View className="absolute inset-0 justify-between">
+                {[0, 1, 2, 3, 4].map(line => (
+                  <View
+                    key={line}
+                    className="border-t border-[#F1F5F9]"
+                    style={{ top: `${line * 20}%` }}
+                  />
+                ))}
               </View>
-            );
-          })}
-        </View>
-      )}
+              {chartValues.slice(-12).map((item, index) => {
+                const height = Math.max((item.value / chartMax) * 160, 4);
+                return (
+                  <View
+                    key={`${item.label}-${index}`}
+                    className="z-10 flex-1 items-center justify-end"
+                  >
+                    {chartMode === 'growth' ? (
+                      <Text className="mb-1 text-[8px] font-bold text-[#059669]">
+                        {item.growthRate}%
+                      </Text>
+                    ) : null}
+                    <Text
+                      numberOfLines={1}
+                      className="mb-1 text-[8px] font-semibold text-[#64748B]"
+                    >
+                      {formatCompactCurrency(item.value)}
+                    </Text>
+                    <View
+                      className={`w-[58%] rounded-t-lg ${
+                        chartMode === 'growth' ? 'bg-[#0D9488]' : 'bg-[#07564B]'
+                      }`}
+                      style={{ height }}
+                    />
+                    <Text
+                      numberOfLines={1}
+                      className="mb-2 mt-2 text-[8px] font-semibold text-[#64748B]"
+                    >
+                      {item.label}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+      </View>
+      {renderPlanDistribution()}
     </View>
   );
 
