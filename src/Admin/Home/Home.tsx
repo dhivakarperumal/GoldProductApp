@@ -170,6 +170,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
 export default function Home({ onNavigate }: HomeProps) {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [goldRates, setGoldRates] = useState<GoldRate[]>([]);
+  const [loans, setLoans] = useState<RecentLoan[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -180,11 +181,12 @@ export default function Home({ onNavigate }: HomeProps) {
       api.get('/dashboard', {
         params: { datePreset: 'all', startDate: '', endDate: '' },
       }),
+      api.get('/loans'),
       api.get('/gold-rates/current'),
     ]);
 
     const errors: string[] = [];
-    const [dashboardResult, ratesResult] = results;
+    const [dashboardResult, loansResult, ratesResult] = results;
 
     if (dashboardResult.status === 'fulfilled') {
       if (Array.isArray(dashboardResult.value.data?.stats)) {
@@ -194,6 +196,16 @@ export default function Home({ onNavigate }: HomeProps) {
       }
     } else {
       errors.push(`Dashboard: ${getErrorMessage(dashboardResult.reason)}`);
+    }
+
+    if (loansResult.status === 'fulfilled') {
+      if (Array.isArray(loansResult.value.data)) {
+        setLoans(loansResult.value.data as RecentLoan[]);
+      } else {
+        errors.push('Loans API returned an invalid list.');
+      }
+    } else {
+      errors.push(`Loans: ${getErrorMessage(loansResult.reason)}`);
     }
 
     if (ratesResult.status === 'fulfilled') {
@@ -231,7 +243,9 @@ export default function Home({ onNavigate }: HomeProps) {
   const revenueTrends = dashboard?.revenueTrends || [];
   const maxRevenue = Math.max(...revenueTrends.map(item => item.revenue), 1);
   const loanStatuses = Object.entries(dashboard?.loanStatusCounts || {});
-  const recentLoans = (dashboard?.recentLoans || []).slice(0, 5);
+  const recentLoans = (
+    loans.length > 0 ? loans : dashboard?.recentLoans || []
+  ).slice(0, 5);
   const products = dashboard?.topProducts || [];
 
   return (

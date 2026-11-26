@@ -183,16 +183,7 @@ test('routes shop admins to the admin dashboard and its API', async () => {
             data: {
               stats: [],
               revenueTrends: [],
-              recentLoans: [
-                {
-                  id: '#GL001',
-                  customer: 'Dashboard Customer',
-                  jewellery: 'Ring',
-                  amount: '₹ 1,000',
-                  status: 'Active',
-                  date: '25 Nov 2026',
-                },
-              ],
+              recentLoans: [],
               topProducts: [
                 {
                   id: 2,
@@ -210,9 +201,33 @@ test('routes shop admins to the admin dashboard and its API', async () => {
               ],
             },
           }
-        : path === '/gold-rates/current'
-          ? { data: null }
-          : { data: { user: { role: 'admin' } } },
+        : path === '/loans'
+          ? {
+              data: [
+                {
+                  id: 1,
+                  loan_number: 'GL-001',
+                  customer_name: 'Dashboard Customer',
+                  jewellery_type: 'Ring',
+                  principal_amount: '1000.00',
+                  loan_status: 'Active',
+                  loan_date: '2026-11-25',
+                },
+              ],
+            }
+          : path === '/gold-rates/current'
+            ? {
+                data: {
+                  rates: [
+                    {
+                      metal_type: 'Gold',
+                      purity: '999',
+                      rate_per_gram: 10000,
+                    },
+                  ],
+                },
+              }
+            : { data: { user: { role: 'admin' } } },
     ),
   );
   let renderer!: ReactTestRenderer.ReactTestRenderer;
@@ -246,7 +261,7 @@ test('routes shop admins to the admin dashboard and its API', async () => {
     params: { datePreset: 'all', startDate: '', endDate: '' },
   });
   expect(mockGet).toHaveBeenCalledWith('/gold-rates/current');
-  expect(mockGet).not.toHaveBeenCalledWith('/loans');
+  expect(mockGet).toHaveBeenCalledWith('/loans');
   expect(mockGet).not.toHaveBeenCalledWith('/products/mine');
 });
 
