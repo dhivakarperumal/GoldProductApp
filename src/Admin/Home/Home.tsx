@@ -32,14 +32,19 @@ type DashboardMetric = {
 };
 
 type RecentLoan = {
-  id: number;
+  id: number | string;
   loan_number?: string;
+  customer?: string;
   customer_name?: string;
+  jewellery?: string;
   jewellery_type?: string;
   gold_purity?: string;
   principal_amount?: string | number;
+  amount?: string | number;
+  status?: string;
   loan_status?: string;
   loan_date?: string;
+  date?: string;
 };
 
 type RevenueTrend = {
@@ -56,9 +61,11 @@ type GoldRate = {
 };
 
 type Product = {
-  id: number;
+  id: number | string;
   name: string;
+  cat?: string;
   category?: string;
+  price?: string | number | null;
   final_selling_price?: string | number | null;
   offer_price?: string | number | null;
   mrp?: string | number | null;
@@ -71,6 +78,8 @@ type DashboardData = {
   loanStatusCounts?: Record<string, number>;
   revenueTrends?: RevenueTrend[];
   goldRates?: GoldRate[];
+  recentLoans?: RecentLoan[];
+  topProducts?: Product[];
 };
 
 type HomeProps = {
@@ -161,8 +170,6 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
 export default function Home({ onNavigate }: HomeProps) {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [goldRates, setGoldRates] = useState<GoldRate[]>([]);
-  const [loans, setLoans] = useState<RecentLoan[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -174,12 +181,10 @@ export default function Home({ onNavigate }: HomeProps) {
         params: { datePreset: 'all', startDate: '', endDate: '' },
       }),
       api.get('/gold-rates/current'),
-      api.get('/loans', { params: { startDate: '', endDate: '' } }),
-      api.get('/products/mine', { params: { page: 1, limit: 5 } }),
     ]);
 
     const errors: string[] = [];
-    const [dashboardResult, ratesResult, loansResult, productsResult] = results;
+    const [dashboardResult, ratesResult] = results;
 
     if (dashboardResult.status === 'fulfilled') {
       if (Array.isArray(dashboardResult.value.data?.stats)) {
@@ -193,7 +198,7 @@ export default function Home({ onNavigate }: HomeProps) {
 
     if (ratesResult.status === 'fulfilled') {
       const currentRateSet = ratesResult.value.data;
-      if (currentRateSet === null) {
+      if (currentRateSet === null || currentRateSet?.rates?.length === 0) {
         const dashboardRates =
           dashboardResult.status === 'fulfilled' &&
           Array.isArray(dashboardResult.value.data?.goldRates)
@@ -207,27 +212,6 @@ export default function Home({ onNavigate }: HomeProps) {
       }
     } else {
       errors.push(`Gold rates: ${getErrorMessage(ratesResult.reason)}`);
-    }
-
-    if (loansResult.status === 'fulfilled') {
-      if (Array.isArray(loansResult.value.data)) {
-        setLoans(loansResult.value.data as RecentLoan[]);
-      } else {
-        errors.push('Loans API returned an invalid list.');
-      }
-    } else {
-      errors.push(`Loans: ${getErrorMessage(loansResult.reason)}`);
-    }
-
-    if (productsResult.status === 'fulfilled') {
-      const productList = productsResult.value.data?.products;
-      if (Array.isArray(productList)) {
-        setProducts(productList as Product[]);
-      } else {
-        errors.push('Products API returned an invalid list.');
-      }
-    } else {
-      errors.push(`Products: ${getErrorMessage(productsResult.reason)}`);
     }
 
     setErrorMessage(errors.join(' '));
@@ -247,7 +231,8 @@ export default function Home({ onNavigate }: HomeProps) {
   const revenueTrends = dashboard?.revenueTrends || [];
   const maxRevenue = Math.max(...revenueTrends.map(item => item.revenue), 1);
   const loanStatuses = Object.entries(dashboard?.loanStatusCounts || {});
-  const recentLoans = loans.slice(0, 5);
+  const recentLoans = (dashboard?.recentLoans || []).slice(0, 5);
+  const products = dashboard?.topProducts || [];
 
   return (
     <ScrollView
@@ -417,20 +402,26 @@ export default function Home({ onNavigate }: HomeProps) {
                 <Text
                   numberOfLines={1}
                   className="flex-1 pr-2 text-sm font-bold text-[#173F35]">
-                  {loan.customer_name || 'Customer'}
+                  {loan.customer_name || loan.customer || 'Customer'}
                 </Text>
                 <Text className="text-xs font-bold text-[#173F35]">
-                  {formatCurrency(loan.principal_amount)}
+                  {typeof loan.amount === 'string' && loan.amount.includes('₹')
+                    ? loan.amount
+                    : formatCurrency(loan.amount ?? loan.principal_amount)}
                 </Text>
               </View>
               <View className="mt-1 flex-row justify-between">
                 <Text numberOfLines={1} className="text-xs text-[#6B7280]">
                   {[loan.jewellery_type, loan.gold_purity]
                     .filter(Boolean)
-                    .join(' · ') || loan.loan_number || `Loan ${loan.id}`}
+                    .join(' · ') ||
+                    loan.jewellery ||
+                    loan.loan_number ||
+                    `Loan ${loan.id}`}
                 </Text>
                 <Text className="ml-2 text-xs text-[#8A8F8B]">
-                  {loan.loan_status || '—'} · {formatDate(loan.loan_date)}
+                  {loan.loan_status || loan.status || '—'} ·{' '}
+                  {loan.date || formatDate(loan.loan_date)}
                 </Text>
               </View>
             </View>
@@ -461,15 +452,18 @@ export default function Home({ onNavigate }: HomeProps) {
                   {product.name}
                 </Text>
                 <Text className="mt-1 text-xs text-[#8A8F8B]">
-                  {product.category || 'Jewellery'} · {product.total_stock || 0}{' '}
-                  in stock
+                  {product.category || product.cat || 'Jewellery'}
+                  {product.total_stock !== undefined
+                    ? ` · ${product.total_stock} in stock`
+                    : ''}
                 </Text>
               </View>
               <Text className="text-sm font-extrabold text-[#173F35]">
                 {formatCurrency(
                   product.final_selling_price ??
                     product.offer_price ??
-                    product.mrp,
+                    product.mrp ??
+                    product.price,
                 )}
               </Text>
             </View>

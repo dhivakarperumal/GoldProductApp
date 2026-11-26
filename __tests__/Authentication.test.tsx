@@ -183,6 +183,24 @@ test('routes shop admins to the admin dashboard and its API', async () => {
             data: {
               stats: [],
               revenueTrends: [],
+              recentLoans: [
+                {
+                  id: '#GL001',
+                  customer: 'Dashboard Customer',
+                  jewellery: 'Ring',
+                  amount: '₹ 1,000',
+                  status: 'Active',
+                  date: '25 Nov 2026',
+                },
+              ],
+              topProducts: [
+                {
+                  id: 2,
+                  name: 'Dashboard Ring',
+                  cat: 'Bangles',
+                  price: '99840.00',
+                },
+              ],
               goldRates: [
                 {
                   metal_type: 'Gold',
@@ -194,35 +212,7 @@ test('routes shop admins to the admin dashboard and its API', async () => {
           }
         : path === '/gold-rates/current'
           ? { data: null }
-          : path === '/loans'
-            ? {
-                data: [
-                  {
-                    id: 1,
-                    loan_number: 'GL-001',
-                    customer_name: 'Dashboard Customer',
-                    jewellery_type: 'Ring',
-                    principal_amount: '1000.00',
-                    loan_status: 'Active',
-                    loan_date: '2026-11-25',
-                  },
-                ],
-              }
-            : path === '/products/mine'
-              ? {
-                  data: {
-                    products: [
-                      {
-                        id: 2,
-                        name: 'Dashboard Ring',
-                        category: 'Bangles',
-                        final_selling_price: '99840.00',
-                        total_stock: 2,
-                      },
-                    ],
-                  },
-                }
-              : { data: { user: { role: 'admin' } } },
+          : { data: { user: { role: 'admin' } } },
     ),
   );
   let renderer!: ReactTestRenderer.ReactTestRenderer;
@@ -256,12 +246,8 @@ test('routes shop admins to the admin dashboard and its API', async () => {
     params: { datePreset: 'all', startDate: '', endDate: '' },
   });
   expect(mockGet).toHaveBeenCalledWith('/gold-rates/current');
-  expect(mockGet).toHaveBeenCalledWith('/loans', {
-    params: { startDate: '', endDate: '' },
-  });
-  expect(mockGet).toHaveBeenCalledWith('/products/mine', {
-    params: { page: 1, limit: 5 },
-  });
+  expect(mockGet).not.toHaveBeenCalledWith('/loans');
+  expect(mockGet).not.toHaveBeenCalledWith('/products/mine');
 });
 
 test('removes the saved token only when Logout is pressed', async () => {
