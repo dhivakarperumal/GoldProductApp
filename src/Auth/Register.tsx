@@ -25,7 +25,6 @@ import {
 import { launchImageLibrary } from 'react-native-image-picker';
 import api from '../api';
 import { useCustomAlert } from '../Components/CustomAlert';
-import InnerHeader from '../Components/InnerHeader';
 import { CustomDropdown, DatePicker } from '../Admin/Loans/FormControls';
 
 type RegistrationPlan = {
@@ -63,18 +62,18 @@ type Props = {
   onSubmitted: (email: string) => void;
 };
 
-const STEPS = [
-  { title: 'Personal Details', shortTitle: 'Personal', icon: UserRound },
-  { title: 'Shop Details', shortTitle: 'Shop', icon: Store },
-  { title: 'Subscription', shortTitle: 'Plan', icon: CreditCard },
-  { title: 'Review & Submit', shortTitle: 'Review', icon: CheckCircle2 },
-];
-
 const DURATIONS = [
   { value: 'monthly', label: 'Monthly' },
   { value: 'quarterly', label: 'Quarterly' },
   { value: 'half_yearly', label: 'Half-Yearly' },
   { value: 'yearly', label: 'Yearly' },
+];
+
+const STEPS = [
+  { title: 'Personal Details', shortTitle: 'Personal', icon: UserRound },
+  { title: 'Shop Details', shortTitle: 'Shop', icon: Store },
+  { title: 'Subscription', shortTitle: 'Plan', icon: CreditCard },
+  { title: 'Review & Submit', shortTitle: 'Review', icon: CheckCircle2 },
 ];
 
 const STATES_AND_UTS = [
@@ -274,12 +273,12 @@ function InputField({
 }) {
   return (
     <View className="mb-3">
-      <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]">
+      <Text className="mb-1.5 ml-1 text-sm font-semibold text-[#374151]">
         {label}
         {required ? <Text className="text-red-600"> *</Text> : null}
       </Text>
       <View
-        className={`flex-row items-center rounded-xl border bg-white px-3.5 ${
+        className={`flex-row items-center rounded-xl border bg-white px-4 ${
           error ? 'border-red-400' : 'border-[#E6E9E3]'
         }`}>
         <TextInput
@@ -294,8 +293,8 @@ function InputField({
           placeholderTextColor="#9AA6A1"
           secureTextEntry={secureTextEntry}
           value={value}
-          className={`flex-1 py-3 text-sm text-[#173F35] ${
-            multiline ? 'min-h-24' : 'min-h-12'
+          className={`flex-1 text-sm font-medium text-stone-800 ${
+            multiline ? 'min-h-24 py-3.5' : 'py-3.5'
           }`}
           textAlignVertical={multiline ? 'top' : 'center'}
         />
@@ -532,27 +531,78 @@ export default function Register({ onBack, onSubmitted }: Props) {
     }
   };
 
-  if (plansLoading || plansError || plans.length === 0) {
-    return (
-      <View className="flex-1 bg-[#F8F7F2]">
-        <InnerHeader
-          title="Register your gold shop"
-          sectionLabel="Shop registration"
-          onBack={onBack}
-          backAccessibilityLabel="Back to sign in"
-        />
-        <View className="flex-1 justify-center px-6">
-          <View className="rounded-3xl border border-[#EAE7DC] bg-white p-6">
+  const StepIcon = STEPS[activeStep].icon;
+
+  return (
+    <KeyboardAvoidingView
+      className="flex-1 bg-[#F8F7F2]"
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView
+        contentContainerClassName="flex-grow justify-center px-6 py-10"
+        keyboardShouldPersistTaps="handled">
+        <View className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#F3E8C1]" />
+        <View className="absolute -bottom-16 -left-20 h-56 w-56 rounded-full bg-[#E3EEE8]" />
+        <View className="w-full max-w-md self-center">
+          <View className="mb-6 items-center">
+            <View className="mb-3 h-32 w-32 overflow-hidden rounded-full border-4 border-[#F5E6A8] bg-[#06452D] shadow-lg">
+              <Image
+                accessibilityLabel="Sri GoldSuite logo"
+                source={require('../Assert/Images/App icon.png')}
+                resizeMode="cover"
+                className="h-full w-full"
+              />
+            </View>
+            <Text className="mb-3 text-center text-xs font-bold uppercase tracking-[3px] text-[#A77B15]">
+              A little more sparkle, every day
+            </Text>
+            <Text className="text-center text-3xl font-bold text-[#173F35]">
+              Register your gold shop
+            </Text>
+            <Text className="mt-2 text-center text-sm leading-5 text-[#6B7280]">
+              Create an account to manage customers, products, and billing with ease.
+            </Text>
+          </View>
+
+          <View className="mb-4 flex-row rounded-xl bg-[#07564B] p-1">
+            {STEPS.map((step, index) => {
+              const Icon = step.icon;
+              const selected = index === activeStep;
+              return (
+                <Pressable
+                  key={step.title}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected }}
+                  onPress={() => setActiveStep(index)}
+                  className={`min-h-11 flex-1 items-center justify-center rounded-lg px-1 ${
+                    selected ? 'bg-white' : ''
+                  }`}>
+                  <View className="flex-row items-center">
+                    <Icon size={14} color={selected ? '#07564B' : '#FFFFFF'} />
+                    <Text
+                      numberOfLines={1}
+                      className={`ml-1 text-[10px] font-bold ${
+                        selected ? 'text-[#07564B]' : 'text-white'
+                      }`}>
+                      {step.shortTitle}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View className="rounded-3xl border border-[#EAE7DC] bg-white p-5 shadow-lg">
             {plansLoading ? (
-              <>
-                <ActivityIndicator color="#07564B" />
-                <Text className="mt-4 text-center text-sm text-[#6B7280]">
+              <View className="mb-4 flex-row items-center rounded-xl bg-[#F0F8F5] p-3">
+                <ActivityIndicator size="small" color="#07564B" />
+                <Text className="ml-3 text-sm text-[#52645F]">
                   Loading subscription plans...
                 </Text>
-              </>
-            ) : (
-              <>
-                <Text accessibilityRole="alert" className="text-center text-sm text-[#991B1B]">
+              </View>
+            ) : null}
+            {!plansLoading && (plansError || plans.length === 0) ? (
+              <View className="mb-4 rounded-xl border border-red-100 bg-red-50 p-3">
+                <Text accessibilityRole="alert" className="text-sm text-red-800">
                   {plansError ||
                     'Registration is unavailable because there are no active subscription plans.'}
                 </Text>
@@ -560,100 +610,24 @@ export default function Register({ onBack, onSubmitted }: Props) {
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => setRetryPlans(count => count + 1)}
-                    className="mt-5 items-center rounded-xl bg-[#07564B] px-5 py-3">
-                    <Text className="font-bold text-white">Try again</Text>
+                    className="mt-3 self-start rounded-lg bg-[#07564B] px-4 py-2">
+                    <Text className="text-xs font-bold text-white">Try again</Text>
                   </Pressable>
                 ) : null}
-                <Pressable accessibilityRole="button" onPress={onBack} className="mt-4 py-2">
-                  <Text className="text-center text-sm font-bold text-[#07564B]">
-                    Back to sign in
-                  </Text>
-                </Pressable>
-              </>
-            )}
-          </View>
-        </View>
-      </View>
-    );
-  }
+              </View>
+            ) : null}
 
-  const StepIcon = STEPS[activeStep].icon;
-
-  return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-[#F8F7F2]"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <InnerHeader
-        title="Register your gold shop"
-        sectionLabel="Shop registration"
-        onBack={onBack}
-        backAccessibilityLabel="Back to sign in"
-      />
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="px-4 pb-8 pt-1"
-        keyboardShouldPersistTaps="handled">
-        <View className="mb-4 items-center">
-          <Image
-            accessibilityLabel="Sri Golds logo"
-            source={require('../Assert/Images/App icon.png')}
-            resizeMode="cover"
-            className="mb-2 h-16 w-16 rounded-full border-2 border-[#F5E6A8]"
-          />
-          <Text className="text-center text-xl font-extrabold text-[#173F35]">
-            Create an account
-          </Text>
-          <Text className="mt-1 text-center text-sm leading-5 text-[#6B7280]">
-            Register your gold shop to manage customers, products, and billing with ease.
-          </Text>
-          <View className="mt-2 flex-row items-center">
-            <Text className="text-xs text-[#6B7280]">Already have an account? </Text>
-            <Pressable accessibilityRole="button" onPress={onBack}>
-              <Text className="text-xs font-bold text-[#07564B]">Sign in</Text>
-            </Pressable>
-          </View>
-        </View>
-
-        <View className="mb-4 flex-row rounded-xl bg-[#07564B] p-1">
-          {STEPS.map((step, index) => {
-            const Icon = step.icon;
-            const selected = index === activeStep;
-            return (
-              <Pressable
-                key={step.title}
-                accessibilityRole="tab"
-                accessibilityState={{ selected }}
-                onPress={() => setActiveStep(index)}
-                className={`min-h-11 flex-1 items-center justify-center rounded-lg px-1 ${
-                  selected ? 'bg-white' : ''
-                }`}>
-                <View className="flex-row items-center">
-                  <Icon size={14} color={selected ? '#07564B' : '#FFFFFF'} />
-                  <Text
-                    numberOfLines={1}
-                    className={`ml-1 text-[10px] font-bold ${
-                      selected ? 'text-[#07564B]' : 'text-white'
-                    }`}>
-                    {step.shortTitle}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <View className="rounded-2xl border border-[#EAE7DC] bg-white p-4 shadow-sm">
-          <View className="mb-4 flex-row items-center border-b border-[#E8EEE9] pb-3">
-            <View className="mr-3 h-9 w-9 items-center justify-center rounded-full bg-[#EFF9F5]">
-              <StepIcon size={18} color="#07564B" />
+            <View className="mb-4 flex-row items-center border-b border-[#E8EEE9] pb-3">
+              <View className="mr-3 h-9 w-9 items-center justify-center rounded-full bg-[#EFF9F5]">
+                <StepIcon size={18} color="#07564B" />
+              </View>
+              <Text className="text-base font-extrabold text-[#173F35]">
+                {STEPS[activeStep].title}
+              </Text>
             </View>
-            <Text className="text-base font-extrabold text-[#173F35]">
-              {STEPS[activeStep].title}
-            </Text>
-          </View>
 
-          {activeStep === 0 ? (
-            <>
+            {activeStep === 0 ? (
+              <View className="mb-5">
               <InputField
                 label="Name"
                 value={form.ownerName}
@@ -730,9 +704,10 @@ export default function Register({ onBack, onSubmitted }: Props) {
                   </Pressable>
                 )}
               </View>
-            </>
+            </View>
+
           ) : activeStep === 1 ? (
-            <>
+            <View className="mb-5">
               <InputField
                 label="Shop name"
                 value={form.shopName}
@@ -785,9 +760,10 @@ export default function Register({ onBack, onSubmitted }: Props) {
                 maxLength={5000}
                 placeholder="Street address"
               />
-            </>
+            </View>
+
           ) : activeStep === 2 ? (
-            <>
+            <View className="mb-5">
               <Text className="mb-3 text-xs leading-5 text-[#6B7280]">
                 Select a plan and duration. Payment remains pending until it is confirmed by the
                 Super Admin.
@@ -856,25 +832,10 @@ export default function Register({ onBack, onSubmitted }: Props) {
                   Pending Super Admin confirmation
                 </Text>
               </View>
-            </>
+            </View>
+
           ) : (
-            <>
-              <View className="mb-4 rounded-xl bg-[#F0F8F5] p-3">
-                <Text className="text-xs font-bold uppercase tracking-wide text-[#07564B]">
-                  Registration summary
-                </Text>
-                <Text className="mt-2 text-sm font-semibold text-[#173F35]">
-                  {form.ownerName || 'Owner name'} · {form.mobile || 'Mobile number'}
-                </Text>
-                <Text className="mt-1 text-xs text-[#52645F]">
-                  {form.email || 'Email'} · {form.shopName || 'Shop name'}
-                </Text>
-                <Text className="mt-1 text-xs text-[#52645F]">
-                  {selectedPlan?.plan_name || 'Subscription plan'} ·{' '}
-                  {DURATIONS.find(duration => duration.value === form.duration)?.label} ·{' '}
-                  {formatDate(form.startDate)}
-                </Text>
-              </View>
+            <View>
               <InputField
                 label="Email ID"
                 value={form.email}
@@ -944,44 +905,67 @@ export default function Register({ onBack, onSubmitted }: Props) {
                 Email is filled from Personal Details, and the username is filled from the owner
                 name. Your login account will be created only after Super Admin approval.
               </Text>
-            </>
-          )}
-        </View>
+            </View>
 
-        <View className="mt-4 flex-row justify-between gap-3">
+            )}
+            <View className="mt-4 flex-row justify-between gap-3">
+              <Pressable
+                accessibilityRole="button"
+                disabled={activeStep === 0 || submitting}
+                onPress={() => setActiveStep(step => Math.max(step - 1, 0))}
+                className="min-h-12 min-w-[120px] flex-row items-center justify-center rounded-full border border-[#07564B] px-4 disabled:opacity-40">
+                <ArrowLeft size={16} color="#07564B" />
+                <Text className="ml-2 text-sm font-bold text-[#07564B]">Previous</Text>
+              </Pressable>
+              {activeStep < STEPS.length - 1 ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={goNext}
+                  className="min-h-12 min-w-[150px] flex-row items-center justify-center rounded-full bg-[#064A41] px-5">
+                  <Text className="mr-2 text-sm font-bold text-white">Save &amp; Next</Text>
+                  <ArrowRight size={17} color="#FFFFFF" />
+                </Pressable>
+              ) : (
+                <Pressable
+                  testID="register-submit"
+                  accessibilityRole="button"
+                  accessibilityState={{
+                    disabled: submitting || plansLoading || plans.length === 0,
+                  }}
+                  disabled={submitting || plansLoading || plans.length === 0}
+                  onPress={submitRegistration}
+                  className={`min-h-12 min-w-[160px] flex-row items-center justify-center rounded-full bg-[#B8860B] px-5 disabled:opacity-60 ${
+                    submitting || plansLoading || plans.length === 0 ? 'opacity-60' : ''
+                  }`}>
+                  {submitting ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <CheckCircle2 size={17} color="#FFFFFF" />
+                  )}
+                  <Text className="ml-2 text-sm font-bold text-white">
+                    {submitting ? 'Submitting...' : 'Save Gold Shop'}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+            <View className="mt-5 flex-row items-center">
+              <View className="h-px flex-1 bg-[#E5E7EB]" />
+              <Text className="mx-4 text-xs font-bold tracking-[2px] text-[#9CA3AF]">
+                SRI GOLDSUITE
+              </Text>
+              <View className="h-px flex-1 bg-[#E5E7EB]" />
+            </View>
+          </View>
+
           <Pressable
             accessibilityRole="button"
-            disabled={activeStep === 0 || submitting}
-            onPress={() => setActiveStep(step => Math.max(step - 1, 0))}
-            className="min-h-12 min-w-[120px] flex-row items-center justify-center rounded-full border border-[#07564B] px-4 disabled:opacity-40">
-            <ArrowLeft size={16} color="#07564B" />
-            <Text className="ml-2 text-sm font-bold text-[#07564B]">Previous</Text>
+            onPress={onBack}
+            className="mt-5 items-center py-2">
+            <Text className="text-sm text-[#6B7280]">
+              Already have an account?{' '}
+              <Text className="font-bold text-[#07564B]">Sign in</Text>
+            </Text>
           </Pressable>
-          {activeStep < STEPS.length - 1 ? (
-            <Pressable
-              accessibilityRole="button"
-              onPress={goNext}
-              className="min-h-12 min-w-[150px] flex-row items-center justify-center rounded-full bg-[#064A41] px-5">
-              <Text className="mr-2 text-sm font-bold text-white">Save &amp; Next</Text>
-              <ArrowRight size={17} color="#FFFFFF" />
-            </Pressable>
-          ) : (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled: submitting }}
-              disabled={submitting}
-              onPress={submitRegistration}
-              className="min-h-12 min-w-[160px] flex-row items-center justify-center rounded-full bg-[#064A41] px-5 disabled:opacity-60">
-              {submitting ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <ArrowRight size={17} color="#FFFFFF" />
-              )}
-              <Text className="ml-2 text-sm font-bold text-white">
-                {submitting ? 'Submitting...' : 'Save Gold Shop'}
-              </Text>
-            </Pressable>
-          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
