@@ -9,6 +9,7 @@ import {
 import { Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MyProfile from './MyProfile';
+import PaymentManagement from './PaymentManagement';
 import UsersManegement from './UsersManegement';
 
 type ProfileDestination = 'cards' | 'my-profile' | 'users' | 'payments';
@@ -16,6 +17,7 @@ type ProfileDestination = 'cards' | 'my-profile' | 'users' | 'payments';
 type ProfileProps = {
   onMyProfileVisibilityChange: (visible: boolean) => void;
   onUsersManagementVisibilityChange: (visible: boolean) => void;
+  onPaymentManagementVisibilityChange: (visible: boolean) => void;
   onLogout: () => void;
 };
 
@@ -43,6 +45,7 @@ const cards = [
 export default function Profile({
   onMyProfileVisibilityChange,
   onUsersManagementVisibilityChange,
+  onPaymentManagementVisibilityChange,
   onLogout,
 }: ProfileProps) {
   const [destination, setDestination] = useState<ProfileDestination>('cards');
@@ -76,46 +79,25 @@ export default function Profile({
     );
   }
 
-  if (destination === 'users' || destination === 'payments') {
-    if (destination === 'users') {
-      return (
-        <UsersManegement
-          onBack={() => {
-            setDestination('cards');
-            onUsersManagementVisibilityChange(false);
-          }}
-        />
-      );
-    }
-
-    const title = 'Payment Management';
-    const Icon = CreditCard;
-
+  if (destination === 'users') {
     return (
-      <View className="flex-1 bg-[#F8F7F2] px-4 py-5">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Back to profile cards"
-          onPress={() => setDestination('cards')}
-          className="mb-5 flex-row items-center self-start rounded-xl bg-white px-3 py-2.5"
-        >
-          <ArrowLeft size={18} color="#173F35" />
-          <Text className="ml-2 text-sm font-bold text-[#173F35]">
-            Back to Profile
-          </Text>
-        </Pressable>
-        <View className="flex-1 items-center justify-center rounded-2xl border border-[#ECE7D8] bg-white px-6">
-          <View className="h-16 w-16 items-center justify-center rounded-full bg-[#FEF3C7]">
-            <Icon size={28} color="#92400E" />
-          </View>
-          <Text className="mt-4 text-xl font-extrabold text-[#173F35]">
-            {title}
-          </Text>
-          <Text className="mt-2 text-center text-sm text-[#6B7280]">
-            This section is ready for its management features.
-          </Text>
-        </View>
-      </View>
+      <UsersManegement
+        onBack={() => {
+          setDestination('cards');
+          onUsersManagementVisibilityChange(false);
+        }}
+      />
+    );
+  }
+
+  if (destination === 'payments') {
+    return (
+      <PaymentManagement
+        onBack={() => {
+          setDestination('cards');
+          onPaymentManagementVisibilityChange(false);
+        }}
+      />
     );
   }
 
@@ -135,6 +117,7 @@ export default function Profile({
                 setDestination(card.id);
                 onMyProfileVisibilityChange(card.id === 'my-profile');
                 onUsersManagementVisibilityChange(card.id === 'users');
+                onPaymentManagementVisibilityChange(card.id === 'payments');
               }}
               className="w-full flex-row items-center rounded-2xl border border-[#E8E6DC] bg-white p-4 shadow-sm"
             >

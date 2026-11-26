@@ -44,6 +44,8 @@ function AppContent() {
   const [isMyProfileVisible, setIsMyProfileVisible] = useState(false);
   const [isUsersManagementVisible, setIsUsersManagementVisible] =
     useState(false);
+  const [isPaymentManagementVisible, setIsPaymentManagementVisible] =
+    useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionCheckAttempt, setSessionCheckAttempt] = useState(0);
@@ -124,6 +126,7 @@ function AppContent() {
     if (tab !== 'Profile') {
       setIsMyProfileVisible(false);
       setIsUsersManagementVisible(false);
+      setIsPaymentManagementVisible(false);
     }
   };
 
@@ -182,7 +185,9 @@ function AppContent() {
       {!(
         (activeTab === 'Plans' && isPlanFormVisible) ||
         (activeTab === 'Profile' &&
-          (isMyProfileVisible || isUsersManagementVisible))
+          (isMyProfileVisible ||
+            isUsersManagementVisible ||
+            isPaymentManagementVisible))
       ) ? (
         <TopHeader
           adminName={adminName}
@@ -197,6 +202,7 @@ function AppContent() {
         <Profile
           onMyProfileVisibilityChange={setIsMyProfileVisible}
           onUsersManagementVisibilityChange={setIsUsersManagementVisible}
+          onPaymentManagementVisibilityChange={setIsPaymentManagementVisible}
           onLogout={handleLogout}
         />
       ) : activeTab === 'Plans' ? (
@@ -211,7 +217,9 @@ function AppContent() {
       {!(
         (activeTab === 'Plans' && isPlanFormVisible) ||
         (activeTab === 'Profile' &&
-          (isMyProfileVisible || isUsersManagementVisible))
+          (isMyProfileVisible ||
+            isUsersManagementVisible ||
+            isPaymentManagementVisible))
       ) ? (
         <BottomBar activeTab={activeTab} onTabPress={handleTabChange} />
       ) : null}
