@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
-import { Field, FormHeader, ChoiceChips, SubmitButton, errorMessage } from './FormControls';
+import InnerHeader from '../../Components/InnerHeader';
+import { Field, ChoiceChips, SubmitButton, errorMessage } from './FormControls';
 
 type CustomerForm = {
   customer_type: string;
@@ -184,7 +185,7 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
     <KeyboardAvoidingView
       className="flex-1 bg-[#F8F7F2]"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <FormHeader title="Create Customer" onBack={onBack} />
+      <InnerHeader title="Create Customer" onBack={onBack} />
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerClassName="px-4 pb-8">

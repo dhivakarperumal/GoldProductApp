@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
-import { ChoiceChips, Field, FormHeader, SubmitButton, errorMessage } from './FormControls';
+import InnerHeader from '../../Components/InnerHeader';
+import { ChoiceChips, Field, SubmitButton, errorMessage } from './FormControls';
 
 type Customer = {
   id: number | string;
@@ -255,7 +256,7 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
     <KeyboardAvoidingView
       className="flex-1 bg-[#F8F7F2]"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <FormHeader title="Create Gold Loan" onBack={onBack} />
+      <InnerHeader title="Create Gold Loan" onBack={onBack} />
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerClassName="px-4 pb-8">

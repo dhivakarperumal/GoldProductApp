@@ -12,6 +12,7 @@ module.exports = {
   CalendarDays: MockIcon,
   ChartNoAxesColumn: MockIcon,
   Check: MockIcon,
+  ChevronLeft: MockIcon,
   Clock3: MockIcon,
   CreditCard: MockIcon,
   Eye: MockIcon,
