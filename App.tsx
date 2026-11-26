@@ -25,6 +25,12 @@ import AdminSection from './src/Admin/Pages/AdminSection';
 import AdminLoans from './src/Admin/Loans/Loans';
 import CreateLoan from './src/Admin/Loans/CreateLoan';
 import CreateCustomer from './src/Admin/Loans/CreateCustomer';
+import Products from './src/Admin/Products/Products';
+import AddProduct from './src/Admin/Products/AddProduct';
+import StockDetails from './src/Admin/Products/StockDetails';
+import Categories from './src/Admin/Products/Categories';
+import Metals from './src/Admin/Products/Metals';
+import type { InventoryScreen } from './src/Admin/Products/inventory';
 import AdminProfile from './src/Admin/Profile/Profile';
 import AdminHeader from './src/Admin/Navigation/AdminHeader';
 import AdminTabBar, { AdminTab } from './src/Admin/Navigation/AdminTabBar';
@@ -66,6 +72,9 @@ function AppContent() {
   const [adminTab, setAdminTab] = useState<AdminTab>('Dashboard');
   const [adminLoanScreen, setAdminLoanScreen] =
     useState<AdminLoanScreen>('list');
+  const [adminProductScreen, setAdminProductScreen] =
+    useState<InventoryScreen>('all');
+  const [adminProductId, setAdminProductId] = useState<number | string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionCheckAttempt, setSessionCheckAttempt] = useState(0);
@@ -205,6 +214,16 @@ function AppContent() {
   const navigateAdminTab = (tab: AdminTab) => {
     setAdminTab(tab);
     setAdminLoanScreen('list');
+    setAdminProductScreen('all');
+    setAdminProductId(null);
+  };
+
+  const navigateAdminProduct = (
+    screen: InventoryScreen,
+    productId?: number | string,
+  ) => {
+    setAdminProductScreen(screen);
+    setAdminProductId(productId ?? null);
   };
 
   if (isAuthenticated === null) {
@@ -272,9 +291,12 @@ function AppContent() {
   if (accountRole === 'admin') {
     const isInnerLoanScreen =
       adminTab === 'Loans' && adminLoanScreen !== 'list';
+    const isInnerProductScreen =
+      adminTab === 'Products' && adminProductScreen !== 'all';
+    const isInnerAdminScreen = isInnerLoanScreen || isInnerProductScreen;
     return (
       <View className="flex-1 bg-white">
-        {!isInnerLoanScreen ? (
+        {!isInnerAdminScreen ? (
           <AdminHeader
             adminName={adminName}
             adminEmail={adminEmail}
@@ -299,12 +321,26 @@ function AppContent() {
             onCreateLoan={() => setAdminLoanScreen('createLoan')}
             onCreateCustomer={() => setAdminLoanScreen('createCustomer')}
           />
+        ) : adminTab === 'Products' && adminProductScreen === 'addProduct' ? (
+          <AddProduct
+            productId={adminProductId}
+            onBack={() => navigateAdminProduct('all')}
+            onSaved={() => navigateAdminProduct('all')}
+          />
+        ) : adminTab === 'Products' && adminProductScreen === 'stock' ? (
+          <StockDetails onBack={() => navigateAdminProduct('all')} />
+        ) : adminTab === 'Products' && adminProductScreen === 'categories' ? (
+          <Categories onBack={() => navigateAdminProduct('all')} />
+        ) : adminTab === 'Products' && adminProductScreen === 'metals' ? (
+          <Metals onBack={() => navigateAdminProduct('all')} />
+        ) : adminTab === 'Products' ? (
+          <Products onNavigate={navigateAdminProduct} />
         ) : adminTab === 'More' ? (
           <AdminProfile />
         ) : (
           <AdminSection section={adminTab} />
         )}
-        {adminTab !== 'Loans' || adminLoanScreen === 'list' ? (
+        {!isInnerAdminScreen ? (
           <AdminTabBar activeTab={adminTab} onTabPress={navigateAdminTab} />
         ) : null}
       </View>
