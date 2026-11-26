@@ -16,9 +16,7 @@ import {
   View,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  SafeAreaProvider,
-} from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import api, { clearTokenCache, setTokenCache } from './src/api';
 import Login, { LoginUser } from './src/Auth/Login';
 import BottomBar, {
@@ -43,6 +41,7 @@ function App() {
 function AppContent() {
   const [activeTab, setActiveTab] = useState<SuperAdminTab>('Home');
   const [isPlanFormVisible, setIsPlanFormVisible] = useState(false);
+  const [isMyProfileVisible, setIsMyProfileVisible] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionCheckAttempt, setSessionCheckAttempt] = useState(0);
@@ -77,11 +76,7 @@ function AppContent() {
   }, [sessionCheckAttempt]);
 
   useEffect(() => {
-    if (
-      !isAuthenticated ||
-      adminEmail ||
-      typeof api.get !== 'function'
-    ) {
+    if (!isAuthenticated || adminEmail || typeof api.get !== 'function') {
       return;
     }
 
@@ -101,7 +96,10 @@ function AppContent() {
       })
       .catch(error => {
         if (__DEV__) {
-          console.warn('[Profile] Could not load the saved account details:', error);
+          console.warn(
+            '[Profile] Could not load the saved account details:',
+            error,
+          );
         }
       });
 
@@ -120,6 +118,9 @@ function AppContent() {
     setActiveTab(tab);
     if (tab !== 'Plans') {
       setIsPlanFormVisible(false);
+    }
+    if (tab !== 'Profile') {
+      setIsMyProfileVisible(false);
     }
   };
 
@@ -154,7 +155,8 @@ function AppContent() {
               setSessionError(null);
               setSessionCheckAttempt(attempt => attempt + 1);
             }}
-            className="rounded-xl bg-[#B8860B] px-6 py-3">
+            className="rounded-xl bg-[#B8860B] px-6 py-3"
+          >
             <Text className="font-bold text-white">Retry</Text>
           </Pressable>
         </View>
@@ -174,7 +176,10 @@ function AppContent() {
 
   return (
     <View className="flex-1 bg-white">
-      {!(activeTab === 'Plans' && isPlanFormVisible) ? (
+      {!(
+        (activeTab === 'Plans' && isPlanFormVisible) ||
+        (activeTab === 'Profile' && isMyProfileVisible)
+      ) ? (
         <TopHeader
           adminName={adminName}
           adminEmail={adminEmail}
@@ -185,7 +190,10 @@ function AppContent() {
       {activeTab === 'Home' ? (
         <Home onNavigate={handleTabChange} />
       ) : activeTab === 'Profile' ? (
-        <Profile />
+        <Profile
+          onMyProfileVisibilityChange={setIsMyProfileVisible}
+          onLogout={handleLogout}
+        />
       ) : activeTab === 'Plans' ? (
         <Subscriptions onPlanFormVisibilityChange={setIsPlanFormVisible} />
       ) : (
@@ -195,7 +203,10 @@ function AppContent() {
           </Text>
         </View>
       )}
-      {!(activeTab === 'Plans' && isPlanFormVisible) ? (
+      {!(
+        (activeTab === 'Plans' && isPlanFormVisible) ||
+        (activeTab === 'Profile' && isMyProfileVisible)
+      ) ? (
         <BottomBar activeTab={activeTab} onTabPress={handleTabChange} />
       ) : null}
     </View>

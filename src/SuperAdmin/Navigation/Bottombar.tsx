@@ -70,7 +70,7 @@ export default function BottomBar({
       <View
         testID="bottom-tab-bar"
         onLayout={({ nativeEvent }) => setBarWidth(nativeEvent.layout.width)}
-        className="relative h-16 flex-row items-center border-t border-[#EAD9B1]/40">
+        className="relative h-[70px] flex-row items-center border-t border-[#EAD9B1]/40">
         {tabWidth > 0 && (
           <Animated.View
             testID="active-tab-background"
