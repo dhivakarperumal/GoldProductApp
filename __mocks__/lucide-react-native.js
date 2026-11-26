@@ -5,6 +5,8 @@ const MockIcon = () => React.createElement(View);
 
 module.exports = {
   Activity: MockIcon,
+  ArrowLeft: MockIcon,
+  ArrowRight: MockIcon,
   ArrowDownRight: MockIcon,
   ArrowUpRight: MockIcon,
   Bell: MockIcon,
@@ -23,6 +25,7 @@ module.exports = {
   Phone: MockIcon,
   RefreshCw: MockIcon,
   ShieldCheck: MockIcon,
+  Sparkles: MockIcon,
   Store: MockIcon,
   Trash2: MockIcon,
   UserRound: MockIcon,

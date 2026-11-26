@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   ImageBackground,
@@ -7,7 +7,9 @@ import {
   ScrollView,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -69,6 +71,7 @@ const currencyFormatter = new Intl.NumberFormat('en-IN', {
   currency: 'INR',
   maximumFractionDigits: 0,
 });
+const WELCOME_SLIDE_HEIGHT = 205;
 
 function formatCount(value: number | undefined) {
   return numberFormatter.format(value || 0);
@@ -190,6 +193,11 @@ function MiniBarChart({
 }
 
 export default function Home({ onNavigate }: HomeProps) {
+  const { width: windowWidth } = useWindowDimensions();
+  const bannerWidth = Math.max(windowWidth - 32, 1);
+  const bannerRef = useRef<ScrollViewInstance>(null);
+  const activeSlideRef = useRef(0);
+  const [activeSlide, setActiveSlide] = useState(0);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -290,6 +298,51 @@ export default function Home({ onNavigate }: HomeProps) {
   const subscriptionGrowth = analytics?.subscriptionGrowth || [];
   const activeShops = analytics?.shopStatus?.active || 0;
   const expiredShops = analytics?.shopStatus?.expired || 0;
+  const welcomeSlides = [
+    {
+      image: require('../../Assert/Images/welcomehome1.png'),
+      eyebrow: 'WELCOME TO',
+      title: 'Sri Gold Superadmin',
+      description: 'Manage your gold retail platform from one place.',
+      metricLabel: 'Registered shops',
+      metricValue: formatCount(stats?.totalGoldShops),
+    },
+    {
+      image: require('../../Assert/Images/welcomehome2.png'),
+      eyebrow: 'SHOP NETWORK',
+      title: 'Your shops at a glance',
+      description: 'Keep track of active stores and review shop activity.',
+      metricLabel: 'Active shops',
+      metricValue: formatCount(stats?.activeGoldShops),
+    },
+    {
+      image: require('../../Assert/Images/welcomehome3.png'),
+      eyebrow: 'SUBSCRIPTION OVERVIEW',
+      title: 'Plans and subscriptions',
+      description: 'Monitor your active subscriptions across the platform.',
+      metricLabel: 'Active subscriptions',
+      metricValue: formatCount(stats?.activeSubscriptions),
+    },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const nextSlide = (activeSlideRef.current + 1) % welcomeSlides.length;
+      activeSlideRef.current = nextSlide;
+      setActiveSlide(nextSlide);
+      bannerRef.current?.scrollTo({
+        x: nextSlide * bannerWidth,
+        animated: true,
+      });
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [bannerWidth, welcomeSlides.length]);
+
+  const goToWelcomeSlide = (index: number) => {
+    activeSlideRef.current = index;
+    setActiveSlide(index);
+    bannerRef.current?.scrollTo({ x: index * bannerWidth, animated: true });
+  };
 
   return (
     <ScrollView
@@ -300,38 +353,88 @@ export default function Home({ onNavigate }: HomeProps) {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <ImageBackground
-        source={require('../../Assert/Images/welcomehome.png')}
-        resizeMode="cover"
-        className="mb-5 overflow-hidden rounded-3xl"
-      >
-        <View className="min-h-[190px] flex-row items-start justify-between overflow-hidden rounded-3xl bg-[#06291F]/40 p-5">
-          <View className="flex-1 pr-3">
-            <Text className="text-xs font-bold uppercase tracking-[2px] text-[#F5C451]">
-              Welcome to
-            </Text>
-            <Text className="mt-1 text-2xl font-extrabold text-white">
-              Sri Gold Superadmin
-            </Text>
-            <Text className="mt-2 text-sm leading-5 text-[#F2F5F3]">
-              Manage your gold retail platform from one place.
-            </Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Refresh dashboard"
-            onPress={onRefresh}
-            disabled={refreshing}
-            className="h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/15"
-          >
-            {refreshing ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <RefreshCw size={18} color="#FFFFFF" />
-            )}
-          </Pressable>
+      <View className="mb-5 overflow-hidden rounded-3xl">
+        <ScrollView
+          ref={bannerRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={event => {
+            const index = Math.round(
+              event.nativeEvent.contentOffset.x / bannerWidth,
+            );
+            activeSlideRef.current = index;
+            setActiveSlide(index);
+          }}
+        >
+          {welcomeSlides.map((slide, index) => (
+            <ImageBackground
+              key={slide.eyebrow}
+              source={slide.image}
+              resizeMode="cover"
+              style={{ width: bannerWidth, height: WELCOME_SLIDE_HEIGHT }}
+            >
+              <View className="h-full flex-row items-start justify-between bg-[#06291F]/50 p-5">
+                <View className="flex-1 pr-3">
+                  <Text className="text-[10px] font-bold uppercase tracking-[1.7px] text-[#F5C451]">
+                    {slide.eyebrow}
+                  </Text>
+                  <Text
+                    numberOfLines={1}
+                    className="mt-1 text-[21px] font-extrabold text-white"
+                  >
+                    {slide.title}
+                  </Text>
+                  <Text
+                    numberOfLines={2}
+                    className="mt-2 text-sm leading-5 text-[#F2F5F3]"
+                  >
+                    {slide.description}
+                  </Text>
+                  <View className="mt-3 self-start flex-row items-center rounded-full border border-white/20 bg-white/10 px-3 py-1.5">
+                    <Text className="text-[10px] font-medium text-white/80">
+                      {slide.metricLabel}
+                    </Text>
+                    <Text className="ml-2 text-xs font-extrabold text-[#F5C451]">
+                      {slide.metricValue}
+                    </Text>
+                  </View>
+                </View>
+                {index === 0 ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Refresh dashboard"
+                    onPress={onRefresh}
+                    disabled={refreshing}
+                    className="h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/15"
+                  >
+                    {refreshing ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <RefreshCw size={18} color="#FFFFFF" />
+                    )}
+                  </Pressable>
+                ) : null}
+              </View>
+            </ImageBackground>
+          ))}
+        </ScrollView>
+        <View className="absolute bottom-3 left-0 right-0 flex-row justify-center">
+          {welcomeSlides.map((slide, index) => (
+            <Pressable
+              key={slide.eyebrow}
+              accessibilityRole="button"
+              accessibilityLabel={`Show welcome slide ${index + 1}`}
+              accessibilityState={{ selected: activeSlide === index }}
+              onPress={() => goToWelcomeSlide(index)}
+              hitSlop={10}
+              className={`mx-1 h-1.5 rounded-full ${
+                activeSlide === index ? 'w-5 bg-[#F5C451]' : 'w-1.5 bg-white/60'
+              }`}
+            />
+          ))}
         </View>
-      </ImageBackground>
+      </View>
 
       {errorMessage ? (
         <View className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-3">

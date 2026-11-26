@@ -83,25 +83,86 @@ function formatDate(value: string | undefined) {
 function SummaryCard({
   label,
   value,
-  accent,
+  caption,
   icon: Icon,
+  tone,
 }: {
   label: string;
   value: number;
-  accent: string;
+  caption: string;
   icon: typeof Layers;
+  tone: 'emerald' | 'blue' | 'amber' | 'violet';
 }) {
+  const styles = {
+    emerald: {
+      border: 'border-emerald-100',
+      glow: 'bg-emerald-100/70',
+      icon: 'bg-emerald-50',
+      iconColor: '#08745D',
+      caption: 'text-emerald-700',
+      marker: 'bg-emerald-500',
+    },
+    blue: {
+      border: 'border-sky-100',
+      glow: 'bg-sky-100/70',
+      icon: 'bg-sky-50',
+      iconColor: '#0369A1',
+      caption: 'text-sky-700',
+      marker: 'bg-sky-500',
+    },
+    amber: {
+      border: 'border-amber-100',
+      glow: 'bg-amber-100/70',
+      icon: 'bg-amber-50',
+      iconColor: '#B45309',
+      caption: 'text-amber-700',
+      marker: 'bg-amber-500',
+    },
+    violet: {
+      border: 'border-violet-100',
+      glow: 'bg-violet-100/70',
+      icon: 'bg-violet-50',
+      iconColor: '#7C3AED',
+      caption: 'text-violet-700',
+      marker: 'bg-violet-500',
+    },
+  }[tone];
+
   return (
-    <View className="flex-1 basis-[145px] rounded-2xl border border-[#ECE7D8] bg-white p-4">
+    <View
+      className={`relative min-h-[150px] flex-1 basis-[155px] overflow-hidden rounded-2xl border bg-white p-4 shadow-sm ${styles.border}`}
+    >
       <View
-        className={`mb-3 h-10 w-10 items-center justify-center rounded-xl ${accent}`}
-      >
-        <Icon size={20} color="#FFFFFF" strokeWidth={2} />
+        pointerEvents="none"
+        className={`absolute -right-6 -top-7 h-20 w-20 rounded-full ${styles.glow}`}
+      />
+      <View className="relative">
+        <View className="flex-row items-start justify-between">
+          <Text
+            numberOfLines={2}
+            className="flex-1 pr-2 text-[10px] font-extrabold uppercase leading-4 tracking-[0.8px] text-[#64748B]"
+          >
+            {label}
+          </Text>
+          <View
+            className={`h-10 w-10 items-center justify-center rounded-xl ${styles.icon}`}
+          >
+            <Icon size={19} color={styles.iconColor} strokeWidth={2.2} />
+          </View>
+        </View>
+        <Text className="mt-3 text-[28px] font-black leading-8 tracking-tight text-[#173F35]">
+          {Number(value || 0).toLocaleString('en-IN')}
+        </Text>
+        <View className="mt-3 flex-row items-center">
+          <View className={`mr-2 h-1.5 w-1.5 rounded-full ${styles.marker}`} />
+          <Text
+            numberOfLines={1}
+            className={`flex-1 text-[10px] font-semibold ${styles.caption}`}
+          >
+            {caption}
+          </Text>
+        </View>
       </View>
-      <Text className="text-xs font-semibold text-[#6B7280]">{label}</Text>
-      <Text className="mt-1 text-xl font-extrabold text-[#173F35]">
-        {Number(value || 0).toLocaleString('en-IN')}
-      </Text>
     </View>
   );
 }
@@ -511,26 +572,30 @@ export default function Subscriptions({
           <SummaryCard
             label="Total Plans"
             value={summary.total_plans || 0}
-            accent="bg-[#123B32]"
+            caption="Plans in catalog"
             icon={Layers}
+            tone="emerald"
           />
           <SummaryCard
             label="Active Plans"
             value={summary.active_plans || 0}
-            accent="bg-[#17364D]"
+            caption="Available to shops"
             icon={CheckCircle}
+            tone="blue"
           />
           <SummaryCard
             label="Inactive Plans"
             value={summary.inactive_plans || 0}
-            accent="bg-[#4A2B25]"
+            caption="Not currently available"
             icon={XCircle}
+            tone="amber"
           />
           <SummaryCard
             label="Shops Using Plans"
             value={summary.total_shops_using || 0}
-            accent="bg-[#443719]"
+            caption="Current plan usage"
             icon={Store}
+            tone="violet"
           />
         </View>
 

@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import api, { clearTokenCache, setTokenCache } from './src/api';
 import Login, { LoginUser } from './src/Auth/Login';
+import Welcome from './src/WelcomeScreen/Welcome';
 import BottomBar, {
   SuperAdminTab,
 } from './src/SuperAdmin/Navigation/Bottombar';
@@ -28,6 +29,8 @@ import Profile from './src/SuperAdmin/Profile/Profile';
 import Revenue from './src/SuperAdmin/Reports/Revenue';
 import Subscriptions from './src/SuperAdmin/Subscription/Subscriptions';
 import AllGoldShop from './src/SuperAdmin/Shops/AllGoldShop';
+
+const WELCOME_STORAGE_KEY = 'hasSeenWelcomeScreen';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -53,8 +56,38 @@ function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionCheckAttempt, setSessionCheckAttempt] = useState(0);
+  const [showWelcomeFromLogin, setShowWelcomeFromLogin] = useState(false);
+  const [hasSeenWelcome, setHasSeenWelcome] = useState<boolean | null>(null);
+  const [welcomeCheckError, setWelcomeCheckError] = useState<string | null>(
+    null,
+  );
+  const [welcomeCheckAttempt, setWelcomeCheckAttempt] = useState(0);
   const [adminName, setAdminName] = useState('Super Admin');
   const [adminEmail, setAdminEmail] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    AsyncStorage.getItem(WELCOME_STORAGE_KEY)
+      .then(value => {
+        if (isMounted) {
+          setHasSeenWelcome(value === 'true');
+        }
+      })
+      .catch(error => {
+        if (isMounted) {
+          setWelcomeCheckError(
+            error instanceof Error
+              ? error.message
+              : 'Unable to check the welcome screen status.',
+          );
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [welcomeCheckAttempt]);
 
   useEffect(() => {
     let isMounted = true;
@@ -122,6 +155,21 @@ function AppContent() {
     setIsAuthenticated(true);
   };
 
+  const handleWelcomeContinue = async () => {
+    try {
+      await AsyncStorage.setItem(WELCOME_STORAGE_KEY, 'true');
+      setHasSeenWelcome(true);
+      setShowWelcomeFromLogin(false);
+    } catch (error) {
+      Alert.alert(
+        'Unable to continue',
+        error instanceof Error
+          ? error.message
+          : 'Could not save your welcome screen preference.',
+      );
+    }
+  };
+
   const handleTabChange = (tab: SuperAdminTab) => {
     setActiveTab(tab);
     if (tab !== 'G Shops') {
@@ -151,6 +199,41 @@ function AppContent() {
       );
     }
   };
+
+  if (hasSeenWelcome === null) {
+    if (welcomeCheckError) {
+      return (
+        <View className="flex-1 items-center justify-center bg-[#F8F7F2] px-8">
+          <Text className="mb-2 text-center text-lg font-bold text-[#173F35]">
+            Unable to load the welcome screen
+          </Text>
+          <Text className="mb-5 text-center text-sm text-[#6B7280]">
+            {welcomeCheckError}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              setWelcomeCheckError(null);
+              setWelcomeCheckAttempt(attempt => attempt + 1);
+            }}
+            className="rounded-xl bg-[#B8860B] px-6 py-3"
+          >
+            <Text className="font-bold text-white">Retry</Text>
+          </Pressable>
+        </View>
+      );
+    }
+
+    return (
+      <View className="flex-1 items-center justify-center bg-[#FFFDF8]">
+        <ActivityIndicator color="#B8860B" />
+      </View>
+    );
+  }
+
+  if (!hasSeenWelcome || showWelcomeFromLogin) {
+    return <Welcome onContinue={handleWelcomeContinue} />;
+  }
 
   if (isAuthenticated === null) {
     if (sessionError) {
@@ -184,7 +267,12 @@ function AppContent() {
   }
 
   if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
+    return (
+      <Login
+        onLogin={handleLogin}
+        onWelcomePress={() => setShowWelcomeFromLogin(true)}
+      />
+    );
   }
 
   return (

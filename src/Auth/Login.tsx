@@ -10,7 +10,14 @@ import {
   View,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Check, Eye, EyeOff, LockKeyhole, UserRound } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  Check,
+  Eye,
+  EyeOff,
+  LockKeyhole,
+  UserRound,
+} from 'lucide-react-native';
 import api, { setTokenCache } from '../api';
 
 export type LoginUser = {
@@ -21,6 +28,7 @@ export type LoginUser = {
 
 type LoginProps = {
   onLogin: (user: LoginUser) => void;
+  onWelcomePress: () => void;
 };
 
 function isLoginUser(value: unknown): value is LoginUser {
@@ -48,7 +56,7 @@ function getErrorMessage(error: unknown) {
   return 'Unable to sign in. Please try again.';
 }
 
-export default function Login({ onLogin }: LoginProps) {
+export default function Login({ onLogin, onWelcomePress }: LoginProps) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -174,7 +182,6 @@ export default function Login({ onLogin }: LoginProps) {
                 className="flex-1 px-3 py-3.5 text-sm text-[#374151]"
               />
               <Pressable
-                testID="login-submit"
                 accessibilityRole="button"
                 accessibilityLabel={
                   showPassword ? 'Hide password' : 'Show password'
@@ -207,6 +214,7 @@ export default function Login({ onLogin }: LoginProps) {
             ) : null}
 
             <Pressable
+              testID="login-submit"
               accessibilityRole="button"
               accessibilityState={{ disabled: isSubmitting }}
               disabled={isSubmitting}
@@ -230,6 +238,18 @@ export default function Login({ onLogin }: LoginProps) {
               <View className="h-px flex-1 bg-[#E5E7EB]" />
             </View>
           </View>
+          <Pressable
+            testID="login-welcome"
+            accessibilityRole="button"
+            accessibilityLabel="Back to Welcome"
+            onPress={onWelcomePress}
+            className="mt-5 flex-row items-center justify-center py-2"
+          >
+            <ArrowLeft size={16} color="#08745D" />
+            <Text className="ml-2 text-sm font-bold text-[#08745D]">
+              Back to Welcome
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

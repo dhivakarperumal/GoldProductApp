@@ -1,8 +1,6 @@
 import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
-import { Pressable, TextInput } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import api, { clearTokenCache, setTokenCache } from '../src/api';
+import { TextInput } from 'react-native';
 import App from '../App';
 import Login from '../src/Auth/Login';
 
@@ -12,6 +10,7 @@ const mockRemoveItem = jest.fn();
 const mockPost = jest.fn();
 const mockSetTokenCache = jest.fn();
 const mockClearTokenCache = jest.fn();
+const activeRenderers: ReactTestRenderer.ReactTestRenderer[] = [];
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   __esModule: true,
@@ -38,6 +37,7 @@ jest.mock('react-native-safe-area-context', () => {
   return {
     SafeAreaProvider: ({ children }: { children: React.ReactNode }) =>
       ReactModule.createElement(View, null, children),
+    SafeAreaView: View,
     useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
   };
 });
@@ -51,12 +51,21 @@ beforeEach(() => {
   mockClearTokenCache.mockReset();
 });
 
+afterEach(async () => {
+  await act(async () => {
+    activeRenderers.splice(0).forEach(renderer => renderer.unmount());
+  });
+});
+
 test('restores a saved session without showing the login screen', async () => {
-  mockGetItem.mockResolvedValue('saved-token');
+  mockGetItem.mockImplementation((key: string) =>
+    Promise.resolve(key === 'userToken' ? 'saved-token' : 'true'),
+  );
   let renderer!: ReactTestRenderer.ReactTestRenderer;
 
   await act(async () => {
     renderer = ReactTestRenderer.create(<App />);
+    activeRenderers.push(renderer);
     await new Promise<void>(resolve => setImmediate(resolve));
   });
 
@@ -67,26 +76,85 @@ test('restores a saved session without showing the login screen', async () => {
   ).toBeDefined();
   expect(renderer.root.findAllByProps({ children: 'Super Admin Sign In' }))
     .toHaveLength(0);
-  expect(setTokenCache).toHaveBeenCalledWith('saved-token');
-  expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
+  expect(mockSetTokenCache).toHaveBeenCalledWith('saved-token');
+  expect(mockRemoveItem).not.toHaveBeenCalled();
 });
 
 test('does not redirect to login when session storage cannot be read', async () => {
-  mockGetItem.mockRejectedValue(new Error('Storage unavailable'));
+  mockGetItem.mockImplementation((key: string) =>
+    key === 'userToken'
+      ? Promise.reject(new Error('Storage unavailable'))
+      : Promise.resolve('true'),
+  );
   let renderer!: ReactTestRenderer.ReactTestRenderer;
 
   await act(async () => {
     renderer = ReactTestRenderer.create(<App />);
+    activeRenderers.push(renderer);
     await new Promise<void>(resolve => setImmediate(resolve));
   });
 
   expect(
-    renderer.root.findAllByProps({ children: 'Unable to restore your session' }),
-  ).toHaveLength(1);
+    renderer.root.findByProps({ children: 'Unable to restore your session' }),
+  ).toBeDefined();
   expect(
     renderer.root.findAllByProps({ children: 'Super Admin Sign In' }),
   ).toHaveLength(0);
-  expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
+  expect(mockRemoveItem).not.toHaveBeenCalled();
+});
+
+test('shows the welcome screen on first launch and opens login after continuing', async () => {
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<App />);
+    activeRenderers.push(renderer);
+    await new Promise<void>(resolve => setImmediate(resolve));
+  });
+
+  expect(renderer.root.findByProps({ testID: 'welcome-screen' })).toBeDefined();
+
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'welcome-next' }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'welcome-next' }).props.onPress();
+  });
+
+  await act(async () => {
+    await renderer.root
+      .findByProps({ testID: 'welcome-continue' })
+      .props.onPress();
+  });
+
+  expect(mockSetItem).toHaveBeenCalledWith(
+    'hasSeenWelcomeScreen',
+    'true',
+  );
+  expect(
+    renderer.root.findByProps({ children: 'Super Admin Sign In' }),
+  ).toBeDefined();
+
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'login-welcome' }).props.onPress();
+  });
+  expect(renderer.root.findByProps({ testID: 'welcome-screen' })).toBeDefined();
+
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'welcome-next' }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'welcome-next' }).props.onPress();
+  });
+
+  await act(async () => {
+    await renderer.root
+      .findByProps({ testID: 'welcome-continue' })
+      .props.onPress();
+  });
+  expect(
+    renderer.root.findByProps({ children: 'Super Admin Sign In' }),
+  ).toBeDefined();
 });
 
 test('persists the token after a successful login', async () => {
@@ -100,7 +168,10 @@ test('persists the token after a successful login', async () => {
   let renderer!: ReactTestRenderer.ReactTestRenderer;
 
   await act(async () => {
-    renderer = ReactTestRenderer.create(<Login onLogin={onLogin} />);
+    renderer = ReactTestRenderer.create(
+      <Login onLogin={onLogin} onWelcomePress={jest.fn()} />,
+    );
+    activeRenderers.push(renderer);
   });
 
   await act(async () => {
@@ -109,22 +180,20 @@ test('persists the token after a successful login', async () => {
     inputs[1].props.onChangeText('password');
   });
 
-  const submitButton = renderer.root
-    .findAllByType(Pressable)
-    .find(button => button.props.accessibilityState?.disabled !== undefined);
+  const submitButton = renderer.root.findByProps({ testID: 'login-submit' });
   expect(submitButton).toBeDefined();
 
   await act(async () => {
     await submitButton?.props.onPress();
   });
 
-  expect(api.post).toHaveBeenCalledWith('/auth/login', {
+  expect(mockPost).toHaveBeenCalledWith('/auth/login', {
     identifier: 'admin@example.com',
     password: 'password',
   });
-  expect(AsyncStorage.setItem).toHaveBeenCalledWith('userToken', 'new-token');
+  expect(mockSetItem).toHaveBeenCalledWith('userToken', 'new-token');
   expect(mockSetTokenCache).toHaveBeenCalledWith('new-token');
-  expect(AsyncStorage.removeItem).not.toHaveBeenCalled();
+  expect(mockRemoveItem).not.toHaveBeenCalled();
   expect(onLogin).toHaveBeenCalledWith({
     role: 'superadmin',
     name: 'Super Admin',
@@ -132,11 +201,14 @@ test('persists the token after a successful login', async () => {
 });
 
 test('removes the saved token only when Logout is pressed', async () => {
-  mockGetItem.mockResolvedValue('saved-token');
+  mockGetItem.mockImplementation((key: string) =>
+    Promise.resolve(key === 'userToken' ? 'saved-token' : 'true'),
+  );
   let renderer!: ReactTestRenderer.ReactTestRenderer;
 
   await act(async () => {
     renderer = ReactTestRenderer.create(<App />);
+    activeRenderers.push(renderer);
     await new Promise<void>(resolve => setImmediate(resolve));
   });
 
@@ -146,17 +218,21 @@ test('removes the saved token only when Logout is pressed', async () => {
       .props.onPress();
   });
 
-  const logoutButton = renderer.root
-    .findAllByType(Pressable)
-    .find(button => button.findAllByProps({ children: 'Logout' }).length > 0);
+  const logoutLabel = renderer.root.findByProps({ children: 'Logout' });
+  const logoutButton = renderer.root.findAll(
+    node =>
+      typeof node.props.onPress === 'function' &&
+      node.findAllByProps({ children: 'Logout' }).length > 0,
+  )[0];
+  expect(logoutLabel).toBeDefined();
   expect(logoutButton).toBeDefined();
 
   await act(async () => {
     await logoutButton?.props.onPress();
   });
 
-  expect(AsyncStorage.removeItem).toHaveBeenCalledWith('userToken');
-  expect(clearTokenCache).toHaveBeenCalledTimes(1);
+  expect(mockRemoveItem).toHaveBeenCalledWith('userToken');
+  expect(mockClearTokenCache).toHaveBeenCalledTimes(1);
   expect(
     renderer.root.findByProps({ children: 'Super Admin Sign In' }),
   ).toBeDefined();
