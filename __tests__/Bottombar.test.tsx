@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
-import { Pressable } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import BottomBar, {
   SuperAdminTab,
@@ -35,7 +34,7 @@ function BottomBarHarness() {
   );
 }
 
-test('starts on Home and moves one rounded active pill across all tabs', async () => {
+test('starts on Home and moves the gold active tab background across tabs', async () => {
   let renderer!: ReactTestRenderer.ReactTestRenderer;
 
   await act(async () => {
@@ -50,16 +49,15 @@ test('starts on Home and moves one rounded active pill across all tabs', async (
   const pill = renderer.root.findByProps({
     testID: 'active-tab-background',
   });
-  expect(pill.props.style.borderRadius).toBe(999);
+  expect(pill.props.style.borderRadius).toBe(14);
+  expect(pill.props.style.backgroundColor).toBe('#F4C95D');
   expect(pill.props.style.width).toBe(72);
 
   const expectOnlyActive = (label: SuperAdminTab) => {
-    const activeButtons = renderer.root
-      .findAllByType(Pressable)
-      .filter(button => button.props.accessibilityState?.selected);
-
-    expect(activeButtons).toHaveLength(1);
-    expect(activeButtons[0].props.accessibilityLabel).toBe(label);
+    for (const tab of tabLabels) {
+      const button = renderer.root.findByProps({ accessibilityLabel: tab });
+      expect(button.props.accessibilityState?.selected).toBe(tab === label);
+    }
   };
 
   expectOnlyActive('Home');
