@@ -276,10 +276,8 @@ export default function LoanRenewal() {
           </View>
         ) : filteredLoans.length ? (
           filteredLoans.map(loan => (
-            <Pressable
+            <View
               key={String(loan.id)}
-              accessibilityRole="button"
-              onPress={() => setSelectedLoan(loan)}
               className="mb-3 rounded-2xl border border-[#ECE7D8] bg-white p-4"
             >
               <View className="flex-row items-start justify-between">
@@ -346,11 +344,49 @@ export default function LoanRenewal() {
                   {Number(loan.interest_rate || 0).toFixed(2)}% /{' '}
                   {String(loan.interest_frequency || '').replaceAll('_', ' ')}
                 </Text>
-                <Text className="text-xs font-extrabold text-[#07564B]">
-                  {isReviewDue(loan) ? 'Review' : 'Manage Renewal'} ›
-                </Text>
               </View>
-            </Pressable>
+              <View className="mt-3 flex-row justify-end gap-2">
+                {loan.loan_status === 'Active' ? (
+                  <>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Pay loan ${
+                        loan.loan_number || loan.id
+                      }`}
+                      onPress={() => setSelectedLoan(loan)}
+                      className="min-h-10 items-center justify-center rounded-lg bg-[#064A41] px-4 py-2"
+                    >
+                      <Text className="text-xs font-bold text-white">Pay</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`View renewal for loan ${
+                        loan.loan_number || loan.id
+                      }`}
+                      onPress={() => setSelectedLoan(loan)}
+                      className="min-h-10 items-center justify-center rounded-lg bg-[#EFF9F5] px-4 py-2"
+                    >
+                      <Text className="text-xs font-bold text-[#07564B]">
+                        Renew
+                      </Text>
+                    </Pressable>
+                  </>
+                ) : (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Review loan ${
+                      loan.loan_number || loan.id
+                    }`}
+                    onPress={() => setSelectedLoan(loan)}
+                    className="min-h-10 items-center justify-center rounded-lg bg-[#FFF8E7] px-4 py-2"
+                  >
+                    <Text className="text-xs font-bold text-[#8A5A00]">
+                      {isReviewDue(loan) ? 'Review' : 'Renewal Details'}
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+            </View>
           ))
         ) : (
           <View className="items-center rounded-2xl border border-[#ECE7D8] bg-white px-5 py-10">
