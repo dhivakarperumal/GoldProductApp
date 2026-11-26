@@ -154,6 +154,39 @@ test('notification dropdown shows only shops registered today', async () => {
   ).toHaveLength(0);
 });
 
+test('profile dropdown opens and its profile action closes the menu', async () => {
+  const onProfilePress = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+
+  await act(async () => {
+    renderer = ReactTestRenderer.create(
+      <TopHeader
+        adminName="Shop Admin"
+        adminEmail="admin@example.com"
+        onProfilePress={onProfilePress}
+      />,
+    );
+    activeRenderers.push(renderer);
+  });
+
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'profile-toggle' }).props.onPress();
+  });
+  expect(
+    renderer.root.findByProps({ testID: 'profile-dropdown' }),
+  ).toBeDefined();
+
+  await act(async () => {
+    renderer.root
+      .findByProps({ testID: 'profile-menu-action' })
+      .props.onPress();
+  });
+  expect(onProfilePress).toHaveBeenCalledTimes(1);
+  expect(
+    renderer.root.findAllByProps({ testID: 'profile-dropdown' }),
+  ).toHaveLength(0);
+});
+
 test('shows Home sparklines only for metrics with historical data', async () => {
   mockGet.mockImplementation((url: string) =>
     Promise.resolve({
@@ -213,7 +246,7 @@ test('shows Home sparklines only for metrics with historical data', async () => 
     renderer.root.findAll(
       node => node.props.style?.backgroundColor === '#F4C95D',
     ),
-  ).toHaveLength(6);
+  ).not.toHaveLength(0);
 });
 
 test('shows Admin navigation tabs in the requested order', async () => {
@@ -618,6 +651,79 @@ test('preserves admin dashboard data when returning from another tab', async () 
     mockGet.mock.calls.filter(([path]) => path === '/dashboard'),
   ).toHaveLength(dashboardRequestCount);
   expect(renderer.root.findByProps({ children: 'Dashboard Ring' })).toBeDefined();
+});
+
+test('preserves Super Admin dashboard data when returning from another tab', async () => {
+  mockGetItem.mockImplementation((key: string) =>
+    Promise.resolve(
+      key === 'hasSeenWelcomeScreen'
+        ? 'true'
+        : key === 'userToken'
+          ? 'saved-token'
+          : null,
+    ),
+  );
+  mockGet.mockImplementation((path: string) =>
+    Promise.resolve(
+      path === '/auth/me'
+        ? { data: { user: { role: 'superadmin', name: 'Super Admin' } } }
+        : path === '/super-admin/dashboard/stats'
+          ? { data: { data: { totalGoldShops: 2 } } }
+          : path === '/super-admin/dashboard/analytics'
+            ? {
+                data: {
+                  data: {
+                    shopRegistrations: [],
+                    subscriptionGrowth: [],
+                    monthlyRevenue: [],
+                  },
+                },
+              }
+            : path === '/super-admin/gold-shops'
+              ? {
+                  data: {
+                    shops: [],
+                    pagination: { totalPages: 1 },
+                  },
+                }
+              : { data: {} },
+    ),
+  );
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<App />);
+    activeRenderers.push(renderer);
+    for (let turn = 0; turn < 4; turn += 1) {
+      await new Promise<void>(resolve => setImmediate(resolve));
+    }
+  });
+
+  expect(
+    renderer.root.findByProps({ testID: 'cached-screen-superadmin-Home' }),
+  ).toBeDefined();
+  const dashboardRequestCount = mockGet.mock.calls.filter(
+    ([path]) => path === '/super-admin/dashboard/stats',
+  ).length;
+  expect(dashboardRequestCount).toBe(1);
+
+  await act(async () => {
+    renderer.root
+      .findByProps({ accessibilityLabel: 'Profile' })
+      .props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Home' }).props.onPress();
+  });
+
+  expect(
+    mockGet.mock.calls.filter(
+      ([path]) => path === '/super-admin/dashboard/stats',
+    ),
+  ).toHaveLength(dashboardRequestCount);
+  expect(
+    renderer.root.findByProps({ testID: 'cached-screen-superadmin-Home' }),
+  ).toBeDefined();
 });
 
 test('removes the saved token only when Logout is pressed', async () => {

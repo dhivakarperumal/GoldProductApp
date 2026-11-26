@@ -105,6 +105,10 @@ export default function TopHeader({
     380,
     Dimensions.get('window').width - 32,
   );
+  const profilePanelWidth = Math.min(
+    280,
+    Dimensions.get('window').width - 32,
+  );
 
   const loadTodayRegistrations = useCallback(async () => {
     setIsLoadingRegistrations(true);
@@ -233,6 +237,7 @@ export default function TopHeader({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Open Super Admin menu"
+            testID="profile-toggle"
             accessibilityState={{ expanded: isMenuOpen }}
             onPress={() => {
               setIsNotificationOpen(false);
@@ -416,8 +421,9 @@ export default function TopHeader({
 
         {isMenuOpen ? (
           <View
-            className="absolute right-4 z-10 w-48 rounded-xl border border-gray-100 bg-white p-2 shadow-lg"
-            style={{ top: insets.top + 66 }}
+            testID="profile-dropdown"
+            className="absolute right-4 z-10 rounded-xl border border-gray-100 bg-white p-2 shadow-lg"
+            style={{ top: insets.top + 66, width: profilePanelWidth }}
           >
             <Text
               numberOfLines={1}
@@ -434,11 +440,15 @@ export default function TopHeader({
             <View className="h-px bg-gray-100" />
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel="Open profile"
+              testID="profile-menu-action"
               onPress={handleProfilePress}
               className="mt-1 flex-row items-center rounded-lg px-3 py-3 active:bg-gray-50"
             >
               <UserRound size={17} color="#4B5563" />
-              <Text className="text-sm font-medium text-gray-800">Profile</Text>
+              <Text className="ml-2 text-sm font-medium text-gray-800">
+                Profile
+              </Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -446,7 +456,9 @@ export default function TopHeader({
               className="flex-row items-center rounded-lg px-3 py-3 active:bg-red-50"
             >
               <LogOut size={17} color="#DC2626" />
-              <Text className="text-sm font-medium text-red-600">Logout</Text>
+              <Text className="ml-2 text-sm font-medium text-red-600">
+                Logout
+              </Text>
             </Pressable>
           </View>
         ) : null}

@@ -15,6 +15,7 @@ module.exports = {
   ChartNoAxesColumn: MockIcon,
   Check: MockIcon,
   ChevronLeft: MockIcon,
+  ChevronRight: MockIcon,
   Clock3: MockIcon,
   CreditCard: MockIcon,
   Eye: MockIcon,
