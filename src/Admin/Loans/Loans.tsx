@@ -468,7 +468,7 @@ export default function Loans({
                     ) : null}
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel={`Print loan ${loan.loan_number || loan.id}`}
+                      accessibilityLabel={`Print loan agreement PDF ${loan.loan_number || loan.id}`}
                       disabled={actionLoanId !== null}
                       onPress={() => handlePrintLoan(loan)}
                       className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg bg-[#FFF8E7] px-3 disabled:opacity-50">
@@ -477,7 +477,7 @@ export default function Loans({
                       ) : (
                         <Printer size={15} color="#8A5A00" />
                       )}
-                      <Text className="ml-1.5 text-xs font-bold text-[#8A5A00]">Print</Text>
+                      <Text className="ml-1.5 text-xs font-bold text-[#8A5A00]">Print PDF</Text>
                     </Pressable>
                     <Pressable
                       accessibilityRole="button"

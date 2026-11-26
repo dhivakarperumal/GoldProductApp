@@ -184,7 +184,7 @@ export default function LoanDetails({ loanId, onBack, onEdit }: Props) {
                 ) : (
                   <Printer size={16} color="white" />
                 )}
-                <Text className="ml-2 text-sm font-bold text-white">Print / Share</Text>
+                <Text className="ml-2 text-sm font-bold text-white">Print / Share PDF</Text>
               </Pressable>
             </View>
           </View>
