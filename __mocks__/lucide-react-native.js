@@ -5,7 +5,6 @@ const MockIcon = () => React.createElement(View);
 
 module.exports = {
   Activity: MockIcon,
-  ArrowLeft: MockIcon,
   ArrowDownRight: MockIcon,
   ArrowUpRight: MockIcon,
   Bell: MockIcon,
@@ -15,8 +14,6 @@ module.exports = {
   Check: MockIcon,
   Clock3: MockIcon,
   CreditCard: MockIcon,
-  ChevronDown: MockIcon,
-  CircleDollarSign: MockIcon,
   Eye: MockIcon,
   EyeOff: MockIcon,
   Ellipsis: MockIcon,
@@ -30,15 +27,11 @@ module.exports = {
   Phone: MockIcon,
   Package: MockIcon,
   RefreshCw: MockIcon,
-  Plus: MockIcon,
-  Search: MockIcon,
   ShieldCheck: MockIcon,
   ShoppingBag: MockIcon,
   Store: MockIcon,
   Trash2: MockIcon,
   UserRound: MockIcon,
   Users: MockIcon,
-  UserPlus: MockIcon,
-  X: MockIcon,
   XCircle: MockIcon,
 };

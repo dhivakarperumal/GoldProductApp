@@ -5,7 +5,5 @@ module.exports = {
   ],
   moduleNameMapper: {
     '^lucide-react-native$': '<rootDir>/__mocks__/lucide-react-native.js',
-    '^react-native-image-picker$':
-      '<rootDir>/__mocks__/react-native-image-picker.js',
   },
 };

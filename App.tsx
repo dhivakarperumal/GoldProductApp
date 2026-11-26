@@ -24,6 +24,8 @@ import Login, { LoginUser } from './src/Auth/Login';
 import AdminHome from './src/Admin/Home/Home';
 import AdminSection from './src/Admin/Pages/AdminSection';
 import AdminLoans from './src/Admin/Loans/Loans';
+import CreateLoan from './src/Admin/Loans/CreateLoan';
+import CreateCustomer from './src/Admin/Loans/CreateCustomer';
 import AdminProfile from './src/Admin/Profile/Profile';
 import AdminHeader from './src/Admin/Navigation/AdminHeader';
 import AdminTabBar, { AdminTab } from './src/Admin/Navigation/AdminTabBar';
@@ -35,6 +37,7 @@ import SuperAdminHome from './src/SuperAdmin/Home/Home';
 import Profile from './src/SuperAdmin/Profile/Profile';
 
 type AccountRole = 'admin' | 'superadmin';
+type AdminLoanScreen = 'list' | 'createLoan' | 'createCustomer';
 
 function normalizeRole(role: unknown): AccountRole | null {
   if (typeof role !== 'string') return null;
@@ -58,6 +61,8 @@ function App() {
 function AppContent() {
   const [superAdminTab, setSuperAdminTab] = useState<SuperAdminTab>('Home');
   const [adminTab, setAdminTab] = useState<AdminTab>('Dashboard');
+  const [adminLoanScreen, setAdminLoanScreen] =
+    useState<AdminLoanScreen>('list');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionCheckAttempt, setSessionCheckAttempt] = useState(0);
@@ -192,6 +197,11 @@ function AppContent() {
     }
   };
 
+  const navigateAdminTab = (tab: AdminTab) => {
+    setAdminTab(tab);
+    setAdminLoanScreen('list');
+  };
+
   if (isAuthenticated === null) {
     if (sessionError) {
       return (
@@ -261,18 +271,33 @@ function AppContent() {
           adminName={adminName}
           adminEmail={adminEmail}
           onLogout={handleLogout}
-          onProfilePress={() => setAdminTab('More')}
+          onProfilePress={() => navigateAdminTab('More')}
         />
         {adminTab === 'Dashboard' ? (
-          <AdminHome onNavigate={setAdminTab} />
+          <AdminHome onNavigate={navigateAdminTab} />
+        ) : adminTab === 'Loans' && adminLoanScreen === 'createLoan' ? (
+          <CreateLoan
+            onBack={() => setAdminLoanScreen('list')}
+            onCreated={() => setAdminLoanScreen('list')}
+          />
+        ) : adminTab === 'Loans' && adminLoanScreen === 'createCustomer' ? (
+          <CreateCustomer
+            onBack={() => setAdminLoanScreen('list')}
+            onCreated={() => setAdminLoanScreen('list')}
+          />
         ) : adminTab === 'Loans' ? (
-          <AdminLoans />
+          <AdminLoans
+            onCreateLoan={() => setAdminLoanScreen('createLoan')}
+            onCreateCustomer={() => setAdminLoanScreen('createCustomer')}
+          />
         ) : adminTab === 'More' ? (
           <AdminProfile />
         ) : (
           <AdminSection section={adminTab} />
         )}
-        <AdminTabBar activeTab={adminTab} onTabPress={setAdminTab} />
+        {adminTab !== 'Loans' || adminLoanScreen === 'list' ? (
+          <AdminTabBar activeTab={adminTab} onTabPress={navigateAdminTab} />
+        ) : null}
       </View>
     );
   }
