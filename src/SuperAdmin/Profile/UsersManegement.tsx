@@ -15,10 +15,11 @@ import {
 } from 'react-native';
 import {
   ArrowLeft,
+  CalendarDays,
+  Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  LayoutGrid,
-  List,
   Mail,
   Pencil,
   Phone,
@@ -60,7 +61,6 @@ const ROLES = [
 
 type UserStatus = 'Active' | 'Inactive';
 type StatusFilter = 'all' | 'active' | 'inactive';
-type ViewMode = 'card' | 'list';
 type DatePreset = (typeof DATE_RANGE_OPTIONS)[number][0];
 type DateRange = {
   preset: DatePreset;
@@ -245,8 +245,9 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
   const [loadError, setLoadError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [viewMode, setViewMode] = useState<ViewMode>('card');
+  const [isStatusOptionsOpen, setIsStatusOptionsOpen] = useState(false);
   const [datePreset, setDatePreset] = useState<DatePreset>('all');
+  const [isDateOptionsOpen, setIsDateOptionsOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange>({
     preset: 'all',
     startDate: '',
@@ -625,32 +626,105 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
               ) : null}
             </View>
 
-            <View className="mt-3">
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerClassName="gap-2"
-              >
-                {DATE_RANGE_OPTIONS.map(([value, label]) => (
-                  <Pressable
-                    key={value}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: datePreset === value }}
-                    onPress={() => selectDatePreset(value)}
-                    className={`rounded-full px-3 py-2 ${
-                      datePreset === value ? 'bg-[#08745D]' : 'bg-[#F3F4F6]'
-                    }`}
-                  >
+            <View className="mt-3 flex-row items-start gap-2">
+              <View className="flex-1">
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Select date range"
+                  accessibilityState={{ expanded: isDateOptionsOpen }}
+                  onPress={() => setIsDateOptionsOpen(open => !open)}
+                  className="min-h-11 flex-row items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-3"
+                >
+                  <View className="flex-1 flex-row items-center">
+                    <CalendarDays size={16} color="#08745D" />
                     <Text
-                      className={`text-[10px] font-bold ${
-                        datePreset === value ? 'text-white' : 'text-[#4B5563]'
-                      }`}
+                      numberOfLines={1}
+                      className="ml-2 flex-1 text-xs font-semibold text-[#374151]"
                     >
-                      {label}
+                      {DATE_RANGE_OPTIONS.find(
+                        ([value]) => value === datePreset,
+                      )?.[1] ?? 'All Time'}
                     </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
+                  </View>
+                  <ChevronDown size={17} color="#6B7280" />
+                </Pressable>
+                {isDateOptionsOpen ? (
+                  <View className="mt-2 rounded-xl border border-[#E5E7EB] bg-white p-2">
+                    {DATE_RANGE_OPTIONS.map(([value, label]) => (
+                      <Pressable
+                        key={value}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: datePreset === value }}
+                        onPress={() => {
+                          selectDatePreset(value);
+                          setIsDateOptionsOpen(false);
+                        }}
+                        className={`flex-row items-center justify-between rounded-lg px-3 py-2.5 ${
+                          datePreset === value ? 'bg-[#E7F3EF]' : ''
+                        }`}
+                      >
+                        <Text className="text-xs font-semibold text-[#374151]">
+                          {label}
+                        </Text>
+                        {datePreset === value ? (
+                          <Check size={15} color="#08745D" />
+                        ) : null}
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
+              </View>
+              <View className="flex-1">
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Select user status"
+                  accessibilityState={{ expanded: isStatusOptionsOpen }}
+                  onPress={() => setIsStatusOptionsOpen(open => !open)}
+                  className="min-h-11 flex-row items-center justify-between rounded-xl border border-[#E5E7EB] bg-white px-3"
+                >
+                  <Text className="text-xs font-semibold text-[#374151]">
+                    {statusFilter === 'all'
+                      ? 'All'
+                      : statusFilter === 'active'
+                      ? 'Active'
+                      : 'Inactive'}
+                  </Text>
+                  <ChevronDown size={17} color="#6B7280" />
+                </Pressable>
+                {isStatusOptionsOpen ? (
+                  <View className="mt-2 rounded-xl border border-[#E5E7EB] bg-white p-2">
+                    {(
+                      [
+                        ['all', 'All'],
+                        ['active', 'Active'],
+                        ['inactive', 'Inactive'],
+                      ] as const
+                    ).map(([value, label]) => (
+                      <Pressable
+                        key={value}
+                        accessibilityRole="button"
+                        accessibilityState={{
+                          selected: statusFilter === value,
+                        }}
+                        onPress={() => {
+                          setStatusFilter(value);
+                          setIsStatusOptionsOpen(false);
+                        }}
+                        className={`flex-row items-center justify-between rounded-lg px-3 py-2.5 ${
+                          statusFilter === value ? 'bg-[#E7F3EF]' : ''
+                        }`}
+                      >
+                        <Text className="text-xs font-semibold text-[#374151]">
+                          {label}
+                        </Text>
+                        {statusFilter === value ? (
+                          <Check size={15} color="#08745D" />
+                        ) : null}
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
+              </View>
             </View>
 
             {datePreset === 'custom' ? (
@@ -710,66 +784,6 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
                 ) : null}
               </View>
             ) : null}
-
-            <View className="mt-3 flex-row items-center justify-between">
-              <View className="flex-row gap-2">
-                {(
-                  [
-                    ['all', 'All'],
-                    ['active', 'Active'],
-                    ['inactive', 'Inactive'],
-                  ] as const
-                ).map(([value, label]) => (
-                  <Pressable
-                    key={value}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: statusFilter === value }}
-                    onPress={() => setStatusFilter(value)}
-                    className={`rounded-full px-3 py-1.5 ${
-                      statusFilter === value ? 'bg-[#075C51]' : 'bg-[#F3F4F6]'
-                    }`}
-                  >
-                    <Text
-                      className={`text-[11px] font-bold ${
-                        statusFilter === value ? 'text-white' : 'text-[#4B5563]'
-                      }`}
-                    >
-                      {label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              <View className="flex-row overflow-hidden rounded-lg border border-[#E5E7EB]">
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Card view"
-                  accessibilityState={{ selected: viewMode === 'card' }}
-                  onPress={() => setViewMode('card')}
-                  className={`p-2 ${
-                    viewMode === 'card' ? 'bg-[#E7F3EF]' : 'bg-white'
-                  }`}
-                >
-                  <LayoutGrid
-                    size={16}
-                    color={viewMode === 'card' ? '#08745D' : '#9CA3AF'}
-                  />
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="List view"
-                  accessibilityState={{ selected: viewMode === 'list' }}
-                  onPress={() => setViewMode('list')}
-                  className={`p-2 ${
-                    viewMode === 'list' ? 'bg-[#E7F3EF]' : 'bg-white'
-                  }`}
-                >
-                  <List
-                    size={16}
-                    color={viewMode === 'list' ? '#08745D' : '#9CA3AF'}
-                  />
-                </Pressable>
-              </View>
-            </View>
           </View>
 
           {loadError ? (
@@ -851,13 +865,7 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
                     </View>
                   </Pressable>
 
-                  <View
-                    className={`mt-3 ${
-                      viewMode === 'card'
-                        ? 'gap-2 border-t border-[#F3F4F6] pt-3'
-                        : 'flex-row flex-wrap gap-x-4 gap-y-2'
-                    }`}
-                  >
+                  <View className="mt-3 gap-2 border-t border-[#F3F4F6] pt-3">
                     <View className="flex-row items-center">
                       <Mail size={14} color="#08745D" />
                       <Text
