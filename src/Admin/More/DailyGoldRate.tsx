@@ -420,7 +420,7 @@ export default function DailyGoldRate({ onBack }: Props) {
       <InnerHeader title="Daily Gold Rate" sectionLabel="More · Settings" onBack={onBack} />
       <ScrollView
         className="flex-1"
-        contentContainerClassName="p-4 pb-8"
+        contentContainerClassName="p-4 pb-28"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -436,13 +436,6 @@ export default function DailyGoldRate({ onBack }: Props) {
             <Text className="text-xl font-extrabold text-[#173F35]">Daily Precious Rates</Text>
             <Text className="mt-1 text-sm text-[#6B7E76]">Manage your shop’s active and scheduled rates.</Text>
           </View>
-          <Pressable
-            accessibilityRole="button"
-            onPress={openNewForm}
-            className="ml-2 flex-row items-center gap-2 rounded-xl bg-[#07564B] px-3 py-3">
-            <Plus size={18} color="white" />
-            <Text className="text-xs font-extrabold text-white">New Rate Set</Text>
-          </Pressable>
         </View>
 
         <View className="mb-4 rounded-2xl bg-[#07564B] p-4">
@@ -646,6 +639,16 @@ export default function DailyGoldRate({ onBack }: Props) {
           </>
         )}
       </ScrollView>
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Create new rate set"
+        accessibilityHint="Opens the form to add daily metal and diamond rates"
+        onPress={openNewForm}
+        style={{ bottom: Math.max(insets.bottom, 20) }}
+        className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
+        <Plus size={24} color="white" />
+      </Pressable>
 
       <Modal visible={formOpen} animationType="slide" onRequestClose={() => { if (!saving) setFormOpen(false); }}>
         <KeyboardAvoidingView

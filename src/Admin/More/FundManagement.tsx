@@ -181,6 +181,7 @@ export function TimePickerField({ value, onChange }: { value: string; onChange: 
 
 export default function FundManagement({ onBack }: Props) {
   const { showAlert } = useCustomAlert();
+  const insets = useSafeAreaInsets();
   const [summary, setSummary] = useState<FundSummary | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [total, setTotal] = useState(0);
@@ -351,7 +352,7 @@ export default function FundManagement({ onBack }: Props) {
       <InnerHeader title="Fund Management" sectionLabel="More" onBack={onBack} />
       <ScrollView
         className="flex-1"
-        contentContainerClassName="p-4 pb-8"
+        contentContainerClassName="p-4 pb-28"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -368,13 +369,6 @@ export default function FundManagement({ onBack }: Props) {
             <Text className="text-xl font-extrabold text-[#173F35]">Fund Ledger</Text>
             <Text className="mt-1 text-sm text-[#6B7E76]">Admin fund summary and transactions.</Text>
           </View>
-          <Pressable
-            accessibilityRole="button"
-            onPress={openEntryForm}
-            className="flex-row items-center gap-2 rounded-xl bg-[#07564B] px-3 py-3">
-            <Plus size={18} color="white" />
-            <Text className="text-xs font-extrabold text-white">Add Entry</Text>
-          </Pressable>
         </View>
 
         <View className="mb-4 flex-row flex-wrap gap-2">
@@ -517,6 +511,16 @@ export default function FundManagement({ onBack }: Props) {
           </View>
         </View>
       </ScrollView>
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Add fund entry"
+        accessibilityHint="Opens the form to record a fund transaction"
+        onPress={openEntryForm}
+        style={{ bottom: Math.max(insets.bottom, 20) }}
+        className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
+        <Plus size={24} color="white" />
+      </Pressable>
 
       <Modal visible={formOpen} animationType="slide" onRequestClose={() => { if (!saving) setFormOpen(false); }}>
         <View className="flex-1 bg-[#F8F7F2]">
