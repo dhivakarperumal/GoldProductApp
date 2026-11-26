@@ -113,13 +113,29 @@ test('shows the welcome screen on first launch and opens login after continuing'
   });
 
   expect(renderer.root.findByProps({ testID: 'welcome-screen' })).toBeDefined();
+  expect(renderer.root.findAllByProps({ testID: 'welcome-next' })).toHaveLength(
+    0,
+  );
 
   await act(async () => {
-    renderer.root.findByProps({ testID: 'welcome-next' }).props.onPress();
+    renderer.root
+      .findByProps({ accessibilityLabel: 'Show welcome slide 2' })
+      .props.onPress();
   });
   await act(async () => {
-    renderer.root.findByProps({ testID: 'welcome-next' }).props.onPress();
+    renderer.root
+      .findByProps({ accessibilityLabel: 'Show welcome slide 3' })
+      .props.onPress();
   });
+  expect(
+    renderer.root.findAllByProps({ testID: 'welcome-next' }),
+  ).toHaveLength(0);
+  expect(
+    renderer.root.findByProps({ accessibilityLabel: 'Skip welcome slides' }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findByProps({ testID: 'welcome-continue' }),
+  ).toBeDefined();
 
   await act(async () => {
     await renderer.root
@@ -141,10 +157,14 @@ test('shows the welcome screen on first launch and opens login after continuing'
   expect(renderer.root.findByProps({ testID: 'welcome-screen' })).toBeDefined();
 
   await act(async () => {
-    renderer.root.findByProps({ testID: 'welcome-next' }).props.onPress();
+    renderer.root
+      .findByProps({ accessibilityLabel: 'Show welcome slide 2' })
+      .props.onPress();
   });
   await act(async () => {
-    renderer.root.findByProps({ testID: 'welcome-next' }).props.onPress();
+    renderer.root
+      .findByProps({ accessibilityLabel: 'Show welcome slide 3' })
+      .props.onPress();
   });
 
   await act(async () => {

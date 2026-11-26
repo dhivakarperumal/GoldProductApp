@@ -12,8 +12,6 @@ import {
 } from 'react-native';
 import type { ScrollViewInstance } from 'react-native';
 import {
-  ArrowLeft,
-  ArrowRight,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react-native';
@@ -160,37 +158,27 @@ export default function Welcome({ onContinue }: WelcomeProps) {
               ))}
             </View>
 
-            <View className="flex-row items-center justify-between">
+            {isLastSlide ? (
               <Pressable
-                testID={isLastSlide ? 'welcome-continue' : 'welcome-next'}
+                testID="welcome-continue"
                 accessibilityRole="button"
-                accessibilityLabel={
-                  isLastSlide ? 'Get started' : 'Next welcome slide'
-                }
+                accessibilityLabel="Get started"
                 disabled={isContinuing}
-                onPress={
-                  isLastSlide
-                    ? handleContinue
-                    : () => goToSlide(activeSlide + 1)
-                }
-                className="min-h-12 min-w-[142px] flex-row items-center justify-center rounded-xl bg-[#123B32] px-5 active:opacity-80"
+                onPress={handleContinue}
+                className="min-h-12 flex-row items-center justify-center rounded-xl bg-[#123B32] px-5 active:opacity-80"
               >
                 {isContinuing ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <>
                     <Text className="mr-2 text-sm font-bold text-white">
-                      {isLastSlide ? 'Get Started' : 'Next'}
+                      Get Started
                     </Text>
-                    {isLastSlide ? (
-                      <ShieldCheck size={18} color="#F5C451" />
-                    ) : (
-                      <ArrowRight size={18} color="#F5C451" />
-                    )}
+                    <ShieldCheck size={18} color="#F5C451" />
                   </>
                 )}
               </Pressable>
-            </View>
+            ) : null}
           </View>
         </View>
       </SafeAreaView>
