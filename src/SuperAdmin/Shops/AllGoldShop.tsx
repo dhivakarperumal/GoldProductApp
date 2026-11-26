@@ -171,6 +171,119 @@ function DetailRow({ label, value }: { label: string; value?: string }) {
   );
 }
 
+type SummaryCardProps = {
+  label: string;
+  value: number;
+  note: string;
+  progress: number;
+  icon: typeof Store;
+  tone: 'emerald' | 'amber' | 'sky' | 'rose';
+};
+
+const SUMMARY_BAR_SEGMENTS = [
+  { height: 'h-1.5', threshold: 10 },
+  { height: 'h-2', threshold: 30 },
+  { height: 'h-3', threshold: 50 },
+  { height: 'h-4', threshold: 70 },
+  { height: 'h-5', threshold: 90 },
+];
+
+const SUMMARY_TONES = {
+  emerald: {
+    card: 'border-emerald-100',
+    icon: 'bg-emerald-700',
+    glow: 'bg-emerald-200/45',
+    note: 'text-emerald-700',
+    dot: 'bg-emerald-500',
+    bar: 'bg-emerald-500',
+  },
+  amber: {
+    card: 'border-amber-100',
+    icon: 'bg-amber-500',
+    glow: 'bg-amber-200/45',
+    note: 'text-amber-700',
+    dot: 'bg-amber-500',
+    bar: 'bg-amber-500',
+  },
+  sky: {
+    card: 'border-sky-100',
+    icon: 'bg-sky-700',
+    glow: 'bg-sky-200/45',
+    note: 'text-sky-700',
+    dot: 'bg-sky-500',
+    bar: 'bg-sky-500',
+  },
+  rose: {
+    card: 'border-rose-100',
+    icon: 'bg-rose-600',
+    glow: 'bg-rose-200/45',
+    note: 'text-rose-700',
+    dot: 'bg-rose-500',
+    bar: 'bg-rose-500',
+  },
+};
+
+function SummaryCard({
+  label,
+  value,
+  note,
+  progress,
+  icon: Icon,
+  tone,
+}: SummaryCardProps) {
+  const styles = SUMMARY_TONES[tone];
+  const percentage = Math.min(Math.max(progress, 0), 100);
+  return (
+    <View
+      className={`relative min-h-[145px] flex-1 basis-[155px] overflow-hidden rounded-2xl border bg-white p-4 shadow-sm ${styles.card}`}
+    >
+      <View
+        pointerEvents="none"
+        className={`absolute -right-5 -top-6 h-24 w-24 rounded-full ${styles.glow}`}
+      />
+      <View className="relative">
+        <View className="flex-row items-start justify-between">
+          <Text className="flex-1 text-[10px] font-extrabold uppercase tracking-[1.2px] text-[#6B7280]">
+            {label}
+          </Text>
+          <View
+            className={`ml-2 h-10 w-10 items-center justify-center rounded-xl shadow-sm ${styles.icon}`}
+          >
+            <Icon size={19} color="#FFFFFF" strokeWidth={2.2} />
+          </View>
+        </View>
+        <Text className="mt-2 text-[28px] font-black leading-8 tracking-tight text-[#173F35]">
+          {Number(value || 0).toLocaleString('en-IN')}
+        </Text>
+        <View className="mt-2 flex-row items-center">
+          <View className={`mr-1.5 h-1.5 w-1.5 rounded-full ${styles.dot}`} />
+          <Text
+            numberOfLines={1}
+            className={`flex-1 text-[10px] font-semibold ${styles.note}`}
+          >
+            {note}
+          </Text>
+        </View>
+        <View className="mt-3 flex-row items-end gap-1.5">
+          {SUMMARY_BAR_SEGMENTS.map(segment => (
+            <View
+              key={segment.threshold}
+              className={`flex-1 rounded-full ${
+                percentage >= segment.threshold
+                  ? styles.bar
+                  : 'bg-[#E5E7EB]'
+              } ${segment.height}`}
+            />
+          ))}
+          <Text className="ml-1 text-[9px] font-bold text-[#6B7280]">
+            {Math.round(percentage)}%
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 export default function AllGoldShop({
   onFullScreenShopPageChange,
 }: AllGoldShopProps) {
@@ -490,6 +603,9 @@ export default function AllGoldShop({
     ['inactive', 'Inactive'],
     ['suspended', 'Suspended'],
   ];
+  const totalShopCount = Number(summary.total_shops || 0);
+  const shopShare = (value: number) =>
+    totalShopCount > 0 ? (value / totalShopCount) * 100 : 0;
 
   return (
     <View className="flex-1 bg-[#F8F7F2]">
@@ -525,42 +641,38 @@ export default function AllGoldShop({
         </View>
 
         <View className="flex-row flex-wrap gap-3">
-          <View className="flex-1 basis-[145px] rounded-2xl border border-[#ECE7D8] bg-white p-4">
-            <View className="mb-3 h-10 w-10 items-center justify-center rounded-xl bg-[#08745D]">
-              <Store size={20} color="#FFFFFF" />
-            </View>
-            <Text className="text-xs font-semibold text-[#6B7280]">Total Shops</Text>
-            <Text className="mt-1 text-xl font-extrabold text-[#173F35]">
-              {Number(summary.total_shops || 0).toLocaleString('en-IN')}
-            </Text>
-          </View>
-          <View className="flex-1 basis-[145px] rounded-2xl border border-[#ECE7D8] bg-white p-4">
-            <View className="mb-3 h-10 w-10 items-center justify-center rounded-xl bg-[#D97706]">
-              <ShieldAlert size={20} color="#FFFFFF" />
-            </View>
-            <Text className="text-xs font-semibold text-[#6B7280]">Pending</Text>
-            <Text className="mt-1 text-xl font-extrabold text-[#173F35]">
-              {Number(summary.pending_shops || 0).toLocaleString('en-IN')}
-            </Text>
-          </View>
-          <View className="flex-1 basis-[145px] rounded-2xl border border-[#ECE7D8] bg-white p-4">
-            <View className="mb-3 h-10 w-10 items-center justify-center rounded-xl bg-[#0284C7]">
-              <CheckCircle2 size={20} color="#FFFFFF" />
-            </View>
-            <Text className="text-xs font-semibold text-[#6B7280]">Active</Text>
-            <Text className="mt-1 text-xl font-extrabold text-[#173F35]">
-              {Number(summary.active_shops || 0).toLocaleString('en-IN')}
-            </Text>
-          </View>
-          <View className="flex-1 basis-[145px] rounded-2xl border border-[#ECE7D8] bg-white p-4">
-            <View className="mb-3 h-10 w-10 items-center justify-center rounded-xl bg-[#E11D48]">
-              <X size={20} color="#FFFFFF" />
-            </View>
-            <Text className="text-xs font-semibold text-[#6B7280]">Expired</Text>
-            <Text className="mt-1 text-xl font-extrabold text-[#173F35]">
-              {Number(summary.expired_subscriptions || 0).toLocaleString('en-IN')}
-            </Text>
-          </View>
+          <SummaryCard
+            label="Total Shops"
+            value={totalShopCount}
+            note="All registered shops"
+            progress={shopShare(totalShopCount)}
+            icon={Store}
+            tone="emerald"
+          />
+          <SummaryCard
+            label="Pending"
+            value={summary.pending_shops || 0}
+            note="Awaiting review"
+            progress={shopShare(Number(summary.pending_shops || 0))}
+            icon={ShieldAlert}
+            tone="amber"
+          />
+          <SummaryCard
+            label="Active"
+            value={summary.active_shops || 0}
+            note="Approved shops"
+            progress={shopShare(Number(summary.active_shops || 0))}
+            icon={CheckCircle2}
+            tone="sky"
+          />
+          <SummaryCard
+            label="Expired"
+            value={summary.expired_subscriptions || 0}
+            note="Subscriptions ended"
+            progress={shopShare(Number(summary.expired_subscriptions || 0))}
+            icon={X}
+            tone="rose"
+          />
         </View>
 
         <View className="rounded-2xl border border-[#ECE7D8] bg-white p-3">
