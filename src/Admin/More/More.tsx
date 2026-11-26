@@ -1,7 +1,21 @@
 import { Pressable, Text, View } from 'react-native';
-import { CircleDollarSign, Settings2, UserRound } from 'lucide-react-native';
+import {
+  CircleDollarSign,
+  ClipboardList,
+  ReceiptText,
+  Settings2,
+  Store,
+  UserRound,
+} from 'lucide-react-native';
 
-export type MoreScreen = 'home' | 'funds' | 'dailyRates' | 'profile';
+export type MoreScreen =
+  | 'home'
+  | 'funds'
+  | 'dailyRates'
+  | 'receiptSettings'
+  | 'dealers'
+  | 'dealerPurchases'
+  | 'profile';
 
 type Props = { onNavigate: (screen: MoreScreen) => void };
 
@@ -22,6 +36,24 @@ const OPTIONS: Array<{
     title: 'Daily Gold Rate',
     description: 'Manage precious metal rates, schedules, and rate history.',
     icon: Settings2,
+  },
+  {
+    screen: 'receiptSettings',
+    title: 'Receipt Settings',
+    description: 'Set the shop branding and contact details printed on receipts.',
+    icon: ReceiptText,
+  },
+  {
+    screen: 'dealers',
+    title: 'Dealer Management',
+    description: 'Manage trade partners, balances, and dealer statements.',
+    icon: Store,
+  },
+  {
+    screen: 'dealerPurchases',
+    title: 'Dealer Purchases & Payables',
+    description: 'Record supplier invoices, adjustments, and payments.',
+    icon: ClipboardList,
   },
   {
     screen: 'profile',

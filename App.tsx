@@ -36,6 +36,9 @@ import AdminProfile from './src/Admin/Profile/Profile';
 import More, { MoreScreen } from './src/Admin/More/More';
 import FundManagement from './src/Admin/More/FundManagement';
 import DailyGoldRate from './src/Admin/More/DailyGoldRate';
+import ReceiptSettings from './src/Admin/More/ReceiptSettings';
+import Dealers from './src/Admin/More/Dealers';
+import DealerPurchases from './src/Admin/More/DealerPurchases';
 import InnerHeader from './src/Components/InnerHeader';
 import AdminHeader from './src/Admin/Navigation/AdminHeader';
 import AdminTabBar, { AdminTab } from './src/Admin/Navigation/AdminTabBar';
@@ -420,6 +423,12 @@ function AppContent() {
           <FundManagement onBack={() => setAdminMoreScreen('home')} />
         ) : adminTab === 'More' && adminMoreScreen === 'dailyRates' ? (
           <DailyGoldRate onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'receiptSettings' ? (
+          <ReceiptSettings onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'dealers' ? (
+          <Dealers onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'dealerPurchases' ? (
+          <DealerPurchases onBack={() => setAdminMoreScreen('home')} />
         ) : adminTab === 'More' && adminMoreScreen === 'profile' ? (
           <>
             <InnerHeader
