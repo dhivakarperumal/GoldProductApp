@@ -21,6 +21,7 @@ module.exports = {
   Home: MockIcon,
   LockKeyhole: MockIcon,
   LogOut: MockIcon,
+  MapPin: MockIcon,
   Mail: MockIcon,
   Phone: MockIcon,
   RefreshCw: MockIcon,
@@ -30,5 +31,6 @@ module.exports = {
   Trash2: MockIcon,
   UserRound: MockIcon,
   Users: MockIcon,
+  X: MockIcon,
   XCircle: MockIcon,
 };

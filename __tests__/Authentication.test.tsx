@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
-import { TextInput } from 'react-native';
+import { Text, TextInput } from 'react-native';
 import App from '../App';
 import Login from '../src/Auth/Login';
 import TopHeader from '../src/SuperAdmin/Navigation/TopHeader';
@@ -102,7 +102,11 @@ test('notification dropdown shows only shops registered today', async () => {
     params: { page: 1, pageSize: 50, search: '', status: 'all' },
   });
   expect(renderer.root.findByProps({ children: 'Today Gold' })).toBeDefined();
-  expect(renderer.root.findByProps({ children: 'Asha Kumar' })).toBeDefined();
+  expect(
+    renderer.root
+      .findAllByType(Text)
+      .some(text => String(text.props.children).includes('Asha Kumar')),
+  ).toBe(true);
   expect(
     renderer.root.findAllByProps({ children: 'Yesterday Gold' }),
   ).toHaveLength(0);

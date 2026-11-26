@@ -98,36 +98,64 @@ function MetricCard({
   const showChange = typeof change === 'number';
 
   return (
-    <View className="flex-1 basis-[145px] rounded-2xl border border-[#ECE7D8] bg-white p-4">
+    <View className="relative min-h-[148px] flex-1 basis-[145px] overflow-hidden rounded-2xl border border-[#E8E3D8] bg-white p-4 shadow-sm">
       <View
-        className="mb-3 h-10 w-10 items-center justify-center rounded-xl"
+        pointerEvents="none"
+        className="absolute -right-6 -top-7 h-20 w-20 rounded-full opacity-10"
         style={{ backgroundColor: accent }}
-      >
-        <Icon size={20} color="#FFFFFF" strokeWidth={2} />
-      </View>
-      <Text className="text-xs font-semibold text-[#6B7280]">{label}</Text>
-      <Text className="mt-1 text-xl font-extrabold text-[#173F35]">
-        {value}
-      </Text>
-      {showChange ? (
-        <View className="mt-2 flex-row items-center">
-          {isPositive ? (
-            <ArrowUpRight size={14} color="#059669" />
-          ) : (
-            <ArrowDownRight size={14} color="#DC2626" />
-          )}
-          <Text
-            className={
-              isPositive
-                ? 'ml-1 text-xs font-bold text-[#059669]'
-                : 'ml-1 text-xs font-bold text-[#DC2626]'
-            }
-          >
-            {change > 0 ? '+' : ''}
-            {change.toFixed(1)}%
+      />
+      <View className="relative">
+        <View className="flex-row items-start justify-between">
+          <Text className="flex-1 pr-2 text-[10px] font-extrabold uppercase leading-4 tracking-[0.8px] text-[#64748B]">
+            {label}
           </Text>
+          <View
+            className="h-10 w-10 items-center justify-center rounded-xl"
+            style={{ backgroundColor: accent }}
+          >
+            <Icon size={19} color="#FFFFFF" strokeWidth={2.2} />
+          </View>
         </View>
-      ) : null}
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+          className="mt-3 text-[26px] font-black leading-8 tracking-tight text-[#173F35]"
+        >
+          {value}
+        </Text>
+        {showChange ? (
+          <View
+            className={`mt-3 self-start flex-row items-center rounded-full px-2.5 py-1 ${
+              isPositive ? 'bg-[#E8F7EF]' : 'bg-[#FFF1F2]'
+            }`}
+          >
+            {isPositive ? (
+              <ArrowUpRight size={13} color="#059669" />
+            ) : (
+              <ArrowDownRight size={13} color="#DC2626" />
+            )}
+            <Text
+              className={`ml-1 text-[10px] font-extrabold ${
+                isPositive ? 'text-[#059669]' : 'text-[#DC2626]'
+              }`}
+            >
+              {change > 0 ? '+' : ''}
+              {change.toFixed(1)}%
+            </Text>
+          </View>
+        ) : (
+          <View className="mt-3 flex-row items-center">
+            <View
+              className="mr-1.5 h-1.5 w-1.5 rounded-full"
+              style={{ backgroundColor: accent }}
+            />
+            <Text className="text-[10px] font-semibold text-[#7B817D]">
+              Current total
+            </Text>
+          </View>
+        )}
+      </View>
     </View>
   );
 }
@@ -455,6 +483,14 @@ export default function Home({ onNavigate }: HomeProps) {
         </View>
       ) : null}
 
+      <View className="mb-3 flex-row items-center justify-between">
+        <Text className="text-base font-extrabold text-[#173F35]">
+          At a glance
+        </Text>
+        <Text className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#8A8F8B]">
+          Portfolio summary
+        </Text>
+      </View>
       <View className="mb-5 flex-row flex-wrap gap-3">
         {metrics.map(metric => (
           <MetricCard key={metric.label} {...metric} />
