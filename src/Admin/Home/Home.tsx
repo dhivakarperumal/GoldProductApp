@@ -313,13 +313,13 @@ export default function Home({ onNavigate }: HomeProps) {
 
       <View className="mb-2 flex-row flex-wrap gap-3">
         {[
-          { label: 'Loans', tab: 'Loans' as const, icon: Store },
-          { label: 'Products', tab: 'Products' as const, icon: CreditCard },
           {
-            label: 'Reports',
-            tab: 'Reports' as const,
+            label: 'Orders',
+            tab: 'Orders' as const,
             icon: ChartNoAxesColumn,
           },
+          { label: 'Loans', tab: 'Loans' as const, icon: Store },
+          { label: 'Products', tab: 'Products' as const, icon: CreditCard },
         ].map(({ label, tab, icon: Icon }) => (
           <Pressable
             key={label}

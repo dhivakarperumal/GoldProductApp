@@ -3,6 +3,7 @@ import ReactTestRenderer, { act } from 'react-test-renderer';
 import { TextInput } from 'react-native';
 import App from '../App';
 import Login from '../src/Auth/Login';
+import AdminTabBar from '../src/Admin/Navigation/AdminTabBar';
 
 const mockGetItem = jest.fn();
 const mockSetItem = jest.fn();
@@ -56,6 +57,32 @@ beforeEach(() => {
   );
   mockSetTokenCache.mockReset();
   mockClearTokenCache.mockReset();
+});
+
+test('shows Admin navigation tabs in the requested order', async () => {
+  const onTabPress = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    renderer = ReactTestRenderer.create(
+      <AdminTabBar activeTab="Dashboard" onTabPress={onTabPress} />,
+    );
+  });
+  const tabLabels = renderer.root
+    .findAllByProps({ accessibilityRole: 'button' })
+    .map(button => button.props.accessibilityLabel);
+  const uniqueTabLabels = [...new Set(tabLabels)];
+
+  expect(uniqueTabLabels).toEqual([
+    'Dashboard',
+    'Loans',
+    'Orders',
+    'Products',
+    'More',
+  ]);
+  expect(
+    renderer.root.findByProps({ accessibilityLabel: 'Dashboard' }).props
+      .accessibilityState.selected,
+  ).toBe(true);
 });
 
 test('restores a saved session without showing the login screen', async () => {

@@ -56,7 +56,7 @@ function App() {
 
 function AppContent() {
   const [superAdminTab, setSuperAdminTab] = useState<SuperAdminTab>('Home');
-  const [adminTab, setAdminTab] = useState<AdminTab>('Home');
+  const [adminTab, setAdminTab] = useState<AdminTab>('Dashboard');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionCheckAttempt, setSessionCheckAttempt] = useState(0);
@@ -260,11 +260,11 @@ function AppContent() {
           adminName={adminName}
           adminEmail={adminEmail}
           onLogout={handleLogout}
-          onProfilePress={() => setAdminTab('Profile')}
+          onProfilePress={() => setAdminTab('More')}
         />
-        {adminTab === 'Home' ? (
+        {adminTab === 'Dashboard' ? (
           <AdminHome onNavigate={setAdminTab} />
-        ) : adminTab === 'Profile' ? (
+        ) : adminTab === 'More' ? (
           <AdminProfile />
         ) : (
           <AdminSection section={adminTab} />

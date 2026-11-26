@@ -1,27 +1,32 @@
 import { useState } from 'react';
 import { ImageBackground, Pressable, Text, View } from 'react-native';
 import {
-  ChartNoAxesColumn,
-  CreditCard,
-  Home,
-  Store,
-  UserRound,
+  Ellipsis,
+  HandCoins,
+  LayoutDashboard,
+  Package,
+  ShoppingBag,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export type AdminTab = 'Home' | 'Loans' | 'Products' | 'Reports' | 'Profile';
+export type AdminTab =
+  | 'Dashboard'
+  | 'Loans'
+  | 'Orders'
+  | 'Products'
+  | 'More';
 
 type AdminTabBarProps = {
   activeTab: AdminTab;
   onTabPress: (tab: AdminTab) => void;
 };
 
-const tabs: Array<{ label: AdminTab; icon: typeof Home }> = [
-  { label: 'Home', icon: Home },
-  { label: 'Loans', icon: Store },
-  { label: 'Products', icon: CreditCard },
-  { label: 'Reports', icon: ChartNoAxesColumn },
-  { label: 'Profile', icon: UserRound },
+const tabs: Array<{ label: AdminTab; icon: typeof LayoutDashboard }> = [
+  { label: 'Dashboard', icon: LayoutDashboard },
+  { label: 'Loans', icon: HandCoins },
+  { label: 'Orders', icon: ShoppingBag },
+  { label: 'Products', icon: Package },
+  { label: 'More', icon: Ellipsis },
 ];
 
 export default function AdminTabBar({

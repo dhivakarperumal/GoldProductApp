@@ -3,8 +3,8 @@ import type { AdminTab } from '../Navigation/AdminTabBar';
 
 const descriptions: Partial<Record<AdminTab, string>> = {
   Loans: 'Review and manage your shop loan activity.',
+  Orders: 'Review and manage your shop orders.',
   Products: 'Manage your shop inventory and product catalogue.',
-  Reports: 'Review shop performance and account activity.',
 };
 
 export default function AdminSection({ section }: { section: AdminTab }) {
