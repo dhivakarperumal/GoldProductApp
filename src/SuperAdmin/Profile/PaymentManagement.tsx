@@ -597,331 +597,341 @@ export default function PaymentManagement({ onBack }: PaymentManagementProps) {
         </View>
       </SafeAreaView>
 
-      <ScrollView
-        className="flex-1"
-        keyboardShouldPersistTaps="handled"
-        contentContainerClassName="gap-4 px-4 py-4 pb-8"
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => refresh()}
-            tintColor="#08745D"
-          />
-        }
-      >
-        {overviewError ? (
-          <Text className="rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-700">
-            {overviewError}
-          </Text>
-        ) : null}
-        <View className="flex-row flex-wrap gap-2">
-          <SummaryCard
-            label="Total Payments"
-            value={
-              loadingOverview
-                ? '—'
-                : (overview.totalPayments || 0).toLocaleString('en-IN')
-            }
-            note="All logged transactions"
-            icon={CreditCard}
-            color="bg-[#123B32]"
-          />
-          <SummaryCard
-            label="Amount Collected"
-            value={
-              loadingOverview
-                ? '—'
-                : formatCurrency(overview.totalAmountCollected)
-            }
-            note="Net successful payments"
-            icon={DollarSign}
-            color="bg-[#443719]"
-          />
-          <SummaryCard
-            label="Pending Payments"
-            value={
-              loadingOverview ? '—' : String(overview.pendingPaymentsCount || 0)
-            }
-            note={`${formatCurrency(overview.pendingPaymentsAmount)} due`}
-            icon={Clock3}
-            color="bg-[#17364D]"
-          />
-          <SummaryCard
-            label="Failed Payments"
-            value={
-              loadingOverview ? '—' : String(overview.failedPaymentsCount || 0)
-            }
-            note={formatCurrency(overview.failedPaymentsAmount)}
-            icon={XCircle}
-            color="bg-[#4A2B25]"
-          />
-          <SummaryCard
-            label="Refunded Payments"
-            value={
-              loadingOverview
-                ? '—'
-                : String(overview.refundedPaymentsCount || 0)
-            }
-            note={`${formatCurrency(overview.refundedPaymentsAmount)} refunded`}
-            icon={RotateCcw}
-            color="bg-[#29363B]"
-          />
-        </View>
-
-        <View className="rounded-2xl border border-[#ECE7D8] bg-white p-3">
-          <View className="flex-row items-center rounded-xl border border-[#E5E7EB] px-3">
-            <Search size={16} color="#9CA3AF" />
-            <TextInput
-              accessibilityLabel="Search payments"
-              value={search}
-              onChangeText={value => updateFilter(() => setSearch(value))}
-              placeholder="Search shop, owner, transaction..."
-              placeholderTextColor="#9CA3AF"
-              className="min-h-11 flex-1 px-2 text-xs text-[#1F2937]"
-              returnKeyType="search"
+      <SafeAreaView edges={['bottom']} className="flex-1 bg-[#F8F7F2]">
+        <ScrollView
+          className="flex-1"
+          keyboardShouldPersistTaps="handled"
+          contentContainerClassName="gap-4 px-4 py-4 pb-8"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => refresh()}
+              tintColor="#08745D"
             />
-            {search ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Clear payment search"
-                onPress={() => updateFilter(() => setSearch(''))}
-                className="p-1"
-              >
-                <X size={15} color="#6B7280" />
-              </Pressable>
-            ) : null}
-          </View>
-          <View className="mt-2 flex-row flex-wrap gap-2">
-            <FilterSelect
-              label="Filter by payment status"
-              value={statusFilter}
-              options={STATUS_OPTIONS}
-              onSelect={value =>
-                updateFilter(() => setStatusFilter(value as PaymentFilter))
+          }
+        >
+          {overviewError ? (
+            <Text className="rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-700">
+              {overviewError}
+            </Text>
+          ) : null}
+          <View className="flex-row flex-wrap gap-2">
+            <SummaryCard
+              label="Total Payments"
+              value={
+                loadingOverview
+                  ? '—'
+                  : (overview.totalPayments || 0).toLocaleString('en-IN')
               }
+              note="All logged transactions"
+              icon={CreditCard}
+              color="bg-[#123B32]"
             />
-            <FilterSelect
-              label="Filter by subscription plan"
-              value={planFilter}
-              options={[
-                { value: 'all', label: 'All Subscription Plans' },
-                ...plans.map(plan => ({
-                  value: String(plan.id),
-                  label: plan.plan_name || 'Unnamed plan',
-                })),
-              ]}
-              onSelect={value => updateFilter(() => setPlanFilter(value))}
+            <SummaryCard
+              label="Amount Collected"
+              value={
+                loadingOverview
+                  ? '—'
+                  : formatCurrency(overview.totalAmountCollected)
+              }
+              note="Net successful payments"
+              icon={DollarSign}
+              color="bg-[#443719]"
             />
-            <FilterSelect
-              label="Filter by payment method"
-              value={methodFilter}
-              options={[
-                { value: 'all', label: 'All Payment Methods' },
-                ...METHODS.map(method => ({ value: method, label: method })),
-              ]}
-              onSelect={value => updateFilter(() => setMethodFilter(value))}
+            <SummaryCard
+              label="Pending Payments"
+              value={
+                loadingOverview
+                  ? '—'
+                  : String(overview.pendingPaymentsCount || 0)
+              }
+              note={`${formatCurrency(overview.pendingPaymentsAmount)} due`}
+              icon={Clock3}
+              color="bg-[#17364D]"
             />
-            <View className="min-w-[47%] flex-1 flex-row items-center rounded-xl border border-[#E5E7EB] px-3">
-              <CalendarDays size={15} color="#6B7280" />
+            <SummaryCard
+              label="Failed Payments"
+              value={
+                loadingOverview
+                  ? '—'
+                  : String(overview.failedPaymentsCount || 0)
+              }
+              note={formatCurrency(overview.failedPaymentsAmount)}
+              icon={XCircle}
+              color="bg-[#4A2B25]"
+            />
+            <SummaryCard
+              label="Refunded Payments"
+              value={
+                loadingOverview
+                  ? '—'
+                  : String(overview.refundedPaymentsCount || 0)
+              }
+              note={`${formatCurrency(
+                overview.refundedPaymentsAmount,
+              )} refunded`}
+              icon={RotateCcw}
+              color="bg-[#29363B]"
+            />
+          </View>
+
+          <View className="rounded-2xl border border-[#ECE7D8] bg-white p-3">
+            <View className="flex-row items-center rounded-xl border border-[#E5E7EB] px-3">
+              <Search size={16} color="#9CA3AF" />
               <TextInput
-                accessibilityLabel="Filter by payment date"
-                value={dateFilter}
-                onChangeText={value => updateFilter(() => setDateFilter(value))}
-                placeholder="YYYY-MM-DD"
+                accessibilityLabel="Search payments"
+                value={search}
+                onChangeText={value => updateFilter(() => setSearch(value))}
+                placeholder="Search shop, owner, transaction..."
                 placeholderTextColor="#9CA3AF"
-                className="min-h-11 flex-1 px-2 text-xs text-[#374151]"
-                keyboardType="numbers-and-punctuation"
-                maxLength={10}
+                className="min-h-11 flex-1 px-2 text-xs text-[#1F2937]"
+                returnKeyType="search"
               />
-              {dateFilter ? (
+              {search ? (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Clear payment date"
-                  onPress={() => updateFilter(() => setDateFilter(''))}
+                  accessibilityLabel="Clear payment search"
+                  onPress={() => updateFilter(() => setSearch(''))}
+                  className="p-1"
                 >
-                  <X size={14} color="#6B7280" />
+                  <X size={15} color="#6B7280" />
                 </Pressable>
               ) : null}
             </View>
-          </View>
-          {plansError ? (
-            <Text className="mt-2 text-[10px] font-semibold text-rose-700">
-              {plansError}
-            </Text>
-          ) : null}
-        </View>
-
-        {listError ? (
-          <View className="items-center rounded-2xl bg-white px-5 py-7">
-            <Text className="text-center text-sm font-semibold text-rose-700">
-              {listError}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => loadPayments()}
-              className="mt-3 rounded-xl bg-[#08745D] px-4 py-2.5"
-            >
-              <Text className="text-xs font-bold text-white">Retry</Text>
-            </Pressable>
-          </View>
-        ) : loadingList && payments.length === 0 ? (
-          <View className="items-center rounded-2xl bg-white py-10">
-            <ActivityIndicator color="#08745D" />
-            <Text className="mt-3 text-xs text-[#6B7280]">
-              Loading payments...
-            </Text>
-          </View>
-        ) : payments.length === 0 ? (
-          <View className="items-center rounded-2xl bg-white px-5 py-10">
-            <Wallet size={34} color="#9CA3AF" />
-            <Text className="mt-3 text-sm font-bold text-[#374151]">
-              No payment records found
-            </Text>
-            <Text className="mt-1 text-center text-xs text-[#6B7280]">
-              Try changing your search or filters.
-            </Text>
-          </View>
-        ) : (
-          <View className="gap-3">
-            {payments.map(payment => (
-              <View
-                key={payment.id}
-                className="rounded-2xl border border-[#ECE7D8] bg-white p-4"
-              >
-                <View className="flex-row items-start justify-between gap-3">
-                  <View className="flex-1">
-                    <Text className="text-sm font-extrabold text-[#173F35]">
-                      {payment.shopName || 'Unnamed shop'}
-                    </Text>
-                    <Text className="mt-1 text-[10px] font-semibold text-[#6B7280]">
-                      Shop ID: {payment.shopCode || '—'} ·{' '}
-                      {payment.email || 'Email not provided'}
-                    </Text>
-                  </View>
-                  <StatusBadge status={payment.paymentStatus} />
-                </View>
-                <View className="mt-3 flex-row flex-wrap gap-2 border-t border-[#F3F4F6] pt-3">
-                  <DetailRow
-                    label="Transaction ID"
-                    value={payment.transactionId || 'PENDING'}
-                  />
-                  <DetailRow label="Plan" value={payment.planName} />
-                  <DetailRow
-                    label="Amount"
-                    value={formatCurrency(payment.amount)}
-                  />
-                  <DetailRow
-                    label="Payment Date"
-                    value={formatDate(payment.paymentDate)}
-                  />
-                  <DetailRow
-                    label="Subscription Start"
-                    value={formatDate(payment.subscriptionStartDate)}
-                  />
-                  <DetailRow
-                    label="Subscription Expiry"
-                    value={formatDate(payment.subscriptionEndDate)}
-                  />
-                </View>
-                {Number(payment.refundAmount || 0) > 0 ? (
-                  <Text className="mt-2 text-xs font-semibold text-purple-700">
-                    Refunded: {formatCurrency(payment.refundAmount)}
-                  </Text>
+            <View className="mt-2 flex-row flex-wrap gap-2">
+              <FilterSelect
+                label="Filter by payment status"
+                value={statusFilter}
+                options={STATUS_OPTIONS}
+                onSelect={value =>
+                  updateFilter(() => setStatusFilter(value as PaymentFilter))
+                }
+              />
+              <FilterSelect
+                label="Filter by subscription plan"
+                value={planFilter}
+                options={[
+                  { value: 'all', label: 'All Subscription Plans' },
+                  ...plans.map(plan => ({
+                    value: String(plan.id),
+                    label: plan.plan_name || 'Unnamed plan',
+                  })),
+                ]}
+                onSelect={value => updateFilter(() => setPlanFilter(value))}
+              />
+              <FilterSelect
+                label="Filter by payment method"
+                value={methodFilter}
+                options={[
+                  { value: 'all', label: 'All Payment Methods' },
+                  ...METHODS.map(method => ({ value: method, label: method })),
+                ]}
+                onSelect={value => updateFilter(() => setMethodFilter(value))}
+              />
+              <View className="min-w-[47%] flex-1 flex-row items-center rounded-xl border border-[#E5E7EB] px-3">
+                <CalendarDays size={15} color="#6B7280" />
+                <TextInput
+                  accessibilityLabel="Filter by payment date"
+                  value={dateFilter}
+                  onChangeText={value =>
+                    updateFilter(() => setDateFilter(value))
+                  }
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#9CA3AF"
+                  className="min-h-11 flex-1 px-2 text-xs text-[#374151]"
+                  keyboardType="numbers-and-punctuation"
+                  maxLength={10}
+                />
+                {dateFilter ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Clear payment date"
+                    onPress={() => updateFilter(() => setDateFilter(''))}
+                  >
+                    <X size={14} color="#6B7280" />
+                  </Pressable>
                 ) : null}
-                <View className="mt-3 flex-row flex-wrap gap-2 border-t border-[#F3F4F6] pt-3">
-                  {actionButton(
-                    'View Details',
-                    () => viewDetails(payment),
-                    'bg-[#173F35]',
-                  )}
-                  {payment.paymentStatus === 'pending'
-                    ? actionButton(
-                        'Approve',
-                        () => {
-                          setApproveTarget(payment);
-                          setApproveForm(current => ({
-                            ...current,
-                            transactionId:
-                              payment.transactionId === 'PENDING'
-                                ? ''
-                                : payment.transactionId || '',
-                            paymentMethod:
-                              payment.paymentMethod || 'Bank Transfer',
-                            paymentReference: payment.paymentReference || '',
-                          }));
-                        },
-                        'bg-[#059669]',
-                      )
-                    : null}
-                  {payment.paymentStatus === 'pending'
-                    ? actionButton(
-                        'Reject',
-                        () => {
-                          setRejectTarget(payment);
-                          setRejectionReason('');
-                        },
-                        'bg-[#BE123C]',
-                      )
-                    : null}
-                  {payment.paymentStatus === 'paid'
-                    ? actionButton(
-                        'Refund',
-                        () => {
-                          setRefundTarget(payment);
-                          const remaining =
-                            Number(payment.amount || 0) -
-                            Number(payment.refundAmount || 0);
-                          setRefundAmount(
-                            remaining > 0 ? String(remaining) : '',
-                          );
-                          setRefundReason('');
-                        },
-                        'bg-[#7E22CE]',
-                      )
-                    : null}
-                </View>
               </View>
-            ))}
+            </View>
+            {plansError ? (
+              <Text className="mt-2 text-[10px] font-semibold text-rose-700">
+                {plansError}
+              </Text>
+            ) : null}
           </View>
-        )}
 
-        {pagination.totalPages > 1 ? (
-          <View className="flex-row items-center justify-between rounded-xl bg-white px-3 py-3">
-            <Text className="flex-1 text-[10px] text-[#6B7280]">
-              Page {pagination.page || page} of {pagination.totalPages} ·{' '}
-              {pagination.total || 0} payments
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Previous page"
-              disabled={page <= 1}
-              onPress={() => setPage(current => current - 1)}
-              className={`mr-2 min-h-9 flex-row items-center rounded-lg border border-[#E5E7EB] px-2 ${
-                page <= 1 ? 'opacity-40' : ''
-              }`}
-            >
-              <ChevronLeft size={15} color="#374151" />
-              <Text className="text-[10px] font-semibold text-[#374151]">
-                Prev
+          {listError ? (
+            <View className="items-center rounded-2xl bg-white px-5 py-7">
+              <Text className="text-center text-sm font-semibold text-rose-700">
+                {listError}
               </Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Next page"
-              disabled={page >= pagination.totalPages}
-              onPress={() => setPage(current => current + 1)}
-              className={`min-h-9 flex-row items-center rounded-lg border border-[#E5E7EB] px-2 ${
-                page >= pagination.totalPages ? 'opacity-40' : ''
-              }`}
-            >
-              <Text className="text-[10px] font-semibold text-[#374151]">
-                Next
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => loadPayments()}
+                className="mt-3 rounded-xl bg-[#08745D] px-4 py-2.5"
+              >
+                <Text className="text-xs font-bold text-white">Retry</Text>
+              </Pressable>
+            </View>
+          ) : loadingList && payments.length === 0 ? (
+            <View className="items-center rounded-2xl bg-white py-10">
+              <ActivityIndicator color="#08745D" />
+              <Text className="mt-3 text-xs text-[#6B7280]">
+                Loading payments...
               </Text>
-              <ChevronRight size={15} color="#374151" />
-            </Pressable>
-          </View>
-        ) : null}
-      </ScrollView>
+            </View>
+          ) : payments.length === 0 ? (
+            <View className="items-center rounded-2xl bg-white px-5 py-10">
+              <Wallet size={34} color="#9CA3AF" />
+              <Text className="mt-3 text-sm font-bold text-[#374151]">
+                No payment records found
+              </Text>
+              <Text className="mt-1 text-center text-xs text-[#6B7280]">
+                Try changing your search or filters.
+              </Text>
+            </View>
+          ) : (
+            <View className="gap-3">
+              {payments.map(payment => (
+                <View
+                  key={payment.id}
+                  className="rounded-2xl border border-[#ECE7D8] bg-white p-4"
+                >
+                  <View className="flex-row items-start justify-between gap-3">
+                    <View className="flex-1">
+                      <Text className="text-sm font-extrabold text-[#173F35]">
+                        {payment.shopName || 'Unnamed shop'}
+                      </Text>
+                      <Text className="mt-1 text-[10px] font-semibold text-[#6B7280]">
+                        Shop ID: {payment.shopCode || '—'} ·{' '}
+                        {payment.email || 'Email not provided'}
+                      </Text>
+                    </View>
+                    <StatusBadge status={payment.paymentStatus} />
+                  </View>
+                  <View className="mt-3 flex-row flex-wrap gap-2 border-t border-[#F3F4F6] pt-3">
+                    <DetailRow
+                      label="Transaction ID"
+                      value={payment.transactionId || 'PENDING'}
+                    />
+                    <DetailRow label="Plan" value={payment.planName} />
+                    <DetailRow
+                      label="Amount"
+                      value={formatCurrency(payment.amount)}
+                    />
+                    <DetailRow
+                      label="Payment Date"
+                      value={formatDate(payment.paymentDate)}
+                    />
+                    <DetailRow
+                      label="Subscription Start"
+                      value={formatDate(payment.subscriptionStartDate)}
+                    />
+                    <DetailRow
+                      label="Subscription Expiry"
+                      value={formatDate(payment.subscriptionEndDate)}
+                    />
+                  </View>
+                  {Number(payment.refundAmount || 0) > 0 ? (
+                    <Text className="mt-2 text-xs font-semibold text-purple-700">
+                      Refunded: {formatCurrency(payment.refundAmount)}
+                    </Text>
+                  ) : null}
+                  <View className="mt-3 flex-row flex-wrap gap-2 border-t border-[#F3F4F6] pt-3">
+                    {actionButton(
+                      'View Details',
+                      () => viewDetails(payment),
+                      'bg-[#173F35]',
+                    )}
+                    {payment.paymentStatus === 'pending'
+                      ? actionButton(
+                          'Approve',
+                          () => {
+                            setApproveTarget(payment);
+                            setApproveForm(current => ({
+                              ...current,
+                              transactionId:
+                                payment.transactionId === 'PENDING'
+                                  ? ''
+                                  : payment.transactionId || '',
+                              paymentMethod:
+                                payment.paymentMethod || 'Bank Transfer',
+                              paymentReference: payment.paymentReference || '',
+                            }));
+                          },
+                          'bg-[#059669]',
+                        )
+                      : null}
+                    {payment.paymentStatus === 'pending'
+                      ? actionButton(
+                          'Reject',
+                          () => {
+                            setRejectTarget(payment);
+                            setRejectionReason('');
+                          },
+                          'bg-[#BE123C]',
+                        )
+                      : null}
+                    {payment.paymentStatus === 'paid'
+                      ? actionButton(
+                          'Refund',
+                          () => {
+                            setRefundTarget(payment);
+                            const remaining =
+                              Number(payment.amount || 0) -
+                              Number(payment.refundAmount || 0);
+                            setRefundAmount(
+                              remaining > 0 ? String(remaining) : '',
+                            );
+                            setRefundReason('');
+                          },
+                          'bg-[#7E22CE]',
+                        )
+                      : null}
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {pagination.totalPages > 1 ? (
+            <View className="flex-row items-center justify-between rounded-xl bg-white px-3 py-3">
+              <Text className="flex-1 text-[10px] text-[#6B7280]">
+                Page {pagination.page || page} of {pagination.totalPages} ·{' '}
+                {pagination.total || 0} payments
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Previous page"
+                disabled={page <= 1}
+                onPress={() => setPage(current => current - 1)}
+                className={`mr-2 min-h-9 flex-row items-center rounded-lg border border-[#E5E7EB] px-2 ${
+                  page <= 1 ? 'opacity-40' : ''
+                }`}
+              >
+                <ChevronLeft size={15} color="#374151" />
+                <Text className="text-[10px] font-semibold text-[#374151]">
+                  Prev
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Next page"
+                disabled={page >= pagination.totalPages}
+                onPress={() => setPage(current => current + 1)}
+                className={`min-h-9 flex-row items-center rounded-lg border border-[#E5E7EB] px-2 ${
+                  page >= pagination.totalPages ? 'opacity-40' : ''
+                }`}
+              >
+                <Text className="text-[10px] font-semibold text-[#374151]">
+                  Next
+                </Text>
+                <ChevronRight size={15} color="#374151" />
+              </Pressable>
+            </View>
+          ) : null}
+        </ScrollView>
+      </SafeAreaView>
 
       <Modal
         visible={Boolean(selectedPayment)}
