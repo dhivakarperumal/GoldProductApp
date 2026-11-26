@@ -2,6 +2,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import {
   CircleDollarSign,
   ClipboardList,
+  ChartNoAxesColumnIncreasing,
   Gem,
   Package,
   ReceiptText,
@@ -21,6 +22,7 @@ export type MoreScreen =
   | 'metals'
   | 'categories'
   | 'stockDetails'
+  | 'reports'
   | 'profile';
 
 type Props = { onNavigate: (screen: MoreScreen) => void };
@@ -78,6 +80,12 @@ const OPTIONS: Array<{
     title: 'Stock Details',
     description: 'Review product stock and update available quantities.',
     icon: Package,
+  },
+  {
+    screen: 'reports',
+    title: 'Reports',
+    description: 'Review sales trends, customers, inventory, and loan activity.',
+    icon: ChartNoAxesColumnIncreasing,
   },
   {
     screen: 'profile',

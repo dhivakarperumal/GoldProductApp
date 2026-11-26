@@ -39,6 +39,7 @@ import DailyGoldRate from './src/Admin/More/DailyGoldRate';
 import ReceiptSettings from './src/Admin/More/ReceiptSettings';
 import Dealers from './src/Admin/More/Dealers';
 import DealerPurchases from './src/Admin/More/DealerPurchases';
+import Reports from './src/Admin/More/Reports';
 import InnerHeader from './src/Components/InnerHeader';
 import AdminHeader from './src/Admin/Navigation/AdminHeader';
 import AdminTabBar, { AdminTab } from './src/Admin/Navigation/AdminTabBar';
@@ -435,6 +436,8 @@ function AppContent() {
           <Categories onBack={() => setAdminMoreScreen('home')} />
         ) : adminTab === 'More' && adminMoreScreen === 'stockDetails' ? (
           <StockDetails onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'reports' ? (
+          <Reports onBack={() => setAdminMoreScreen('home')} />
         ) : adminTab === 'More' && adminMoreScreen === 'profile' ? (
           <>
             <InnerHeader
