@@ -179,19 +179,21 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   mockGet.mockImplementation((path: unknown) =>
     Promise.resolve(
       path === '/dashboard'
-        ? { data: { stats: [], revenueTrends: [] } }
+        ? {
+            data: {
+              stats: [],
+              revenueTrends: [],
+              goldRates: [
+                {
+                  metal_type: 'Gold',
+                  purity: '999',
+                  rate_per_gram: '10000.00',
+                },
+              ],
+            },
+          }
         : path === '/gold-rates/current'
-          ? {
-              data: {
-                rates: [
-                  {
-                    metal_type: 'Gold',
-                    purity: '999',
-                    rate_per_gram: '10000.00',
-                  },
-                ],
-              },
-            }
+          ? { data: null }
           : path === '/loans'
             ? {
                 data: [
@@ -245,6 +247,11 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   expect(renderer.root.findByProps({ testID: 'admin-home' })).toBeDefined();
   expect(renderer.root.findByProps({ children: 'Dashboard Customer' })).toBeDefined();
   expect(renderer.root.findByProps({ children: 'Dashboard Ring' })).toBeDefined();
+  expect(
+    renderer.root.findAllByProps({
+      children: 'Gold rates API returned an invalid response.',
+    }),
+  ).toHaveLength(0);
   expect(mockGet).toHaveBeenCalledWith('/dashboard', {
     params: { datePreset: 'all', startDate: '', endDate: '' },
   });

@@ -70,6 +70,7 @@ type DashboardData = {
   stats: DashboardMetric[];
   loanStatusCounts?: Record<string, number>;
   revenueTrends?: RevenueTrend[];
+  goldRates?: GoldRate[];
 };
 
 type HomeProps = {
@@ -191,9 +192,16 @@ export default function Home({ onNavigate }: HomeProps) {
     }
 
     if (ratesResult.status === 'fulfilled') {
-      const rates = ratesResult.value.data?.rates;
-      if (Array.isArray(rates)) {
-        setGoldRates(rates);
+      const currentRateSet = ratesResult.value.data;
+      if (currentRateSet === null) {
+        const dashboardRates =
+          dashboardResult.status === 'fulfilled' &&
+          Array.isArray(dashboardResult.value.data?.goldRates)
+            ? dashboardResult.value.data.goldRates
+            : [];
+        setGoldRates(dashboardRates);
+      } else if (Array.isArray(currentRateSet?.rates)) {
+        setGoldRates(currentRateSet.rates);
       } else {
         errors.push('Gold rates API returned an invalid response.');
       }
