@@ -90,8 +90,8 @@ export default function Login({ onLogin, onWelcomePress }: LoginProps) {
       }
 
       const role = user.role?.trim().toLowerCase().replace(/[\s_-]/g, '');
-      if (role !== 'superadmin') {
-        throw new Error('This app is only available to Super Admin accounts.');
+      if (role !== 'admin' && role !== 'superadmin') {
+        throw new Error('Only Admin and Super Admin accounts can sign in here.');
       }
 
       await AsyncStorage.setItem('userToken', token);
@@ -128,10 +128,10 @@ export default function Login({ onLogin, onWelcomePress }: LoginProps) {
               A little more sparkle, every day
             </Text>
             <Text className="text-center text-3xl font-bold text-[#173F35]">
-              Super Admin Sign In
+              Admin Sign In
             </Text>
             <Text className="mt-2 text-center text-sm leading-5 text-[#6B7280]">
-              Sign in to manage gold shops and subscriptions.
+              Sign in to your Sri Golds account to continue.
             </Text>
           </View>
 
