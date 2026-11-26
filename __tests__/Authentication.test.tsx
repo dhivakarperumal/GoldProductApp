@@ -111,6 +111,13 @@ test('notification dropdown shows only shops registered today', async () => {
   expect(
     renderer.root.findAllByProps({ children: 'Yesterday Gold' }),
   ).toHaveLength(0);
+
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'dropdown-backdrop' }).props.onPress();
+  });
+  expect(
+    renderer.root.findAllByProps({ testID: 'today-registrations-dropdown' }),
+  ).toHaveLength(0);
 });
 
 test('shows Home sparklines only for metrics with historical data', async () => {
