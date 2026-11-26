@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  ImageBackground,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -299,30 +300,38 @@ export default function Home({ onNavigate }: HomeProps) {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <View className="mb-5 overflow-hidden rounded-3xl bg-[#173F35] p-5">
-        <Text className="text-xs font-bold uppercase tracking-[2px] text-[#EAD78A]">
-          Welcome to
-        </Text>
-        <Text className="mt-1 text-2xl font-extrabold text-white">
-          Sri Gold Superadmin
-        </Text>
-        <Text className="mt-2 text-sm text-[#DCE8E4]">
-          Manage your gold retail platform from one place.
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Refresh dashboard"
-          onPress={onRefresh}
-          disabled={refreshing}
-          className="mt-4 h-10 w-10 items-center justify-center self-end rounded-full border border-white/30 bg-white/10"
-        >
-          {refreshing ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <RefreshCw size={18} color="#FFFFFF" />
-          )}
-        </Pressable>
-      </View>
+      <ImageBackground
+        source={require('../../Assert/Images/welcomehome.png')}
+        resizeMode="cover"
+        className="mb-5 overflow-hidden rounded-3xl"
+      >
+        <View className="min-h-[190px] flex-row items-start justify-between overflow-hidden rounded-3xl bg-[#06291F]/40 p-5">
+          <View className="flex-1 pr-3">
+            <Text className="text-xs font-bold uppercase tracking-[2px] text-[#F5C451]">
+              Welcome to
+            </Text>
+            <Text className="mt-1 text-2xl font-extrabold text-white">
+              Sri Gold Superadmin
+            </Text>
+            <Text className="mt-2 text-sm leading-5 text-[#F2F5F3]">
+              Manage your gold retail platform from one place.
+            </Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Refresh dashboard"
+            onPress={onRefresh}
+            disabled={refreshing}
+            className="h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/15"
+          >
+            {refreshing ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <RefreshCw size={18} color="#FFFFFF" />
+            )}
+          </Pressable>
+        </View>
+      </ImageBackground>
 
       {errorMessage ? (
         <View className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-3">

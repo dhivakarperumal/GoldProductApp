@@ -27,6 +27,7 @@ import Home from './src/SuperAdmin/Home/Home';
 import Profile from './src/SuperAdmin/Profile/Profile';
 import Revenue from './src/SuperAdmin/Reports/Revenue';
 import Subscriptions from './src/SuperAdmin/Subscription/Subscriptions';
+import AllGoldShop from './src/SuperAdmin/Shops/AllGoldShop';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -42,6 +43,8 @@ function App() {
 function AppContent() {
   const [activeTab, setActiveTab] = useState<SuperAdminTab>('Home');
   const [isPlanFormVisible, setIsPlanFormVisible] = useState(false);
+  const [isShopPageFullscreenVisible, setIsShopPageFullscreenVisible] =
+    useState(false);
   const [isMyProfileVisible, setIsMyProfileVisible] = useState(false);
   const [isUsersManagementVisible, setIsUsersManagementVisible] =
     useState(false);
@@ -121,6 +124,9 @@ function AppContent() {
 
   const handleTabChange = (tab: SuperAdminTab) => {
     setActiveTab(tab);
+    if (tab !== 'G Shops') {
+      setIsShopPageFullscreenVisible(false);
+    }
     if (tab !== 'Plans') {
       setIsPlanFormVisible(false);
     }
@@ -185,6 +191,7 @@ function AppContent() {
     <View className="flex-1 bg-white">
       {!(
         (activeTab === 'Plans' && isPlanFormVisible) ||
+        (activeTab === 'G Shops' && isShopPageFullscreenVisible) ||
         (activeTab === 'Profile' &&
           (isMyProfileVisible ||
             isUsersManagementVisible ||
@@ -208,6 +215,10 @@ function AppContent() {
         />
       ) : activeTab === 'Plans' ? (
         <Subscriptions onPlanFormVisibilityChange={setIsPlanFormVisible} />
+      ) : activeTab === 'G Shops' ? (
+        <AllGoldShop
+          onFullScreenShopPageChange={setIsShopPageFullscreenVisible}
+        />
       ) : activeTab === 'Revenue' ? (
         <Revenue />
       ) : (
@@ -219,6 +230,7 @@ function AppContent() {
       )}
       {!(
         (activeTab === 'Plans' && isPlanFormVisible) ||
+        (activeTab === 'G Shops' && isShopPageFullscreenVisible) ||
         (activeTab === 'Profile' &&
           (isMyProfileVisible ||
             isUsersManagementVisible ||

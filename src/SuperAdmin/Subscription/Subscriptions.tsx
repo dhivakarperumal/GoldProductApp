@@ -18,6 +18,7 @@ import {
   LayoutGrid,
   List,
   Pencil,
+  Plus,
   Search,
   Store,
   Trash2,
@@ -489,6 +490,23 @@ export default function Subscriptions({
         }
         contentContainerClassName="px-4 pb-24 pt-4"
       >
+        <View className="mb-4 flex-row items-center rounded-2xl bg-[#123B32] p-5">
+          <View className="mr-3 h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/10">
+            <Layers size={25} color="#F5C451" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-[10px] font-black uppercase tracking-[1.5px] text-[#F5C451]">
+              Super Admin · Control Center
+            </Text>
+            <Text className="mt-1 text-xl font-black text-white">
+              Subscription plan portfolio
+            </Text>
+            <Text className="mt-1 text-xs leading-5 text-white/75">
+              Manage pricing, plan availability, and shop subscriptions from one place.
+            </Text>
+          </View>
+        </View>
+
         <View className="mb-4 flex-row flex-wrap gap-3">
           <SummaryCard
             label="Total Plans"
@@ -658,9 +676,10 @@ export default function Subscriptions({
         accessibilityRole="button"
         accessibilityLabel="Create subscription plan"
         onPress={openCreate}
-        className="absolute bottom-4 right-4 z-20 h-14 w-14 items-center justify-center rounded-full bg-[#08745D] shadow-lg"
+        className="absolute bottom-5 right-5 z-20 h-14 w-14 items-center justify-center rounded-full bg-[#F5C451] shadow-lg"
+        style={{ elevation: 8 }}
       >
-        <Text className="text-3xl font-black leading-9 text-white">+</Text>
+        <Plus size={32} color="#173F35" strokeWidth={4} />
       </Pressable>
 
       {modal === 'view' && selected ? (

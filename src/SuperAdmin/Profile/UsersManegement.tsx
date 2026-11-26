@@ -1049,10 +1049,10 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
         accessibilityRole="button"
         accessibilityLabel="Add user"
         onPress={openAddModal}
-        style={floatingButtonPosition}
-        className="absolute right-4 z-20 h-14 w-14 items-center justify-center rounded-full bg-[#08745D] shadow-lg"
+        className="absolute right-5 z-20 h-14 w-14 items-center justify-center rounded-full bg-[#F5C451] shadow-lg"
+        style={[floatingButtonPosition, { elevation: 8 }]}
       >
-        <Plus size={24} color="#FFFFFF" />
+        <Plus size={32} color="#173F35" strokeWidth={4} />
       </Pressable>
 
       <Modal
