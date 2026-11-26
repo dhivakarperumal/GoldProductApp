@@ -188,33 +188,31 @@ export default function StockDetails({ onBack }: Props) {
           </View>
         ) : null}
         {!selected && !loading && !loadingProduct ? (
-          <View className="mb-4 max-h-72 rounded-2xl bg-white p-2">
-            <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
-              {products.map(product => {
-                const image = mediaUrl(firstProductImage(product));
-                return (
-                  <Pressable
-                    key={String(product.id)}
-                    onPress={() => selectProduct(product)}
-                    className="flex-row items-center border-b border-[#F1F2EE] p-2">
-                    {image ? (
-                      <Image source={{ uri: image }} className="h-12 w-12 rounded-lg bg-[#F3F4F1]" />
-                    ) : (
-                      <View className="h-12 w-12 items-center justify-center rounded-lg bg-[#EAF3EF]">
-                        <Text className="text-[10px] font-bold text-[#07564B]">Image</Text>
-                      </View>
-                    )}
-                    <View className="ml-3 flex-1">
-                      <Text numberOfLines={1} className="font-bold text-[#173F35]">{product.name || 'Unnamed product'}</Text>
-                      <Text className="mt-1 text-xs text-[#6B7E76]">{product.product_code || 'No SKU'} · Stock {Number(product.total_stock) || 0}</Text>
+          <View className="mb-4 rounded-2xl bg-white p-2">
+            {products.map(product => {
+              const image = mediaUrl(firstProductImage(product));
+              return (
+                <Pressable
+                  key={String(product.id)}
+                  onPress={() => selectProduct(product)}
+                  className="flex-row items-center border-b border-[#F1F2EE] p-2">
+                  {image ? (
+                    <Image source={{ uri: image }} className="h-12 w-12 rounded-lg bg-[#F3F4F1]" />
+                  ) : (
+                    <View className="h-12 w-12 items-center justify-center rounded-lg bg-[#EAF3EF]">
+                      <Text className="text-[10px] font-bold text-[#07564B]">Image</Text>
                     </View>
-                  </Pressable>
-                );
-              })}
-              {products.length === 0 && !error ? (
-                <Text className="p-5 text-center text-sm text-[#6B7E76]">No matching products.</Text>
-              ) : null}
-            </ScrollView>
+                  )}
+                  <View className="ml-3 flex-1">
+                    <Text numberOfLines={1} className="font-bold text-[#173F35]">{product.name || 'Unnamed product'}</Text>
+                    <Text className="mt-1 text-xs text-[#6B7E76]">{product.product_code || 'No SKU'} · Stock {Number(product.total_stock) || 0}</Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+            {products.length === 0 && !error ? (
+              <Text className="p-5 text-center text-sm text-[#6B7E76]">No matching products.</Text>
+            ) : null}
           </View>
         ) : null}
 

@@ -84,7 +84,7 @@ export default function Metals({ onBack }: Props) {
         <View className="flex-1 items-center justify-center"><ActivityIndicator color="#07564B" /></View>
       ) : (
         <ScrollView
-          contentContainerClassName="p-4 pb-8"
+          contentContainerClassName="p-4 pb-24"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor="#07564B" />}
           keyboardShouldPersistTaps="handled">
           <View className="mb-4 flex-row items-center justify-between">
@@ -92,12 +92,6 @@ export default function Metals({ onBack }: Props) {
               <Text className="text-xl font-extrabold text-[#173F35]">Manage Metals</Text>
               <Text className="mt-1 text-sm text-[#6B7E76]">{metals.length} metals</Text>
             </View>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => { setSelected(null); setFormVisible(true); }}
-              className="h-11 w-11 items-center justify-center rounded-full bg-[#07564B]">
-              <Plus size={22} color="white" />
-            </Pressable>
           </View>
           <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-white px-3">
             <Search size={17} color="#6B7E76" />
@@ -161,6 +155,13 @@ export default function Metals({ onBack }: Props) {
           ) : null}
         </ScrollView>
       )}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Add metal"
+        onPress={() => { setSelected(null); setFormVisible(true); }}
+        className="absolute bottom-6 right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
+        <Plus size={24} color="white" />
+      </Pressable>
       <MetalForm
         visible={formVisible}
         metal={selected}
