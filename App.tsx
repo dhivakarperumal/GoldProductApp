@@ -42,6 +42,8 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState<SuperAdminTab>('Home');
   const [isPlanFormVisible, setIsPlanFormVisible] = useState(false);
   const [isMyProfileVisible, setIsMyProfileVisible] = useState(false);
+  const [isUsersManagementVisible, setIsUsersManagementVisible] =
+    useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionCheckAttempt, setSessionCheckAttempt] = useState(0);
@@ -121,6 +123,7 @@ function AppContent() {
     }
     if (tab !== 'Profile') {
       setIsMyProfileVisible(false);
+      setIsUsersManagementVisible(false);
     }
   };
 
@@ -178,7 +181,8 @@ function AppContent() {
     <View className="flex-1 bg-white">
       {!(
         (activeTab === 'Plans' && isPlanFormVisible) ||
-        (activeTab === 'Profile' && isMyProfileVisible)
+        (activeTab === 'Profile' &&
+          (isMyProfileVisible || isUsersManagementVisible))
       ) ? (
         <TopHeader
           adminName={adminName}
@@ -192,6 +196,7 @@ function AppContent() {
       ) : activeTab === 'Profile' ? (
         <Profile
           onMyProfileVisibilityChange={setIsMyProfileVisible}
+          onUsersManagementVisibilityChange={setIsUsersManagementVisible}
           onLogout={handleLogout}
         />
       ) : activeTab === 'Plans' ? (
@@ -205,7 +210,8 @@ function AppContent() {
       )}
       {!(
         (activeTab === 'Plans' && isPlanFormVisible) ||
-        (activeTab === 'Profile' && isMyProfileVisible)
+        (activeTab === 'Profile' &&
+          (isMyProfileVisible || isUsersManagementVisible))
       ) ? (
         <BottomBar activeTab={activeTab} onTabPress={handleTabChange} />
       ) : null}

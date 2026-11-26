@@ -9,11 +9,13 @@ import {
 import { Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MyProfile from './MyProfile';
+import UsersManegement from './UsersManegement';
 
 type ProfileDestination = 'cards' | 'my-profile' | 'users' | 'payments';
 
 type ProfileProps = {
   onMyProfileVisibilityChange: (visible: boolean) => void;
+  onUsersManagementVisibilityChange: (visible: boolean) => void;
   onLogout: () => void;
 };
 
@@ -40,6 +42,7 @@ const cards = [
 
 export default function Profile({
   onMyProfileVisibilityChange,
+  onUsersManagementVisibilityChange,
   onLogout,
 }: ProfileProps) {
   const [destination, setDestination] = useState<ProfileDestination>('cards');
@@ -74,9 +77,19 @@ export default function Profile({
   }
 
   if (destination === 'users' || destination === 'payments') {
-    const isUserManagement = destination === 'users';
-    const title = isUserManagement ? 'User Management' : 'Payment Management';
-    const Icon = isUserManagement ? Users : CreditCard;
+    if (destination === 'users') {
+      return (
+        <UsersManegement
+          onBack={() => {
+            setDestination('cards');
+            onUsersManagementVisibilityChange(false);
+          }}
+        />
+      );
+    }
+
+    const title = 'Payment Management';
+    const Icon = CreditCard;
 
     return (
       <View className="flex-1 bg-[#F8F7F2] px-4 py-5">
@@ -111,7 +124,6 @@ export default function Profile({
       className="flex-1 bg-[#F8F7F2]"
       contentContainerClassName="px-4 py-5"
     >
-      
       <View className="gap-3">
         {cards.map(card => {
           const Icon = card.icon;
@@ -122,6 +134,7 @@ export default function Profile({
               onPress={() => {
                 setDestination(card.id);
                 onMyProfileVisibilityChange(card.id === 'my-profile');
+                onUsersManagementVisibilityChange(card.id === 'users');
               }}
               className="w-full flex-row items-center rounded-2xl border border-[#E8E6DC] bg-white p-4 shadow-sm"
             >

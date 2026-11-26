@@ -20,7 +20,7 @@ const tabLabels: SuperAdminTab[] = [
   'Home',
   'G Shops',
   'Plans',
-  'Reports',
+  'Revenue',
   'Profile',
 ];
 
@@ -67,5 +67,4 @@ test('starts on Home and moves the gold active tab background across tabs', asyn
     });
     expectOnlyActive(label);
   }
-
 });

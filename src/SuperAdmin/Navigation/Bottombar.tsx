@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  Animated,
-  ImageBackground,
-  Pressable,
-  Text,
-  View,
-} from 'react-native';
+import { Animated, ImageBackground, Pressable, Text, View } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   ChartNoAxesColumn,
@@ -20,7 +14,7 @@ export type SuperAdminTab =
   | 'Home'
   | 'G Shops'
   | 'Plans'
-  | 'Reports'
+  | 'Revenue'
   | 'Profile';
 
 type BottomBarProps = {
@@ -32,14 +26,11 @@ const tabs: Array<{ label: SuperAdminTab; icon: typeof Home }> = [
   { label: 'Home', icon: Home },
   { label: 'G Shops', icon: Store },
   { label: 'Plans', icon: CreditCard },
-  { label: 'Reports', icon: ChartNoAxesColumn },
+  { label: 'Revenue', icon: ChartNoAxesColumn },
   { label: 'Profile', icon: UserRound },
 ];
 
-export default function BottomBar({
-  activeTab,
-  onTabPress,
-}: BottomBarProps) {
+export default function BottomBar({ activeTab, onTabPress }: BottomBarProps) {
   const insets = useSafeAreaInsets();
   const [barWidth, setBarWidth] = useState(0);
   const translateX = useRef(new Animated.Value(0)).current;
@@ -66,11 +57,13 @@ export default function BottomBar({
     <ImageBackground
       source={require('../../Assert/Images/bottom.png')}
       resizeMode="stretch"
-      style={{ paddingBottom: insets.bottom }}>
+      style={{ paddingBottom: insets.bottom }}
+    >
       <View
         testID="bottom-tab-bar"
         onLayout={({ nativeEvent }) => setBarWidth(nativeEvent.layout.width)}
-        className="relative h-[70px] flex-row items-center border-t border-[#EAD9B1]/40">
+        className="relative h-[70px] flex-row items-center border-t border-[#EAD9B1]/40"
+      >
         {tabWidth > 0 && (
           <Animated.View
             testID="active-tab-background"
@@ -101,13 +94,15 @@ export default function BottomBar({
               className="z-10 h-full flex-1 items-center justify-center px-0.5"
               style={({ pressed }) => ({
                 opacity: pressed ? 0.72 : 1,
-              })}>
+              })}
+            >
               <View
                 className={
                   isActive
                     ? 'mb-1 h-8 w-9 items-center justify-center'
                     : 'mb-1 h-8 w-9 items-center justify-center'
-                }>
+                }
+              >
                 <Icon
                   size={19}
                   color={isActive ? '#153B35' : '#FFF8E7'}
@@ -120,7 +115,8 @@ export default function BottomBar({
                   isActive
                     ? 'max-w-full text-[10px] font-extrabold text-[#153B35]'
                     : 'max-w-full text-[10px] font-bold text-white'
-                }>
+                }
+              >
                 {tab.label}
               </Text>
             </Pressable>

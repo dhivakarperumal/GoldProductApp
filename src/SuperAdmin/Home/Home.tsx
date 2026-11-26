@@ -12,6 +12,7 @@ import {
   ArrowUpRight,
   Building2,
   CalendarDays,
+  ChartNoAxesColumn,
   Clock3,
   CreditCard,
   RefreshCw,
@@ -96,7 +97,8 @@ function MetricCard({
     <View className="flex-1 basis-[145px] rounded-2xl border border-[#ECE7D8] bg-white p-4">
       <View
         className="mb-3 h-10 w-10 items-center justify-center rounded-xl"
-        style={{ backgroundColor: accent }}>
+        style={{ backgroundColor: accent }}
+      >
         <Icon size={20} color="#FFFFFF" strokeWidth={2} />
       </View>
       <Text className="text-xs font-semibold text-[#6B7280]">{label}</Text>
@@ -115,7 +117,8 @@ function MetricCard({
               isPositive
                 ? 'ml-1 text-xs font-bold text-[#059669]'
                 : 'ml-1 text-xs font-bold text-[#DC2626]'
-            }>
+            }
+          >
             {change > 0 ? '+' : ''}
             {change.toFixed(1)}%
           </Text>
@@ -137,8 +140,11 @@ function MiniBarChart({
   currency?: boolean;
 }) {
   const data = values.slice(-6);
-  const numbers = data.map(item =>
-    Number(currency ? item.revenue : item.registrations || item.subscriptions) || 0,
+  const numbers = data.map(
+    item =>
+      Number(
+        currency ? item.revenue : item.registrations || item.subscriptions,
+      ) || 0,
   );
   const max = Math.max(...numbers, 1);
 
@@ -152,7 +158,10 @@ function MiniBarChart({
             const value = numbers[index];
             const height = Math.max((value / max) * 112, 8);
             return (
-              <View key={`${item.label || index}-${index}`} className="flex-1 items-center">
+              <View
+                key={`${item.label || index}-${index}`}
+                className="flex-1 items-center"
+              >
                 <Text className="mb-1 text-[9px] font-bold text-[#6B7280]">
                   {currency ? formatCurrency(value) : formatCount(value)}
                 </Text>
@@ -160,14 +169,19 @@ function MiniBarChart({
                   className="w-[55%] rounded-t-lg bg-[#B8860B]"
                   style={{ height }}
                 />
-                <Text numberOfLines={1} className="mt-2 text-[9px] text-[#8A8F8B]">
+                <Text
+                  numberOfLines={1}
+                  className="mt-2 text-[9px] text-[#8A8F8B]"
+                >
                   {item.label || '—'}
                 </Text>
               </View>
             );
           })
         ) : (
-          <Text className="m-auto text-sm text-[#9CA3AF]">No data available</Text>
+          <Text className="m-auto text-sm text-[#9CA3AF]">
+            No data available
+          </Text>
         )}
       </View>
     </View>
@@ -283,7 +297,8 @@ export default function Home({ onNavigate }: HomeProps) {
       contentContainerClassName="px-4 py-5"
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }>
+      }
+    >
       <View className="mb-5 overflow-hidden rounded-3xl bg-[#173F35] p-5">
         <Text className="text-xs font-bold uppercase tracking-[2px] text-[#EAD78A]">
           Welcome to
@@ -299,7 +314,8 @@ export default function Home({ onNavigate }: HomeProps) {
           accessibilityLabel="Refresh dashboard"
           onPress={onRefresh}
           disabled={refreshing}
-          className="mt-4 h-10 w-10 items-center justify-center self-end rounded-full border border-white/30 bg-white/10">
+          className="mt-4 h-10 w-10 items-center justify-center self-end rounded-full border border-white/30 bg-white/10"
+        >
           {refreshing ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
@@ -314,7 +330,8 @@ export default function Home({ onNavigate }: HomeProps) {
           <Pressable
             accessibilityRole="button"
             onPress={onRefresh}
-            className="mt-2 self-start">
+            className="mt-2 self-start"
+          >
             <Text className="text-sm font-bold text-[#991B1B]">Try again</Text>
           </Pressable>
         </View>
@@ -344,7 +361,11 @@ export default function Home({ onNavigate }: HomeProps) {
               tab: 'Plans' as const,
               icon: CreditCard,
             },
-            { label: 'Reports', tab: 'Reports' as const, icon: ShieldCheck },
+            {
+              label: 'Revenue',
+              tab: 'Revenue' as const,
+              icon: ChartNoAxesColumn,
+            },
             { label: 'Profile', tab: 'Profile' as const, icon: Users },
           ].map(item => {
             const Icon = item.icon;
@@ -353,7 +374,8 @@ export default function Home({ onNavigate }: HomeProps) {
                 key={item.label}
                 accessibilityRole="button"
                 onPress={() => onNavigate(item.tab)}
-                className="min-h-[88px] flex-1 basis-[145px] items-center justify-center rounded-xl bg-[#F8F7F2] px-2 active:opacity-70">
+                className="min-h-[88px] flex-1 basis-[145px] items-center justify-center rounded-xl bg-[#F8F7F2] px-2 active:opacity-70"
+              >
                 <Icon size={22} color="#B8860B" />
                 <Text className="mt-2 text-center text-xs font-bold text-[#374151]">
                   {item.label}
