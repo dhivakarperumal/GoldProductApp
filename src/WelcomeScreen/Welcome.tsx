@@ -22,13 +22,13 @@ const WELCOME_SLIDES = [
     image: require('../Assert/Images/Welcome/welcome1.png'),
     title: 'Welcome to Sri GoldSuite',
     description:
-      'Your trusted control center for managing every part of your gold business.',
+      'Manage your gold shops with ease. Review approvals, track subscriptions, and monitor revenue from one secure admin dashboard.',
   },
   {
     image: require('../Assert/Images/Welcome/welcome2.png'),
     title: 'Manage shops with ease',
     description:
-      'Review shop activity, approvals, and account details from one place.',
+      'Review shop activity, verify business details, manage approval requests, and keep every shop account organized in one place.',
   },
   {
     image: require('../Assert/Images/Welcome/welcome3.png'),
