@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import {
   CircleDollarSign,
   ClipboardList,
@@ -65,14 +65,14 @@ const OPTIONS: Array<{
 
 export default function More({ onNavigate }: Props) {
   return (
-    <View className="flex-1 bg-[#F8F7F2] px-4 py-5">
+    <ScrollView className="flex-1 bg-[#F8F7F2]" contentContainerClassName="px-4 py-5">
       <View className="mb-5 rounded-3xl bg-[#173F35] p-5">
         <Text className="text-xs font-bold uppercase tracking-[2px] text-[#EAD78A]">
           Shop Administration
         </Text>
         <Text className="mt-1 text-2xl font-extrabold text-white">More</Text>
         <Text className="mt-2 text-sm text-[#DCE8E4]">
-          Funds, precious metal pricing, and account settings.
+          Funds, rates, receipts, dealers, and account settings.
         </Text>
       </View>
       {OPTIONS.map(({ screen, title, description, icon: Icon }) => (
@@ -91,6 +91,6 @@ export default function More({ onNavigate }: Props) {
           <Text className="ml-2 text-lg font-bold text-[#A77B15]">›</Text>
         </Pressable>
       ))}
-    </View>
+    </ScrollView>
   );
 }

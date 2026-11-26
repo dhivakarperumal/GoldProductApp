@@ -6,6 +6,7 @@ import {
   Platform,
   Pressable,
   RefreshControl,
+  Share,
   ScrollView,
   Text,
   View,
@@ -13,12 +14,9 @@ import {
 import {
   AlertTriangle,
   ArrowDownLeft,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   Coins,
   Plus,
-  Search,
+  Store,
   Wallet,
   X,
 } from 'lucide-react-native';
@@ -308,6 +306,7 @@ export default function DealerPurchases({ onBack }: Props) {
       setLine(index, 'negotiated_rate', false);
       setLine(index, 'rate_per_gram', String(response.data.rate_per_gram));
     } catch (error) {
+      setLine(index, 'rate_per_gram', '');
       showAlert('Current rate unavailable', `${inventoryError(error)} You can enter an authorized negotiated rate.`, { variant: 'warning' });
     }
   };
@@ -375,12 +374,17 @@ export default function DealerPurchases({ onBack }: Props) {
   const submitPayment = async () => {
     const amount = Number(paymentForm.amount);
     const allocation = Number(paymentForm.allocation);
+    const selectedInvoice = outstanding.find(item => String(item.id) === paymentForm.purchase_id);
     if (!paymentForm.dealer_id || !Number.isFinite(amount) || amount <= 0) {
       showAlert('Payment details required', 'Select a dealer and enter a payment amount greater than zero.', { variant: 'warning' });
       return;
     }
     if (paymentForm.purchase_id && (!Number.isFinite(allocation) || allocation <= 0 || allocation > amount)) {
       showAlert('Invalid allocation', 'The invoice allocation must be positive and no greater than the payment amount.', { variant: 'warning' });
+      return;
+    }
+    if (selectedInvoice && allocation > Number(selectedInvoice.outstanding)) {
+      showAlert('Allocation exceeds invoice balance', 'The allocation cannot be greater than the selected invoice outstanding amount.', { variant: 'warning' });
       return;
     }
     setSaving(true);
@@ -403,6 +407,29 @@ export default function DealerPurchases({ onBack }: Props) {
       showAlert('Could not post payment', inventoryError(error), { variant: 'error' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const exportCsv = async () => {
+    const rows = [
+      ['Document', 'Dealer', 'Type', 'Date', 'Due date', 'Total', 'Paid', 'Outstanding'],
+      ...visiblePurchases.map(item => [
+        item.document_number,
+        item.dealer_name || '',
+        item.document_type,
+        item.document_date,
+        item.due_date || '',
+        item.total,
+        item.paid_amount,
+        item.outstanding,
+      ]),
+    ];
+    const escapeCsv = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`;
+    const csv = rows.map(row => row.map(escapeCsv).join(',')).join('\n');
+    try {
+      await Share.share({ title: 'Dealer purchases', message: csv });
+    } catch (error) {
+      showAlert('Could not export purchases', inventoryError(error), { variant: 'error' });
     }
   };
 
@@ -464,6 +491,9 @@ export default function DealerPurchases({ onBack }: Props) {
           <Pressable onPress={applyDateRange} className="mb-4 min-h-11 items-center justify-center rounded-xl bg-[#EAF3EF]">
             <Text className="text-sm font-bold text-[#07564B]">{dateRange.startDate || dateRange.endDate ? 'Apply date range' : 'Apply date filter'}</Text>
           </Pressable>
+          <Pressable onPress={exportCsv} className="mb-4 min-h-11 flex-row items-center justify-center gap-2 rounded-xl border border-[#E6E9E3]">
+            <Text className="text-sm font-bold text-[#52645F]">Export CSV</Text>
+          </Pressable>
           <View className="flex-row items-center justify-between">
             <Text className="text-sm font-bold text-[#52645F]">View</Text>
             <View className="flex-row rounded-xl bg-[#F3F4F1] p-1">
@@ -499,34 +529,53 @@ export default function DealerPurchases({ onBack }: Props) {
           <ActivityIndicator className="py-8" color="#07564B" />
         ) : visiblePurchases.length ? (
           visiblePurchases.map((item, index) => (
-            <View key={String(item.id)} className={`mb-3 rounded-2xl border border-[#E6E9E3] bg-white p-4 ${viewMode === 'grid' ? 'mx-0' : ''}`}>
-              <View className="flex-row items-start justify-between gap-3">
-                <View className="flex-1">
-                  <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">Entry {index + 1}</Text>
-                  <Text className="mt-1 font-extrabold text-[#07564B]">{item.document_number}</Text>
-                  <Text className="mt-1 text-[10px] font-semibold uppercase text-[#6B7E76]">{displayDocType(item.document_type)}</Text>
+            viewMode === 'list' ? (
+              <View key={String(item.id)} className="mb-2 rounded-xl border border-[#E6E9E3] bg-white p-3">
+                <View className="flex-row items-start justify-between gap-3">
+                  <View className="flex-1">
+                    <Text className="font-extrabold text-[#07564B]">{item.document_number}</Text>
+                    <Text className="mt-1 text-xs text-[#52645F]">{item.dealer_name || '—'} · {displayDocType(item.document_type)}</Text>
+                    <Text className="mt-1 text-[10px] text-[#6B7E76]">{displayDate(item.document_date)} · Due {displayDate(item.due_date)}</Text>
+                  </View>
+                  <View className="items-end">
+                    <Text className="font-extrabold text-[#173F35]">{currency(item.outstanding)}</Text>
+                    <Text className="text-[10px] text-[#6B7E76]">Outstanding</Text>
+                  </View>
                 </View>
-                <View className="items-end">
-                  <Text className="font-extrabold text-[#173F35]">{currency(item.outstanding)}</Text>
-                  <Text className="text-[10px] text-[#6B7E76]">Outstanding</Text>
+                <Text className="mt-2 border-t border-[#F1F2EE] pt-2 text-xs text-[#6B7E76]">
+                  Invoice ref: {item.supplier_invoice_number || '—'} · Paid {currency(item.paid_amount)} of {currency(item.total)}
+                </Text>
+              </View>
+            ) : (
+              <View key={String(item.id)} className="mb-3 rounded-2xl border border-[#E6E9E3] bg-white p-4">
+                <View className="flex-row items-start justify-between gap-3">
+                  <View className="flex-1">
+                    <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">Entry {index + 1}</Text>
+                    <Text className="mt-1 font-extrabold text-[#07564B]">{item.document_number}</Text>
+                    <Text className="mt-1 text-[10px] font-semibold uppercase text-[#6B7E76]">{displayDocType(item.document_type)}</Text>
+                  </View>
+                  <View className="items-end">
+                    <Text className="font-extrabold text-[#173F35]">{currency(item.outstanding)}</Text>
+                    <Text className="text-[10px] text-[#6B7E76]">Outstanding</Text>
+                  </View>
+                </View>
+                <View className="mt-3 border-t border-[#F1F2EE] pt-3">
+                  <Text className="text-sm text-[#52645F]">Dealer: {item.dealer_name || '—'}</Text>
+                  <Text className="mt-1 text-sm text-[#52645F]">Invoice ref: {item.supplier_invoice_number || '—'}</Text>
+                  <Text className="mt-1 text-sm text-[#52645F]">Date: {displayDate(item.document_date)} · Due: {displayDate(item.due_date)}</Text>
+                </View>
+                <View className="mt-3 flex-row gap-2">
+                  <View className="flex-1 rounded-xl bg-[#F8F7F2] p-3">
+                    <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">Amount</Text>
+                    <Text className="mt-1 font-bold text-[#173F35]">{currency(item.total)}</Text>
+                  </View>
+                  <View className="flex-1 rounded-xl bg-[#F8F7F2] p-3">
+                    <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">Paid</Text>
+                    <Text className="mt-1 font-bold text-[#173F35]">{currency(item.paid_amount)}</Text>
+                  </View>
                 </View>
               </View>
-              <View className="mt-3 border-t border-[#F1F2EE] pt-3">
-                <Text className="text-sm text-[#52645F]">Dealer: {item.dealer_name || '—'}</Text>
-                <Text className="mt-1 text-sm text-[#52645F]">Invoice ref: {item.supplier_invoice_number || '—'}</Text>
-                <Text className="mt-1 text-sm text-[#52645F]">Date: {displayDate(item.document_date)} · Due: {displayDate(item.due_date)}</Text>
-              </View>
-              <View className="mt-3 flex-row gap-2">
-                <View className="flex-1 rounded-xl bg-[#F8F7F2] p-3">
-                  <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">Amount</Text>
-                  <Text className="mt-1 font-bold text-[#173F35]">{currency(item.total)}</Text>
-                </View>
-                <View className="flex-1 rounded-xl bg-[#F8F7F2] p-3">
-                  <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">Paid</Text>
-                  <Text className="mt-1 font-bold text-[#173F35]">{currency(item.paid_amount)}</Text>
-                </View>
-              </View>
-            </View>
+            )
           ))
         ) : !loadError ? (
           <View className="items-center rounded-2xl bg-white p-8">

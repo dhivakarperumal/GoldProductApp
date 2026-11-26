@@ -94,32 +94,38 @@ export default function ReceiptSettings({ onBack }: Props) {
   };
 
   const uploadLogo = async () => {
-    const response = await launchImageLibrary({
-      mediaType: 'photo',
-      selectionLimit: 1,
-      includeBase64: true,
-      quality: 0.85,
-    });
-    if (response.didCancel) return;
-    if (response.errorCode) {
-      showAlert('Could not select logo', response.errorMessage || 'Please try again.', { variant: 'error' });
-      return;
+    try {
+      const response = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 1,
+        includeBase64: true,
+        quality: 0.8,
+      });
+      if (response.didCancel) return;
+      if (response.errorCode) {
+        showAlert('Could not select logo', response.errorMessage || 'Please try again.', { variant: 'error' });
+        return;
+      }
+      const asset = response.assets?.[0];
+      if (!asset?.base64) {
+        showAlert('Could not read logo', 'Choose another image and try again.', { variant: 'error' });
+        return;
+      }
+      const encodedSize = Math.floor(asset.base64.length * 3 / 4);
+      if ((asset.fileSize || encodedSize) > 1024 * 1024) {
+        showAlert('Logo is too large', 'Choose a PNG, JPG, or WebP logo no larger than 1 MB.', { variant: 'warning' });
+        return;
+      }
+      const mimeType = asset.type?.toLowerCase();
+      if (!mimeType || !['image/png', 'image/jpeg', 'image/webp'].includes(mimeType)) {
+        showAlert('Unsupported logo', 'Choose a PNG, JPG, or WebP image.', { variant: 'warning' });
+        return;
+      }
+      setField('logoUrl', `data:${mimeType};base64,${asset.base64}`);
+    } catch (error) {
+      if (__DEV__) console.warn('[ReceiptSettings] Could not open image picker:', error);
+      showAlert('Could not select logo', inventoryError(error), { variant: 'error' });
     }
-    const asset = response.assets?.[0];
-    if (!asset?.base64) {
-      showAlert('Could not read logo', 'Choose another image and try again.', { variant: 'error' });
-      return;
-    }
-    if ((asset.fileSize || 0) > 1024 * 1024) {
-      showAlert('Logo is too large', 'Choose a PNG, JPG, or WebP logo no larger than 1 MB.', { variant: 'warning' });
-      return;
-    }
-    const mimeType = asset.type?.toLowerCase();
-    if (!mimeType || !['image/png', 'image/jpeg', 'image/webp'].includes(mimeType)) {
-      showAlert('Unsupported logo', 'Choose a PNG, JPG, or WebP image.', { variant: 'warning' });
-      return;
-    }
-    setField('logoUrl', `data:${mimeType};base64,${asset.base64}`);
   };
 
   const saveSettings = async () => {
