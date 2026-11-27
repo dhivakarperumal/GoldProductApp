@@ -1,7 +1,29 @@
-import { Pressable, Text, View } from 'react-native';
-import { CircleDollarSign, Settings2, UserRound } from 'lucide-react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import {
+  CircleDollarSign,
+  ClipboardList,
+  ChartNoAxesColumnIncreasing,
+  Gem,
+  Package,
+  ReceiptText,
+  Shapes,
+  Settings2,
+  Store,
+  UserRound,
+} from 'lucide-react-native';
 
-export type MoreScreen = 'home' | 'funds' | 'dailyRates' | 'profile';
+export type MoreScreen =
+  | 'home'
+  | 'funds'
+  | 'dailyRates'
+  | 'receiptSettings'
+  | 'dealers'
+  | 'dealerPurchases'
+  | 'metals'
+  | 'categories'
+  | 'stockDetails'
+  | 'reports'
+  | 'profile';
 
 type Props = { onNavigate: (screen: MoreScreen) => void };
 
@@ -24,6 +46,48 @@ const OPTIONS: Array<{
     icon: Settings2,
   },
   {
+    screen: 'receiptSettings',
+    title: 'Receipt Settings',
+    description: 'Set the shop branding and contact details printed on receipts.',
+    icon: ReceiptText,
+  },
+  {
+    screen: 'dealers',
+    title: 'Dealer Management',
+    description: 'Manage trade partners, balances, and dealer statements.',
+    icon: Store,
+  },
+  {
+    screen: 'dealerPurchases',
+    title: 'Dealer Purchases & Payables',
+    description: 'Record supplier invoices, adjustments, and payments.',
+    icon: ClipboardList,
+  },
+  {
+    screen: 'metals',
+    title: 'Metals',
+    description: 'Manage the metals used by products and inventory.',
+    icon: Gem,
+  },
+  {
+    screen: 'categories',
+    title: 'Categories',
+    description: 'Add, edit, and organize product categories.',
+    icon: Shapes,
+  },
+  {
+    screen: 'stockDetails',
+    title: 'Stock Details',
+    description: 'Review product stock and update available quantities.',
+    icon: Package,
+  },
+  {
+    screen: 'reports',
+    title: 'Reports',
+    description: 'Review sales trends, customers, inventory, and loan activity.',
+    icon: ChartNoAxesColumnIncreasing,
+  },
+  {
     screen: 'profile',
     title: 'Admin Profile',
     description: 'View your account details.',
@@ -33,14 +97,14 @@ const OPTIONS: Array<{
 
 export default function More({ onNavigate }: Props) {
   return (
-    <View className="flex-1 bg-[#F8F7F2] px-4 py-5">
+    <ScrollView className="flex-1 bg-[#F8F7F2]" contentContainerClassName="px-4 py-5">
       <View className="mb-5 rounded-3xl bg-[#173F35] p-5">
         <Text className="text-xs font-bold uppercase tracking-[2px] text-[#EAD78A]">
           Shop Administration
         </Text>
         <Text className="mt-1 text-2xl font-extrabold text-white">More</Text>
         <Text className="mt-2 text-sm text-[#DCE8E4]">
-          Funds, precious metal pricing, and account settings.
+          Funds, rates, receipts, dealers, products, and account settings.
         </Text>
       </View>
       {OPTIONS.map(({ screen, title, description, icon: Icon }) => (
@@ -59,6 +123,6 @@ export default function More({ onNavigate }: Props) {
           <Text className="ml-2 text-lg font-bold text-[#A77B15]">›</Text>
         </Pressable>
       ))}
-    </View>
+    </ScrollView>
   );
 }

@@ -23,11 +23,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import api, { clearTokenCache, setTokenCache } from './src/api';
 import Login, { LoginUser } from './src/Auth/Login';
 import Welcome from './src/WelcomeScreen/Welcome';
+import Register from './src/Auth/Register';
 import AdminHome from './src/Admin/Home/Home';
 import AdminSection from './src/Admin/Pages/AdminSection';
 import AdminLoans from './src/Admin/Loans/Loans';
 import CreateLoan from './src/Admin/Loans/CreateLoan';
 import CreateCustomer from './src/Admin/Loans/CreateCustomer';
+import LoanDetails from './src/Admin/Loans/LoanDetails';
 import Products from './src/Admin/Products/Products';
 import AddProduct from './src/Admin/Products/AddProduct';
 import StockDetails from './src/Admin/Products/StockDetails';
@@ -38,6 +40,10 @@ import AdminProfile from './src/Admin/Profile/Profile';
 import More, { MoreScreen } from './src/Admin/More/More';
 import FundManagement from './src/Admin/More/FundManagement';
 import DailyGoldRate from './src/Admin/More/DailyGoldRate';
+import ReceiptSettings from './src/Admin/More/ReceiptSettings';
+import Dealers from './src/Admin/More/Dealers';
+import DealerPurchases from './src/Admin/More/DealerPurchases';
+import Reports from './src/Admin/More/Reports';
 import InnerHeader from './src/Components/InnerHeader';
 import AdminHeader from './src/Admin/Navigation/AdminHeader';
 import AdminTabBar, { AdminTab } from './src/Admin/Navigation/AdminTabBar';
@@ -55,7 +61,13 @@ const WELCOME_STORAGE_KEY = 'hasSeenWelcomeScreen';
 import { CustomAlertProvider, useCustomAlert } from './src/Components/CustomAlert';
 
 type AccountRole = 'admin' | 'superadmin';
-type AdminLoanScreen = 'list' | 'createLoan' | 'createCustomer';
+type AuthScreen = 'login' | 'register';
+type AdminLoanScreen =
+  | 'list'
+  | 'createLoan'
+  | 'createCustomer'
+  | 'viewLoan'
+  | 'editLoan';
 
 const screenStyles = StyleSheet.create({
   visible: { flex: 1 },
@@ -126,10 +138,14 @@ function AppContent() {
   );
   const [adminLoanScreen, setAdminLoanScreen] =
     useState<AdminLoanScreen>('list');
+  const [adminLoanId, setAdminLoanId] = useState<number | string | null>(null);
   const [adminProductScreen, setAdminProductScreen] =
     useState<InventoryScreen>('all');
   const [adminProductId, setAdminProductId] = useState<number | string | null>(null);
   const [adminMoreScreen, setAdminMoreScreen] = useState<MoreScreen>('home');
+  const [authScreen, setAuthScreen] = useState<AuthScreen>('login');
+  const [registrationEmail, setRegistrationEmail] = useState('');
+  const [registrationMessage, setRegistrationMessage] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionCheckAttempt, setSessionCheckAttempt] = useState(0);
@@ -353,6 +369,7 @@ function AppContent() {
   const navigateAdminTab = (tab: AdminTab) => {
     setAdminTab(tab);
     setAdminLoanScreen('list');
+    setAdminLoanId(null);
     setAdminProductScreen('all');
     setAdminProductId(null);
     setAdminMoreScreen('home');
@@ -399,6 +416,7 @@ function AppContent() {
         if (accountRole === 'admin') {
           if (adminTab === 'Loans' && adminLoanScreen !== 'list') {
             setAdminLoanScreen('list');
+            setAdminLoanId(null);
             return true;
           }
           if (adminTab === 'Products' && adminProductScreen !== 'all') {
@@ -413,6 +431,7 @@ function AppContent() {
           if (adminTab !== 'Dashboard') {
             setAdminTab('Dashboard');
             setAdminLoanScreen('list');
+            setAdminLoanId(null);
             setAdminProductScreen('all');
             setAdminProductId(null);
             setAdminMoreScreen('home');
@@ -521,10 +540,29 @@ function AppContent() {
   }
 
   if (!isAuthenticated) {
+    if (authScreen === 'register') {
+      return (
+        <Register
+          onBack={() => setAuthScreen('login')}
+          onSubmitted={email => {
+            setRegistrationEmail(email);
+            setRegistrationMessage(
+              'Registration submitted. You can sign in after approval.',
+            );
+            setAuthScreen('login');
+          }}
+        />
+      );
+    }
     return (
       <Login
         onLogin={handleLogin}
-        onWelcomePress={() => setShowWelcomeFromLogin(true)}
+        onRegister={() => {
+          setRegistrationMessage('');
+          setAuthScreen('register');
+        }}
+        initialIdentifier={registrationEmail}
+        registrationMessage={registrationMessage}
       />
     );
   }
@@ -593,25 +631,31 @@ function AppContent() {
           active={activeAdminScreen === 'Dashboard'}
         >
           <AdminHome onNavigate={navigateAdminTab} />
-        </CachedScreen>
-        <CachedScreen
-          cacheKey="admin-Loans-list"
-          visited={visitedAdminScreens.has('Loans:list')}
-          active={activeAdminScreen === 'Loans:list'}
-        >
-          <AdminLoans
-            onCreateLoan={() => navigateAdminLoan('createLoan')}
-            onCreateCustomer={() => navigateAdminLoan('createCustomer')}
+        ) : adminTab === 'Loans' && adminLoanScreen === 'viewLoan' && adminLoanId !== null ? (
+          <LoanDetails
+            loanId={adminLoanId}
+            onBack={() => {
+              setAdminLoanScreen('list');
+              setAdminLoanId(null);
+            }}
+            onEdit={() => setAdminLoanScreen('editLoan')}
           />
-        </CachedScreen>
-        <CachedScreen
-          cacheKey="admin-Loans-createLoan"
-          visited={visitedAdminScreens.has('Loans:createLoan')}
-          active={activeAdminScreen === 'Loans:createLoan'}
-        >
+        ) : adminTab === 'Loans' && adminLoanScreen === 'editLoan' && adminLoanId !== null ? (
           <CreateLoan
-            onBack={() => navigateAdminLoan('list')}
-            onCreated={() => navigateAdminLoan('list')}
+            loanId={adminLoanId}
+            onBack={() => setAdminLoanScreen('viewLoan')}
+            onCreated={() => {
+              setAdminLoanScreen('list');
+              setAdminLoanId(null);
+            }}
+          />
+        ) : adminTab === 'Loans' && adminLoanScreen === 'createLoan' ? (
+          <CreateLoan
+            onBack={() => setAdminLoanScreen('list')}
+            onCreated={() => {
+              setAdminLoanScreen('list');
+              setAdminLoanId(null);
+            }}
           />
         </CachedScreen>
         <CachedScreen
@@ -623,26 +667,20 @@ function AppContent() {
             onBack={() => navigateAdminLoan('list')}
             onCreated={() => navigateAdminLoan('list')}
           />
-        </CachedScreen>
-        <CachedScreen
-          cacheKey="admin-Orders"
-          visited={visitedAdminScreens.has('Orders')}
-          active={activeAdminScreen === 'Orders'}
-        >
-          <AdminSection section="Orders" />
-        </CachedScreen>
-        <CachedScreen
-          cacheKey="admin-Products-all"
-          visited={visitedAdminScreens.has('Products:all')}
-          active={activeAdminScreen === 'Products:all'}
-        >
-          <Products onNavigate={navigateAdminProduct} />
-        </CachedScreen>
-        <CachedScreen
-          cacheKey="admin-Products-addProduct"
-          visited={visitedAdminScreens.has('Products:addProduct')}
-          active={activeAdminScreen === 'Products:addProduct'}
-        >
+        ) : adminTab === 'Loans' ? (
+          <AdminLoans
+            onCreateLoan={() => setAdminLoanScreen('createLoan')}
+            onCreateCustomer={() => setAdminLoanScreen('createCustomer')}
+            onViewLoan={loanId => {
+              setAdminLoanId(loanId);
+              setAdminLoanScreen('viewLoan');
+            }}
+            onEditLoan={loanId => {
+              setAdminLoanId(loanId);
+              setAdminLoanScreen('editLoan');
+            }}
+          />
+        ) : adminTab === 'Products' && adminProductScreen === 'addProduct' ? (
           <AddProduct
             productId={adminProductId}
             onBack={() => navigateAdminProduct('all')}
@@ -669,33 +707,27 @@ function AppContent() {
           active={activeAdminScreen === 'Products:metals'}
         >
           <Metals onBack={() => navigateAdminProduct('all')} />
-        </CachedScreen>
-        <CachedScreen
-          cacheKey="admin-More-home"
-          visited={visitedAdminScreens.has('More:home')}
-          active={activeAdminScreen === 'More:home'}
-        >
-          <More onNavigate={navigateAdminMore} />
-        </CachedScreen>
-        <CachedScreen
-          cacheKey="admin-More-funds"
-          visited={visitedAdminScreens.has('More:funds')}
-          active={activeAdminScreen === 'More:funds'}
-        >
-          <FundManagement onBack={() => navigateAdminMore('home')} />
-        </CachedScreen>
-        <CachedScreen
-          cacheKey="admin-More-dailyRates"
-          visited={visitedAdminScreens.has('More:dailyRates')}
-          active={activeAdminScreen === 'More:dailyRates'}
-        >
-          <DailyGoldRate onBack={() => navigateAdminMore('home')} />
-        </CachedScreen>
-        <CachedScreen
-          cacheKey="admin-More-profile"
-          visited={visitedAdminScreens.has('More:profile')}
-          active={activeAdminScreen === 'More:profile'}
-        >
+        ) : adminTab === 'Products' ? (
+          <Products onNavigate={navigateAdminProduct} />
+        ) : adminTab === 'More' && adminMoreScreen === 'funds' ? (
+          <FundManagement onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'dailyRates' ? (
+          <DailyGoldRate onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'receiptSettings' ? (
+          <ReceiptSettings onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'dealers' ? (
+          <Dealers onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'dealerPurchases' ? (
+          <DealerPurchases onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'metals' ? (
+          <Metals onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'categories' ? (
+          <Categories onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'stockDetails' ? (
+          <StockDetails onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'reports' ? (
+          <Reports onBack={() => setAdminMoreScreen('home')} />
+        ) : adminTab === 'More' && adminMoreScreen === 'profile' ? (
           <>
             <InnerHeader
               title="Admin Profile"

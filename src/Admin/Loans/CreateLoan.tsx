@@ -85,6 +85,7 @@ type LoanForm = {
   interest_free_days: string;
   minimum_interest_amount: string;
   maximum_interest_amount: string;
+  processing_fee: string;
   other_charges: string;
   loan_date: string;
   maturity_date: string;
@@ -106,6 +107,14 @@ type Estimate = {
 type CreateLoanProps = {
   onBack: () => void;
   onCreated: () => void;
+  loanId?: number | string;
+};
+
+type SavedRateSnapshot = {
+  metal_type: string;
+  purity: string;
+  rate: number | null;
+  unit: string;
 };
 
 const JEWELLERY_TYPES = [
@@ -212,6 +221,7 @@ function emptyLoan(): LoanForm {
     interest_free_days: '0',
     minimum_interest_amount: '',
     maximum_interest_amount: '',
+    processing_fee: '0',
     other_charges: '0',
     loan_date: today,
     maturity_date: addMonthsToDate(today, 11),
@@ -342,7 +352,8 @@ function calculateEstimate(form: LoanForm, principal: number): Estimate | null {
     interest = Math.min(interest, Number(form.maximum_interest_amount));
   }
   interest = Math.round(interest * 100) / 100;
-  const charges = Number(form.other_charges || 0);
+  const charges =
+    Number(form.processing_fee || 0) + Number(form.other_charges || 0);
 
   return {
     principal,
@@ -403,13 +414,19 @@ function Section({
   );
 }
 
-export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
+export default function CreateLoan({
+  onBack,
+  onCreated,
+  loanId,
+}: CreateLoanProps) {
   const { showAlert } = useCustomAlert();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [interestTypes, setInterestTypes] = useState<InterestType[]>([]);
   const [goldRates, setGoldRates] = useState<GoldRate[]>([]);
   const [rateSet, setRateSet] = useState<GoldRateSet | null>(null);
   const [form, setForm] = useState<LoanForm>(emptyLoan);
+  const [savedRateSnapshot, setSavedRateSnapshot] =
+    useState<SavedRateSnapshot | null>(null);
   const [otherJewelleryType, setOtherJewelleryType] = useState('');
   const [loanAmountMode, setLoanAmountMode] = useState<'auto' | 'manual'>('auto');
   const [customerId, setCustomerId] = useState('');
@@ -440,22 +457,99 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
     setOptionsError('');
     setLoadingOptions(true);
     try {
-      const [customerResponse, interestResponse] = await Promise.all([
+      const [customerResponse, interestResponse, loanResponse] = await Promise.all([
         api.get('/customers'),
         api.get('/loans/interest-types'),
+        loanId ? api.get(`/loans/${loanId}`) : Promise.resolve(null),
       ]);
       if (!Array.isArray(customerResponse.data) || !Array.isArray(interestResponse.data)) {
         throw new Error('The server returned invalid customer or interest-type data.');
       }
 
       const methods = interestResponse.data as InterestType[];
+      const loan = loanResponse?.data as Record<string, unknown> | undefined;
       setCustomers(customerResponse.data as Customer[]);
-      setInterestTypes(methods.filter(type => type.enabled));
-      setForm(current => ({
-        ...current,
-        interest_type:
-          current.interest_type || methods.find(type => type.enabled)?.type_key || '',
-      }));
+      setInterestTypes(
+        methods.filter(
+          type =>
+            type.enabled ||
+            (typeof loan?.interest_type === 'string' &&
+              type.type_key === loan.interest_type),
+        ),
+      );
+      if (loanId && (!loan || !loan.id || !loan.customer_id)) {
+        throw new Error('The loan could not be found.');
+      }
+
+      if (loan) {
+        const savedJewelleryType = String(loan.jewellery_type || '');
+        const knownJewelleryType = JEWELLERY_TYPES.some(
+          option => option.value === savedJewelleryType && option.value !== 'Other',
+        );
+        const fieldValue = (key: keyof LoanForm, fallback = '') =>
+          loan[key] == null ? fallback : String(loan[key]);
+        const savedMetalType = String(loan.metal_type || 'Gold');
+        const savedPurity = String(loan.gold_purity || '');
+        const savedRate =
+          loan.gold_rate_per_gram == null
+            ? null
+            : Number(loan.gold_rate_per_gram);
+        setCustomerId(String(loan.customer_id));
+        setLoanAmountMode('manual');
+        setOtherJewelleryType(knownJewelleryType ? '' : savedJewelleryType);
+        setSavedRateSnapshot({
+          metal_type: savedMetalType,
+          purity: savedPurity,
+          rate: Number.isFinite(savedRate) ? savedRate : null,
+          unit: String(loan.rate_unit || (savedMetalType === 'Diamond' ? 'carat' : 'gram')),
+        });
+        setForm({
+          ...emptyLoan(),
+          jewellery_type: savedJewelleryType
+            ? knownJewelleryType
+              ? savedJewelleryType
+              : 'Other'
+            : '',
+          metal_type: savedMetalType,
+          gold_purity: savedPurity,
+          gross_weight: fieldValue('gross_weight'),
+          stone_weight: fieldValue('stone_weight', '0'),
+          principal_amount: fieldValue('principal_amount'),
+          interest_type: fieldValue('interest_type'),
+          interest_rate: fieldValue('interest_rate'),
+          fixed_interest_amount: fieldValue('fixed_interest_amount'),
+          interest_frequency: fieldValue('interest_frequency', 'monthly'),
+          custom_period_days: fieldValue('custom_period_days', '30'),
+          interest_calculation_start_date: fieldValue(
+            'interest_calculation_start_date',
+            fieldValue('loan_date'),
+          ).slice(0, 10),
+          compounding_frequency: fieldValue('compounding_frequency', 'monthly'),
+          day_count_convention: fieldValue('day_count_convention', 'actual_365'),
+          grace_period_days: fieldValue('grace_period_days', '0'),
+          late_payment_interest_rate: fieldValue('late_payment_interest_rate'),
+          interest_free_days: fieldValue('interest_free_days', '0'),
+          minimum_interest_amount: fieldValue('minimum_interest_amount'),
+          maximum_interest_amount: fieldValue('maximum_interest_amount'),
+          processing_fee: fieldValue('processing_fee', '0'),
+          other_charges: fieldValue('other_charges', '0'),
+          loan_date: fieldValue('loan_date').slice(0, 10),
+          maturity_date: fieldValue('maturity_date').slice(0, 10),
+          payment_frequency: fieldValue('payment_frequency', 'monthly'),
+          loan_status: fieldValue('loan_status', 'Active'),
+          notes: fieldValue('notes'),
+        });
+      } else {
+        setCustomerId('');
+        setLoanAmountMode('auto');
+        setOtherJewelleryType('');
+        setSavedRateSnapshot(null);
+        setForm(current => ({
+          ...emptyLoan(),
+          interest_type:
+            current.interest_type || methods.find(type => type.enabled)?.type_key || '',
+        }));
+      }
 
       try {
         const ratesResponse = await api.get('/gold-rates/current');
@@ -477,7 +571,7 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
     } finally {
       setLoadingOptions(false);
     }
-  }, []);
+  }, [loanId]);
 
   const refreshFundBalance = useCallback(async () => {
     setFundBalanceLoading(true);
@@ -555,15 +649,26 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
           ),
       )
       .map(rate => ({ value: String(rate.purity), label: String(rate.purity) })),
+    ...(savedRateSnapshot?.metal_type === form.metal_type &&
+    ![
+      ...(PURITY_OPTIONS[form.metal_type] || []).map(option => option.value),
+      ...matchingRates.map(rate => String(rate.purity)),
+    ].includes(savedRateSnapshot.purity)
+      ? [{ value: savedRateSnapshot.purity, label: savedRateSnapshot.purity }]
+      : []),
   ];
   const selectedRate = matchingRates.find(
     rate => String(rate.purity) === form.gold_purity,
   );
-  const appliedRate = Number(
-    selectedRate?.rate_per_unit ?? selectedRate?.rate_per_gram ?? 0,
-  );
-  const rateUnit =
-    selectedRate?.rate_unit || (form.metal_type === 'Diamond' ? 'carat' : 'gram');
+  const isOriginalRateSnapshot =
+    savedRateSnapshot?.metal_type === form.metal_type &&
+    savedRateSnapshot.purity === form.gold_purity;
+  const appliedRate = isOriginalRateSnapshot
+    ? Number(savedRateSnapshot.rate || 0)
+    : Number(selectedRate?.rate_per_unit ?? selectedRate?.rate_per_gram ?? 0);
+  const rateUnit = isOriginalRateSnapshot
+    ? savedRateSnapshot.unit
+    : selectedRate?.rate_unit || (form.metal_type === 'Diamond' ? 'carat' : 'gram');
   const weightUnit = rateUnit === 'carat' ? 'ct' : 'g';
   const grossWeight = Number(form.gross_weight || 0);
   const stoneWeight = Number(form.stone_weight || 0);
@@ -644,10 +749,13 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
       });
       return;
     }
-    if (!form.gold_purity || !(appliedRate > 0)) {
+    if (
+      !form.gold_purity ||
+      (!(appliedRate > 0) && !isOriginalRateSnapshot)
+    ) {
       showAlert(
         'Active metal rate required',
-        'Select a purity or quality with an active rate before creating the loan.',
+        'Select a purity or quality with an active rate before saving the loan.',
         { variant: 'warning' },
       );
       return;
@@ -754,23 +862,35 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
       });
       return;
     }
+    const processingFee = Number(form.processing_fee);
+    if (
+      form.processing_fee.trim() &&
+      (!Number.isFinite(processingFee) || processingFee < 0)
+    ) {
+      showAlert('Invalid processing fee', 'Processing fee cannot be negative.', {
+        variant: 'warning',
+      });
+      return;
+    }
 
     setSaving(true);
     try {
-      let latestBalance = fundBalance;
-      try {
-        latestBalance = await refreshFundBalance();
-      } catch (error) {
-        showAlert('Fund balance unavailable', errorMessage(error), { variant: 'error' });
-        return;
-      }
-      if (latestBalance != null && amount > latestBalance + 0.001) {
-        showAlert(
-          'Insufficient funds',
-          `Loan amount exceeds available fund balance (${currency(latestBalance)}).`,
-          { variant: 'warning' },
-        );
-        return;
+      if (!loanId) {
+        let latestBalance = fundBalance;
+        try {
+          latestBalance = await refreshFundBalance();
+        } catch (error) {
+          showAlert('Fund balance unavailable', errorMessage(error), { variant: 'error' });
+          return;
+        }
+        if (latestBalance != null && amount > latestBalance + 0.001) {
+          showAlert(
+            'Insufficient funds',
+            `Loan amount exceeds available fund balance (${currency(latestBalance)}).`,
+            { variant: 'warning' },
+          );
+          return;
+        }
       }
 
       const payload: Record<string, string> = {
@@ -801,7 +921,7 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
         interest_free_days: form.interest_free_days,
         minimum_interest_amount: form.minimum_interest_amount,
         maximum_interest_amount: form.maximum_interest_amount,
-        processing_fee: '0',
+        processing_fee: form.processing_fee || '0',
         other_charges: form.other_charges || '0',
         loan_date: form.loan_date,
         maturity_date: form.maturity_date,
@@ -818,18 +938,33 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
         requestBody = formData;
       }
 
-      await api.post('/loans', requestBody, {
+      const request = loanId
+        ? api.put(`/loans/${loanId}`, requestBody, {
+            ...(goldImage
+              ? { headers: { 'Content-Type': 'multipart/form-data' } }
+              : {}),
+          })
+        : api.post('/loans', requestBody, {
         ...(goldImage
           ? { headers: { 'Content-Type': 'multipart/form-data' } }
           : {}),
       });
-      showAlert('Loan created', 'The loan was created successfully.', {
+      await request;
+      showAlert(
+        loanId ? 'Loan updated' : 'Loan created',
+        loanId ? 'The loan was updated successfully.' : 'The loan was created successfully.',
+        {
         variant: 'success',
         buttons: [{ text: 'Done', onPress: onCreated }],
-      });
+        },
+      );
     } catch (error) {
-      if (__DEV__) console.warn('[Loans] Could not create loan:', error);
-      showAlert('Could not create loan', errorMessage(error), { variant: 'error' });
+      if (__DEV__) console.warn('[Loans] Could not save loan:', error);
+      showAlert(
+        loanId ? 'Could not update loan' : 'Could not create loan',
+        errorMessage(error),
+        { variant: 'error' },
+      );
     } finally {
       setSaving(false);
     }
@@ -841,10 +976,13 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
     setLoanAmountMode('auto');
     setCustomerId('');
     setGoldImage(null);
+    setSavedRateSnapshot(null);
   };
 
   const remainingBalance =
-    fundBalance == null ? null : fundBalance - (Number(loanAmount) || 0);
+    fundBalance == null
+      ? null
+      : fundBalance - (loanId ? 0 : Number(loanAmount) || 0);
   const interestLabel =
     interestOptions.find(option => option.value === form.interest_type)?.label || '—';
   const rateLabel =
@@ -856,7 +994,10 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
     <KeyboardAvoidingView
       className="flex-1 bg-[#F8F7F2]"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <InnerHeader title="Create Gold Loan" onBack={onBack} />
+      <InnerHeader
+        title={loanId ? 'Edit Gold Loan' : 'Create Gold Loan'}
+        onBack={onBack}
+      />
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerClassName="px-4"
@@ -1258,12 +1399,27 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
           <CustomDropdown
             label="Loan Status"
             value={form.loan_status}
-            options={[
-              { value: 'Active', label: 'Active' },
-              { value: 'Pending', label: 'Pending' },
-            ]}
+            options={
+              loanId
+                ? [
+                    { value: 'Active', label: 'Active' },
+                    { value: 'Pending', label: 'Pending' },
+                    { value: 'Inactive', label: 'Inactive' },
+                    { value: 'Completed', label: 'Completed' },
+                  ]
+                : [
+                    { value: 'Active', label: 'Active' },
+                    { value: 'Pending', label: 'Pending' },
+                  ]
+            }
             onSelect={value => setField('loan_status', value)}
             required
+          />
+          <Field
+            label="Processing Fee (₹)"
+            value={form.processing_fee}
+            onChangeText={value => setField('processing_fee', value)}
+            keyboardType="decimal-pad"
           />
           <Field
             label="Other Authorized Charges (₹)"
@@ -1340,7 +1496,7 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
                 ['Interest Type', interestLabel],
                 ['Applicable Rate', rateLabel],
                 ['Accrued Interest at Maturity', currency(estimate.interest)],
-                ['Processing Fee', currency(0)],
+                ['Processing Fee', currency(Number(form.processing_fee || 0))],
                 ['Other Charges', currency(estimate.charges)],
                 ['Payments Received', currency(0)],
                 ['Outstanding Principal', currency(estimate.principal)],
@@ -1390,17 +1546,19 @@ export default function CreateLoan({ onBack, onCreated }: CreateLoanProps) {
             className="min-h-12 flex-1 items-center justify-center rounded-xl border border-[#D9DED9] bg-white px-3">
             <Text className="text-sm font-bold text-[#52645F]">Cancel</Text>
           </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            disabled={saving}
-            onPress={resetForm}
-            className="min-h-12 flex-row items-center justify-center rounded-xl border border-[#D9DED9] bg-white px-3">
-            <RotateCcw size={15} color="#52645F" />
-            <Text className="ml-1.5 text-sm font-bold text-[#52645F]">Reset</Text>
-          </Pressable>
+          {!loanId ? (
+            <Pressable
+              accessibilityRole="button"
+              disabled={saving}
+              onPress={resetForm}
+              className="min-h-12 flex-row items-center justify-center rounded-xl border border-[#D9DED9] bg-white px-3">
+              <RotateCcw size={15} color="#52645F" />
+              <Text className="ml-1.5 text-sm font-bold text-[#52645F]">Reset</Text>
+            </Pressable>
+          ) : null}
           <View className="flex-[1.4]">
             <SubmitButton
-              label="Save Loan"
+              label={loanId ? 'Update Loan' : 'Save Loan'}
               loading={saving}
               onPress={saveLoan}
             />

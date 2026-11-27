@@ -8,12 +8,23 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { CalendarDays, Check, HandCoins, Users } from 'lucide-react-native';
+import {
+  CalendarDays,
+  Check,
+  Eye,
+  HandCoins,
+  Pencil,
+  Printer,
+  Trash2,
+  Users,
+} from 'lucide-react-native';
 import api from '../../api';
+import { useCustomAlert } from '../../Components/CustomAlert';
 import CompleteLoan from './CompleteLoan';
 import GoldRelease from './GoldRelease';
 import KycReview from './KycReview';
 import LoanRenewal from './LoanRenewal';
+import { printLoanAgreement } from './loanActions';
 import OverdueLoans from './OverdueLoans';
 
 type LoanSection =
@@ -52,6 +63,8 @@ type Loan = {
 type LoansProps = {
   onCreateLoan: () => void;
   onCreateCustomer: () => void;
+  onViewLoan: (loanId: number | string) => void;
+  onEditLoan: (loanId: number | string) => void;
 };
 
 function formatCurrency(value: string | number | undefined) {
@@ -73,7 +86,50 @@ function formatDate(value: string | undefined) {
       });
 }
 
-export default function Loans({ onCreateLoan, onCreateCustomer }: LoansProps) {
+function displayLoanStatus(loan: Loan) {
+      if (loan.release_status === 'Released') return 'Completed';
+      if (
+        loan.release_status === 'Pending Release' &&
+        Number(loan.outstanding_principal ?? loan.principal_amount) === 0
+      ) {
+        return 'Awaiting Gold Release';
+      }
+      return loan.loan_status || 'Unknown';
+}
+
+function actionErrorMessage(error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof error.response === 'object' &&
+        error.response !== null &&
+        'data' in error.response &&
+        typeof error.response.data === 'object' &&
+        error.response.data !== null &&
+        'message' in error.response.data &&
+        typeof error.response.data.message === 'string'
+      ) {
+        return error.response.data.message;
+      }
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'message' in error &&
+        typeof error.message === 'string'
+      ) {
+        return error.message;
+      }
+      return 'Please try again.';
+}
+
+export default function Loans({
+      onCreateLoan,
+      onCreateCustomer,
+      onViewLoan,
+      onEditLoan,
+}: LoansProps) {
+      const { showAlert } = useCustomAlert();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -81,6 +137,7 @@ export default function Loans({ onCreateLoan, onCreateCustomer }: LoansProps) {
   const [query, setQuery] = useState('');
   const [showCreateOptions, setShowCreateOptions] = useState(false);
   const [activeSection, setActiveSection] = useState<LoanSection>('all');
+  const [actionLoanId, setActionLoanId] = useState<number | string | null>(null);
 
   const loadLoans = useCallback(async () => {
     setLoadError('');
@@ -129,13 +186,71 @@ export default function Loans({ onCreateLoan, onCreateCustomer }: LoansProps) {
   }, [loans, query]);
 
   const activeCount = loans.filter(
-    loan => String(loan.loan_status || '').toLowerCase() === 'active',
+    loan =>
+      String(loan.loan_status || '').toLowerCase() === 'active' &&
+      !(
+        loan.release_status === 'Pending Release' &&
+        Number(loan.outstanding_principal ?? loan.principal_amount) === 0
+      ),
   ).length;
   const completedCount = loans.filter(
     loan =>
       loan.release_status === 'Released' ||
       String(loan.loan_status || '').toLowerCase() === 'completed',
   ).length;
+
+  const deleteLoan = async (loan: Loan) => {
+    setActionLoanId(loan.id);
+    try {
+      await api.delete(`/loans/${loan.id}`);
+      setLoans(currentLoans =>
+        currentLoans.filter(item => String(item.id) !== String(loan.id)),
+      );
+      showAlert('Loan deleted', `Loan ${loan.loan_number || loan.id} was deleted.`, {
+        variant: 'success',
+      });
+    } catch (error) {
+      showAlert('Could not delete loan', actionErrorMessage(error), {
+        variant: 'error',
+      });
+    } finally {
+      setActionLoanId(null);
+    }
+  };
+
+  const confirmDeleteLoan = (loan: Loan) => {
+    if (actionLoanId !== null) return;
+    showAlert(
+      'Delete this loan?',
+      `Permanently delete loan ${loan.loan_number || loan.id}? This action cannot be undone.`,
+      {
+        variant: 'warning',
+        buttons: [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              deleteLoan(loan);
+            },
+          },
+        ],
+      },
+    );
+  };
+
+  const handlePrintLoan = async (loan: Loan) => {
+    setActionLoanId(loan.id);
+    try {
+      await printLoanAgreement(loan.id);
+    } catch (error) {
+      showAlert('Could not prepare loan agreement', actionErrorMessage(error), {
+        variant: 'error',
+      });
+    } finally {
+      setActionLoanId(null);
+    }
+  };
 
   return (
     <View className="flex-1 bg-[#F8F7F2]">
@@ -291,9 +406,7 @@ export default function Loans({ onCreateLoan, onCreateCustomer }: LoansProps) {
                     </View>
                     <View className="rounded-full bg-[#EFF9F5] px-2.5 py-1.5">
                       <Text className="text-[10px] font-bold text-[#07564B]">
-                        {loan.release_status === 'Released'
-                          ? 'Completed'
-                          : loan.loan_status || 'Unknown'}
+                        {displayLoanStatus(loan)}
                       </Text>
                     </View>
                   </View>
@@ -332,6 +445,50 @@ export default function Loans({ onCreateLoan, onCreateCustomer }: LoansProps) {
                         .join(' · ')}
                     </Text>
                   ) : null}
+                  <View className="mt-4 flex-row flex-wrap gap-2 border-t border-[#F1F2EE] pt-3">
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`View loan ${loan.loan_number || loan.id}`}
+                      onPress={() => onViewLoan(loan.id)}
+                      className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg bg-[#EAF3EF] px-3">
+                      <Eye size={15} color="#07564B" />
+                      <Text className="ml-1.5 text-xs font-bold text-[#07564B]">View</Text>
+                    </Pressable>
+                    {Number(loan.outstanding_principal ?? loan.principal_amount) > 0 &&
+                    loan.loan_status?.toLowerCase() !== 'completed' &&
+                    loan.release_status !== 'Released' ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Edit loan ${loan.loan_number || loan.id}`}
+                        onPress={() => onEditLoan(loan.id)}
+                        className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg bg-[#EFF6FF] px-3">
+                        <Pencil size={15} color="#1D4ED8" />
+                        <Text className="ml-1.5 text-xs font-bold text-[#1D4ED8]">Edit</Text>
+                      </Pressable>
+                    ) : null}
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Print loan agreement PDF ${loan.loan_number || loan.id}`}
+                      disabled={actionLoanId !== null}
+                      onPress={() => handlePrintLoan(loan)}
+                      className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg bg-[#FFF8E7] px-3 disabled:opacity-50">
+                      {actionLoanId === loan.id ? (
+                        <ActivityIndicator size="small" color="#8A5A00" />
+                      ) : (
+                        <Printer size={15} color="#8A5A00" />
+                      )}
+                      <Text className="ml-1.5 text-xs font-bold text-[#8A5A00]">Print PDF</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Delete loan ${loan.loan_number || loan.id}`}
+                      disabled={actionLoanId !== null}
+                      onPress={() => confirmDeleteLoan(loan)}
+                      className="min-h-10 flex-row items-center justify-center rounded-lg bg-[#FEF2F2] px-3 disabled:opacity-50">
+                      <Trash2 size={15} color="#B42332" />
+                      <Text className="ml-1.5 text-xs font-bold text-[#B42332]">Delete</Text>
+                    </Pressable>
+                  </View>
                 </View>
               ))
             ) : (
