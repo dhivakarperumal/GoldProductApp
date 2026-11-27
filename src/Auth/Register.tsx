@@ -708,13 +708,11 @@ export default function Register({ onBack, onSubmitted }: Props) {
     <KeyboardAvoidingView
       className="flex-1 bg-[#F8F7F2]"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        contentContainerClassName="flex-grow justify-center px-6 py-10"
-        keyboardShouldPersistTaps="handled">
+      <View className="flex-1 px-6 py-4">
         <View className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#F3E8C1]" />
         <View className="absolute -bottom-16 -left-20 h-56 w-56 rounded-full bg-[#E3EEE8]" />
-        <View className="w-full max-w-md self-center">
-          <View className="mb-6 items-center">
+        <View className="w-full max-w-md flex-1 self-center">
+          <View className="mb-3 items-center">
             <View className="mb-3 h-32 w-32 overflow-hidden rounded-full border-4 border-[#F5E6A8] bg-[#06452D] shadow-lg">
               <Image
                 accessibilityLabel="Sri GoldSuite logo"
@@ -762,7 +760,11 @@ export default function Register({ onBack, onSubmitted }: Props) {
             })}
           </View>
 
-          <View className="rounded-3xl border border-[#EAE7DC] bg-white p-5 shadow-lg">
+          <View className="min-h-0 flex-1 rounded-3xl border border-[#EAE7DC] bg-white p-5 shadow-lg">
+            <ScrollView
+              className="flex-1"
+              contentContainerClassName="flex-grow"
+              keyboardShouldPersistTaps="handled">
             {plansLoading ? (
               <View className="mb-4 flex-row items-center rounded-xl bg-[#F0F8F5] p-3">
                 <ActivityIndicator size="small" color="#07564B" />
@@ -1111,6 +1113,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
             </View>
 
             )}
+            </ScrollView>
             <View className="mt-4 flex-row justify-between gap-3">
               <Pressable
                 accessibilityRole="button"
@@ -1170,7 +1173,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
             </Text>
           </Pressable>
         </View>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
