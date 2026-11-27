@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  ImageBackground,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -19,7 +20,6 @@ import {
   IndianRupee,
   LayoutDashboard,
   Package,
-  RefreshCw,
   Store,
   Users,
   XCircle,
@@ -367,7 +367,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
           </View>
         </View>
         {metric.trend ? (
-          <View className="absolute bottom-2 left-[58px] right-2 flex-row items-center rounded-full bg-black/25 py-1 pl-1 pr-2">
+          <View className="absolute bottom-2 left-3 flex-row items-center rounded-full bg-black/25 py-1 pl-1 pr-2">
             <View
               className="mr-1 h-4 w-4 shrink-0 items-center justify-center rounded-full"
               style={{ backgroundColor: trendColor }}>
@@ -475,29 +475,28 @@ export default function Home({ onNavigate }: HomeProps) {
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }>
-      <View className="mb-5 overflow-hidden rounded-3xl bg-[#173F35] p-5">
-        <Text className="text-xs font-bold uppercase tracking-[2px] text-[#EAD78A]">
-          Welcome to
-        </Text>
-        <Text className="mt-1 text-2xl font-extrabold text-white">
-          Admin Dashboard
-        </Text>
-        <Text className="mt-2 text-sm text-[#DCE8E4]">
-          Your shop overview, inventory, and gold loan activity.
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Refresh dashboard"
-          onPress={onRefresh}
-          disabled={refreshing}
-          className="mt-4 h-10 w-10 items-center justify-center self-end rounded-full border border-white/30 bg-white/10">
-          {refreshing ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <RefreshCw size={18} color="#FFFFFF" />
-          )}
-        </Pressable>
-      </View>
+      <ImageBackground
+        source={require('../../Assert/Images/admindashboard.png')}
+        resizeMode="cover"
+        className="mb-5 h-[150px] overflow-hidden rounded-3xl"
+      >
+        <View className="h-full w-[78%] justify-center pl-4 pr-1">
+          <Text className="text-base font-bold text-[#173F35]">
+            Welcome to
+          </Text>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            className="mt-1 text-[27px] font-extrabold text-[#171717]">
+            Admin Dashboard
+          </Text>
+          <Text
+            numberOfLines={2}
+            className="mt-1 text-[13px] leading-[18px] text-[#202020]">
+            Your shop overview, inventory, and gold loan activity.
+          </Text>
+        </View>
+      </ImageBackground>
 
       {errorMessage ? (
         <View className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-3">

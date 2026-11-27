@@ -33,7 +33,7 @@ export function CustomDropdown({
   placeholder?: string;
   required?: boolean;
   searchable?: boolean;
-  variant?: 'default' | 'glass';
+  variant?: 'default' | 'filter';
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -65,25 +65,12 @@ export function CustomDropdown({
           setSearch('');
           setOpen(true);
         }}
-        style={isGlass ? glassStyles.trigger : undefined}
-        className={
-          isGlass
-            ? 'min-h-12 flex-row items-center justify-between rounded-2xl px-4 py-3'
-            : 'min-h-12 flex-row items-center justify-between rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3'
-        }>
-        <Text
-          style={
-            isGlass
-              ? selectedLabel
-                ? glassStyles.valueText
-                : glassStyles.placeholderText
-              : undefined
-          }
-          className={
-            isGlass
-              ? 'text-[15px] font-medium'
-              : `text-sm ${selectedLabel ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`
-          }>
+        className={`min-h-12 flex-row items-center justify-between py-3 ${
+          variant === 'filter'
+            ? 'rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm'
+            : 'rounded-xl border border-[#E6E9E3] bg-white px-3.5'
+        }`}>
+        <Text className={`text-sm ${selectedLabel ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`}>
           {selectedLabel || placeholder}
         </Text>
         <ChevronDown size={18} color={isGlass ? '#F5C451' : '#6B7E76'} />

@@ -5,13 +5,14 @@ import {
   RefreshControl,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
-import { CheckCircle2, Clock3, Users } from 'lucide-react-native';
+import { CheckCircle2, Clock3, IndianRupee, Users } from 'lucide-react-native';
 import api from '../../api';
-import { CustomDropdown, errorMessage } from './FormControls';
+import { errorMessage } from './FormControls';
 import GoldReleaseFlow from './GoldReleaseFlow';
+import LoanListFilters from './LoanListFilters';
+import LoanStatCard from './LoanStatCard';
 
 type Loan = {
   id: number | string;
@@ -27,6 +28,8 @@ type Loan = {
   loan_status?: string;
   release_status?: string;
 };
+
+type DateRange = { startDate: string; endDate: string };
 
 function currency(value: number | string | undefined) {
   const amount = Number(value);
@@ -59,6 +62,10 @@ export default function GoldReleaseList({
 }) {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [search, setSearch] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: '',
+    endDate: '',
+  });
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,6 +77,12 @@ export default function GoldReleaseList({
     try {
       const { data } = await api.get(
         completionPage ? '/loans' : '/loans/gold-release',
+        {
+          params: {
+            startDate: dateRange.startDate,
+            endDate: dateRange.endDate,
+          },
+        },
       );
       if (!Array.isArray(data)) {
         throw new Error('The server returned an invalid gold release list.');
@@ -90,7 +103,7 @@ export default function GoldReleaseList({
       setLoading(false);
       setRefreshing(false);
     }
-  }, [completionPage]);
+  }, [completionPage, dateRange]);
 
   useEffect(() => {
     loadLoans();
@@ -127,6 +140,10 @@ export default function GoldReleaseList({
   const customerCount = new Set(
     loans.map(loan => loan.customer_id).filter(Boolean),
   ).size;
+  const principalValue = loans.reduce((total, loan) => {
+    const amount = Number(loan.principal_amount);
+    return Number.isFinite(amount) ? total + amount : total;
+  }, 0);
 
   return (
     <View className="flex-1 bg-[#F8F7F2]">
@@ -144,21 +161,7 @@ export default function GoldReleaseList({
           />
         }
       >
-        <View className="mb-4 rounded-2xl bg-[#064A41] p-4">
-          <Text className="text-[10px] font-bold uppercase tracking-[1.5px] text-[#EAD78A]">
-            Loan Management
-          </Text>
-          <Text className="mt-1 text-xl font-extrabold text-white">
-            {completionPage ? 'Complete Loan' : 'Gold Release'}
-          </Text>
-          <Text className="mt-1 text-xs leading-5 text-white/75">
-            {completionPage
-              ? 'Review fully paid loans, record gold handovers, and view completed releases.'
-              : 'Verify the customer and pledged gold before recording a physical handover.'}
-          </Text>
-        </View>
-
-        <View className="mb-3 flex-row flex-wrap gap-2">
+        <View className="mb-3 flex-row flex-wrap gap-3">
           {[
             {
               label: completionPage
@@ -169,43 +172,50 @@ export default function GoldReleaseList({
             },
             { label: 'Awaiting Handover', value: awaitingCount, icon: Clock3 },
             { label: 'Customers', value: customerCount, icon: Users },
-          ].map(({ label, value, icon: Icon }) => (
-            <View
+            {
+              label: 'Principal Value',
+              value: currency(principalValue),
+              icon: IndianRupee,
+            },
+          ].map(({ label, value, icon: Icon }, index) => (
+            <LoanStatCard
               key={label}
-              className="min-h-[82px] flex-1 rounded-xl border border-[#ECE7D8] bg-white p-3"
-            >
-              <Icon size={16} color="#A77B15" />
-              <Text className="mt-2 text-[10px] font-semibold text-[#6B7280]">
-                {label}
-              </Text>
-              <Text className="mt-0.5 text-lg font-extrabold text-[#173F35]">
-                {loading ? '—' : value}
-              </Text>
-            </View>
+              id={label}
+              label={label}
+              value={loading ? '—' : value}
+              icon={Icon}
+              trend={
+                label === 'Awaiting Handover'
+                  ? 'Physical handover'
+                  : label === 'Customers'
+                  ? 'Eligible customers'
+                  : label === 'Principal Value'
+                  ? 'Loan amount'
+                  : completionPage
+                  ? 'Released or completed'
+                  : 'Ready for release'
+              }
+              paletteIndex={index}
+            />
           ))}
         </View>
 
-        <View className="mb-3 rounded-xl border border-[#E6E9E3] bg-white px-3">
-          <TextInput
-            accessibilityLabel="Search gold release records"
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search loan, customer, mobile, pledge..."
-            placeholderTextColor="#9AA6A1"
-            className="min-h-12 text-sm text-[#173F35]"
-          />
-        </View>
-        <CustomDropdown
-          label="Release Status"
-          value={statusFilter}
-          options={[
+        <LoanListFilters
+          search={search}
+          onSearchChange={setSearch}
+          searchAccessibilityLabel="Search gold release records"
+          searchPlaceholder="Search loan, customer, mobile, pledge..."
+          onDateRangeChange={setDateRange}
+          statusLabel="Release Status"
+          statusValue={statusFilter}
+          statusOptions={[
             { value: 'All', label: 'All Statuses' },
             { value: 'Awaiting Gold Release', label: 'Awaiting Gold Release' },
             ...(completionPage
               ? [{ value: 'Completed', label: 'Completed' }]
               : []),
           ]}
-          onSelect={setStatusFilter}
+          onStatusChange={setStatusFilter}
         />
 
         {loadError ? (
@@ -231,7 +241,7 @@ export default function GoldReleaseList({
                 key={String(loan.id)}
                 accessibilityRole="button"
                 onPress={() => setSelectedLoan(loan)}
-                className="mb-3 rounded-2xl border border-[#ECE7D8] bg-white p-4"
+                className="mb-3 rounded-2xl border border-[#DDBB57] bg-white p-4 shadow-sm"
               >
                 <View className="flex-row items-start justify-between">
                   <View className="flex-1 pr-3">

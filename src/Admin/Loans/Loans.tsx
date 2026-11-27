@@ -5,15 +5,17 @@ import {
   RefreshControl,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import {
   CalendarDays,
   Check,
+  Coins,
   Eye,
   HandCoins,
+  IndianRupee,
   Pencil,
+  Percent,
   Printer,
   Trash2,
   Users,
@@ -23,6 +25,8 @@ import { useCustomAlert } from '../../Components/CustomAlert';
 import CompleteLoan from './CompleteLoan';
 import GoldRelease from './GoldRelease';
 import KycReview from './KycReview';
+import LoanStatCard from './LoanStatCard';
+import LoanListFilters from './LoanListFilters';
 import LoanRenewal from './LoanRenewal';
 import { printLoanAgreement } from './loanActions';
 import OverdueLoans from './OverdueLoans';
@@ -59,6 +63,8 @@ type Loan = {
   jewellery_type?: string;
   gold_purity?: string;
 };
+
+type DateRange = { startDate: string; endDate: string };
 
 type LoansProps = {
   onCreateLoan: () => void;
@@ -135,6 +141,11 @@ export default function Loans({
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [query, setQuery] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: '',
+    endDate: '',
+  });
+  const [statusFilter, setStatusFilter] = useState('All');
   const [showCreateOptions, setShowCreateOptions] = useState(false);
   const [activeSection, setActiveSection] = useState<LoanSection>('all');
   const [actionLoanId, setActionLoanId] = useState<number | string | null>(null);
@@ -142,7 +153,12 @@ export default function Loans({
   const loadLoans = useCallback(async () => {
     setLoadError('');
     try {
-      const response = await api.get('/loans');
+      const response = await api.get('/loans', {
+        params: {
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        },
+      });
       if (!Array.isArray(response.data)) {
         throw new Error('The server returned an invalid loan list.');
       }
@@ -161,7 +177,7 @@ export default function Loans({
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [dateRange]);
 
   useEffect(() => {
     loadLoans();
@@ -169,21 +185,38 @@ export default function Loans({
 
   const visibleLoans = useMemo(() => {
     const search = query.trim().toLowerCase();
-    if (!search) return loans;
-    return loans.filter(loan =>
-      [
-        loan.loan_number,
-        loan.customer_name,
-        loan.customer_code,
-        loan.customer_mobile,
-        loan.loan_status,
-      ].some(value =>
-        String(value || '')
-          .toLowerCase()
-          .includes(search),
-      ),
+    return loans.filter(loan => {
+      const matchesSearch =
+        !search ||
+        [
+          loan.loan_number,
+          loan.customer_name,
+          loan.customer_code,
+          loan.customer_mobile,
+          loan.loan_status,
+        ].some(value =>
+          String(value || '')
+            .toLowerCase()
+            .includes(search),
+        );
+      const matchesStatus =
+        statusFilter === 'All' ||
+        displayLoanStatus(loan).toLowerCase() === statusFilter.toLowerCase();
+      return matchesSearch && matchesStatus;
+    });
+  }, [loans, query, statusFilter]);
+  const statusOptions = useMemo(() => {
+    const statuses = Array.from(new Set(loans.map(displayLoanStatus))).sort(
+      (left, right) => left.localeCompare(right),
     );
-  }, [loans, query]);
+    if (statusFilter !== 'All' && !statuses.includes(statusFilter)) {
+      statuses.push(statusFilter);
+    }
+    return [
+      { value: 'All', label: 'All Statuses' },
+      ...statuses.map(status => ({ value: status, label: status })),
+    ];
+  }, [loans, statusFilter]);
 
   const activeCount = loans.filter(
     loan =>
@@ -198,6 +231,12 @@ export default function Loans({
       loan.release_status === 'Released' ||
       String(loan.loan_status || '').toLowerCase() === 'completed',
   ).length;
+  const outstandingTotal = loans.reduce((total, loan) => {
+    const amount = Number(
+      loan.outstanding_principal ?? loan.principal_amount,
+    );
+    return Number.isFinite(amount) ? total + amount : total;
+  }, 0);
 
   const deleteLoan = async (loan: Loan) => {
     setActionLoanId(loan.id);
@@ -254,35 +293,44 @@ export default function Loans({
 
   return (
     <View className="flex-1 bg-[#F8F7F2]">
-      <View className="border-b border-[#E6E9E3] bg-white">
+      <View className="mx-4 my-2 rounded-full border border-[#F1D577] bg-[#FFF8E6] p-1 shadow-sm">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerClassName="px-3"
+          contentContainerClassName="items-center"
         >
-          {LOAN_SECTIONS.map(section => {
+          {LOAN_SECTIONS.map((section, index) => {
             const selected = activeSection === section.value;
             return (
-              <Pressable
+              <View
                 key={section.value}
-                accessibilityRole="tab"
-                accessibilityState={{ selected }}
-                onPress={() => {
-                  setActiveSection(section.value);
-                  setShowCreateOptions(false);
-                }}
-                className={`mr-1 min-h-12 justify-center border-b-[3px] px-3 ${
-                  selected ? 'border-[#07564B]' : 'border-transparent'
-                }`}
+                className="flex-row items-center"
               >
-                <Text
-                  className={`text-xs font-bold ${
-                    selected ? 'text-[#07564B]' : 'text-[#718078]'
+                <Pressable
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected }}
+                  onPress={() => {
+                    setActiveSection(section.value);
+                    setShowCreateOptions(false);
+                  }}
+                  className={`mx-1 min-h-10 justify-center px-3.5 ${
+                    selected
+                      ? 'rounded-full bg-[#07564B]'
+                      : ''
                   }`}
                 >
-                  {section.label}
-                </Text>
-              </Pressable>
+                  <Text
+                    className={`text-xs font-bold ${
+                      selected ? 'text-white' : 'text-[#52645F]'
+                    }`}
+                  >
+                    {section.label}
+                  </Text>
+                </Pressable>
+                {index < LOAN_SECTIONS.length - 1 ? (
+                  <View className="mx-1 h-5 w-px bg-[#E8CD81]" />
+                ) : null}
+              </View>
             );
           })}
         </ScrollView>
@@ -304,19 +352,7 @@ export default function Loans({
               />
             }
           >
-            <View className="mb-4 rounded-3xl bg-[#173F35] p-5">
-              <Text className="text-xs font-bold uppercase tracking-[2px] text-[#EAD78A]">
-                Shop Administration
-              </Text>
-              <Text className="mt-1 text-2xl font-extrabold text-white">
-                All Loans
-              </Text>
-              <Text className="mt-2 text-sm text-[#DCE8E4]">
-                Manage customer gold loans and balances.
-              </Text>
-            </View>
-
-            <View className="mb-4 flex-row gap-3">
+            <View className="mb-4 flex-row flex-wrap gap-3">
               {[
                 { label: 'Total Loans', value: loans.length, icon: HandCoins },
                 { label: 'Active', value: activeCount, icon: Check },
@@ -325,42 +361,43 @@ export default function Loans({
                   value: completedCount,
                   icon: CalendarDays,
                 },
-              ].map(({ label, value, icon: Icon }) => (
-                <View
+                {
+                  label: 'Outstanding Balance',
+                  value: formatCurrency(outstandingTotal),
+                  icon: IndianRupee,
+                },
+              ].map(({ label, value, icon: Icon }, index) => (
+                <LoanStatCard
                   key={label}
-                  className="min-h-[88px] flex-1 rounded-2xl border border-[#ECE7D8] bg-white p-3"
-                >
-                  <Icon size={17} color="#A77B15" />
-                  <Text className="mt-2 text-[10px] font-semibold text-[#6B7280]">
-                    {label}
-                  </Text>
-                  <Text className="mt-0.5 text-lg font-extrabold text-[#173F35]">
-                    {loading ? '—' : value}
-                  </Text>
-                </View>
+                  id={label}
+                  label={label}
+                  value={loading ? '—' : value}
+                  icon={Icon}
+                  trend={
+                    label === 'Total Loans'
+                      ? 'Current portfolio'
+                      : label === 'Active'
+                      ? 'Active accounts'
+                      : label === 'Completed'
+                      ? 'Paid loans'
+                      : 'Current balance'
+                  }
+                  paletteIndex={index}
+                />
               ))}
             </View>
 
-            <View className="mb-4 flex-row items-center rounded-xl border border-[#E6E9E3] bg-white px-3">
-              <Text className="text-lg text-[#8A9690]">⌕</Text>
-              <TextInput
-                accessibilityLabel="Search loans"
-                value={query}
-                onChangeText={setQuery}
-                placeholder="Search loan or customer"
-                placeholderTextColor="#9AA6A1"
-                className="min-h-12 flex-1 px-2 text-sm text-[#173F35]"
-              />
-              {query ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Clear search"
-                  onPress={() => setQuery('')}
-                >
-                  <Text className="px-2 text-lg text-[#6B7280]">×</Text>
-                </Pressable>
-              ) : null}
-            </View>
+            <LoanListFilters
+              search={query}
+              onSearchChange={setQuery}
+              searchAccessibilityLabel="Search loans"
+              searchPlaceholder="Search loan or customer"
+              onDateRangeChange={setDateRange}
+              statusLabel="Loan Status"
+              statusValue={statusFilter}
+              statusOptions={statusOptions}
+              onStatusChange={setStatusFilter}
+            />
 
             {loadError ? (
               <View className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-3">
@@ -388,13 +425,18 @@ export default function Loans({
               visibleLoans.map(loan => (
                 <View
                   key={String(loan.id)}
-                  className="mb-3 rounded-2xl border border-[#ECE7D8] bg-white p-4"
+                  className="mb-3 rounded-2xl border border-[#DDBB57] bg-white p-4 shadow-sm"
                 >
-                  <View className="flex-row items-start justify-between">
+                  <View className="flex-row items-start">
+                    <View className="mr-3 mt-1 h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#E2B94F] bg-[#07564B] shadow-sm">
+                      <HandCoins size={24} color="#FFE08A" strokeWidth={2.2} />
+                    </View>
                     <View className="flex-1 pr-3">
-                      <Text className="text-xs font-bold uppercase tracking-wide text-[#A77B15]">
-                        {loan.loan_number || `Loan ${loan.id}`}
-                      </Text>
+                      <View className="self-start rounded-full border border-[#F2D98B] bg-[#FFF3C4] px-3 py-1">
+                        <Text className="text-[11px] font-bold uppercase tracking-wide text-[#8A5A00]">
+                          {loan.loan_number || `Loan ${loan.id}`}
+                        </Text>
+                      </View>
                       <Text className="mt-1 text-base font-extrabold text-[#173F35]">
                         {loan.customer_name || 'Customer'}
                       </Text>
@@ -404,38 +446,68 @@ export default function Loans({
                           'Customer details unavailable'}
                       </Text>
                     </View>
-                    <View className="rounded-full bg-[#EFF9F5] px-2.5 py-1.5">
+                    <View className="rounded-full border border-[#CFE6D5] bg-[#EFF9F5] px-2.5 py-1.5">
                       <Text className="text-[10px] font-bold text-[#07564B]">
                         {displayLoanStatus(loan)}
                       </Text>
                     </View>
                   </View>
-                  <View className="mt-4 flex-row border-t border-[#F1F2EE] pt-3">
-                    <View className="flex-1">
-                      <Text className="text-[10px] font-semibold text-[#8A8F8B]">
-                        OUTSTANDING
-                      </Text>
-                      <Text className="mt-1 text-sm font-extrabold text-[#173F35]">
-                        {formatCurrency(
-                          loan.outstanding_principal ?? loan.principal_amount,
-                        )}
-                      </Text>
+                  <View className="mt-4 flex-row border-t border-[#E8D596] pt-3">
+                    <View className="min-w-0 flex-1 flex-row items-center border-r border-[#E8D596] pr-2">
+                      <Coins size={19} color="#07564B" />
+                      <View className="ml-1.5 min-w-0 flex-1">
+                        <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          className="text-[9px] font-semibold text-[#8A8F8B]">
+                          OUTSTANDING
+                        </Text>
+                        <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.65}
+                          className="mt-1 text-xs font-extrabold text-[#173F35]">
+                          {formatCurrency(
+                            loan.outstanding_principal ?? loan.principal_amount,
+                          )}
+                        </Text>
+                      </View>
                     </View>
-                    <View className="flex-1">
-                      <Text className="text-[10px] font-semibold text-[#8A8F8B]">
-                        INTEREST
-                      </Text>
-                      <Text className="mt-1 text-sm font-bold text-[#52645F]">
-                        {loan.interest_rate ?? '—'}%
-                      </Text>
+                    <View className="min-w-0 flex-1 flex-row items-center border-r border-[#E8D596] px-2">
+                      <Percent size={19} color="#A77B15" />
+                      <View className="ml-1.5 min-w-0 flex-1">
+                        <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          className="text-[9px] font-semibold text-[#8A8F8B]">
+                          INTEREST
+                        </Text>
+                        <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.65}
+                          className="mt-1 text-xs font-bold text-[#52645F]">
+                          {loan.interest_rate ?? '—'}%
+                        </Text>
+                      </View>
                     </View>
-                    <View className="flex-1">
-                      <Text className="text-[10px] font-semibold text-[#8A8F8B]">
-                        MATURITY
-                      </Text>
-                      <Text className="mt-1 text-xs font-bold text-[#52645F]">
-                        {formatDate(loan.maturity_date)}
-                      </Text>
+                    <View className="min-w-0 flex-1 flex-row items-center pl-2">
+                      <CalendarDays size={19} color="#A77B15" />
+                      <View className="ml-1.5 min-w-0 flex-1">
+                        <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          className="text-[9px] font-semibold text-[#8A8F8B]">
+                          MATURITY
+                        </Text>
+                        <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.65}
+                          className="mt-1 text-[10px] font-bold text-[#52645F]">
+                          {formatDate(loan.maturity_date)}
+                        </Text>
+                      </View>
                     </View>
                   </View>
                   {loan.jewellery_type || loan.gold_purity ? (
@@ -445,14 +517,13 @@ export default function Loans({
                         .join(' · ')}
                     </Text>
                   ) : null}
-                  <View className="mt-4 flex-row flex-wrap gap-2 border-t border-[#F1F2EE] pt-3">
+                  <View className="mt-3 flex-row justify-end gap-2 border-t border-[#E9E2CC] pt-3">
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel={`View loan ${loan.loan_number || loan.id}`}
                       onPress={() => onViewLoan(loan.id)}
-                      className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg bg-[#EAF3EF] px-3">
-                      <Eye size={15} color="#07564B" />
-                      <Text className="ml-1.5 text-xs font-bold text-[#07564B]">View</Text>
+                      className="h-10 w-10 items-center justify-center rounded-xl border border-[#D6E8DE] bg-[#EAF3EF]">
+                      <Eye size={20} color="#07564B" />
                     </Pressable>
                     {Number(loan.outstanding_principal ?? loan.principal_amount) > 0 &&
                     loan.loan_status?.toLowerCase() !== 'completed' &&
@@ -461,9 +532,8 @@ export default function Loans({
                         accessibilityRole="button"
                         accessibilityLabel={`Edit loan ${loan.loan_number || loan.id}`}
                         onPress={() => onEditLoan(loan.id)}
-                        className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg bg-[#EFF6FF] px-3">
-                        <Pencil size={15} color="#1D4ED8" />
-                        <Text className="ml-1.5 text-xs font-bold text-[#1D4ED8]">Edit</Text>
+                        className="h-10 w-10 items-center justify-center rounded-xl border border-[#CFE0F5] bg-[#EFF6FF]">
+                        <Pencil size={20} color="#1D4ED8" />
                       </Pressable>
                     ) : null}
                     <Pressable
@@ -471,22 +541,20 @@ export default function Loans({
                       accessibilityLabel={`Print loan agreement PDF ${loan.loan_number || loan.id}`}
                       disabled={actionLoanId !== null}
                       onPress={() => handlePrintLoan(loan)}
-                      className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg bg-[#FFF8E7] px-3 disabled:opacity-50">
+                      className="h-10 w-10 items-center justify-center rounded-xl border border-[#F2D98B] bg-[#FFF8E7] disabled:opacity-50">
                       {actionLoanId === loan.id ? (
                         <ActivityIndicator size="small" color="#8A5A00" />
                       ) : (
-                        <Printer size={15} color="#8A5A00" />
+                        <Printer size={20} color="#8A5A00" />
                       )}
-                      <Text className="ml-1.5 text-xs font-bold text-[#8A5A00]">Print PDF</Text>
                     </Pressable>
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel={`Delete loan ${loan.loan_number || loan.id}`}
                       disabled={actionLoanId !== null}
                       onPress={() => confirmDeleteLoan(loan)}
-                      className="min-h-10 flex-row items-center justify-center rounded-lg bg-[#FEF2F2] px-3 disabled:opacity-50">
-                      <Trash2 size={15} color="#B42332" />
-                      <Text className="ml-1.5 text-xs font-bold text-[#B42332]">Delete</Text>
+                      className="h-10 w-10 items-center justify-center rounded-xl border border-[#FECACA] bg-[#FEF2F2] disabled:opacity-50">
+                      <Trash2 size={20} color="#B42332" />
                     </Pressable>
                   </View>
                 </View>
@@ -495,8 +563,11 @@ export default function Loans({
               <View className="items-center rounded-2xl border border-[#ECE7D8] bg-white px-5 py-10">
                 <HandCoins size={28} color="#A77B15" />
                 <Text className="mt-3 text-sm font-bold text-[#173F35]">
-                  {loans.length
-                    ? 'No loans match your search.'
+                  {query.trim() ||
+                  statusFilter !== 'All' ||
+                  dateRange.startDate ||
+                  dateRange.endDate
+                    ? 'No loans match your filters.'
                     : 'No loans created yet.'}
                 </Text>
                 <Text className="mt-1 text-center text-xs text-[#6B7280]">

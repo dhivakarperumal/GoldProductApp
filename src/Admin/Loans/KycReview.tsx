@@ -26,8 +26,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api, { API_BASE_URL } from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
-import { CustomDropdown, errorMessage } from './FormControls';
-import LoanDateRangeFilter from './LoanDateRangeFilter';
+import { errorMessage } from './FormControls';
+import LoanListFilters from './LoanListFilters';
+import LoanStatCard from './LoanStatCard';
 
 type KycStatus =
   | 'pending'
@@ -398,35 +399,25 @@ export default function KycReview() {
           />
         }
       >
-        <View className="mb-4 rounded-2xl bg-[#064A41] p-4">
-          <Text className="text-[10px] font-bold uppercase tracking-[1.5px] text-[#EAD78A]">
-            Loan Management
-          </Text>
-          <Text className="mt-1 text-xl font-extrabold text-white">
-            KYC Review
-          </Text>
-          <Text className="mt-1 text-xs leading-5 text-white/75">
-            Review customer identity documents and record a manual decision.
-          </Text>
-        </View>
-
-        <View className="mb-3 flex-row flex-wrap gap-2">
-          {statCards.map(({ label, value, icon: Icon }) => (
-            <View
+        <View className="mb-3 flex-row flex-wrap gap-3">
+          {statCards.map(({ label, value, icon: Icon }, index) => (
+            <LoanStatCard
               key={label}
-              className="min-h-[82px] w-[48%] flex-1 rounded-xl border border-[#ECE7D8] bg-white p-3"
-            >
-              <Icon size={16} color="#A77B15" />
-              <Text className="mt-2 text-[10px] font-semibold text-[#6B7280]">
-                {label}
-              </Text>
-              <Text
-                numberOfLines={1}
-                className="mt-0.5 text-sm font-extrabold text-[#173F35]"
-              >
-                {value}
-              </Text>
-            </View>
+              id={label}
+              label={label}
+              value={value}
+              icon={Icon}
+              trend={
+                label === 'Total applications'
+                  ? 'Customer submissions'
+                  : label === 'Pending'
+                  ? 'Awaiting review'
+                  : label === 'In review'
+                  ? 'Under review'
+                  : 'Verified applications'
+              }
+              paletteIndex={index}
+            />
           ))}
         </View>
         {statsError ? (
@@ -452,25 +443,19 @@ export default function KycReview() {
           </View>
         ) : null}
 
-        <View className="mb-3 rounded-xl border border-[#E6E9E3] bg-white px-3">
-          <TextInput
-            accessibilityLabel="Search KYC applications"
-            value={search}
-            onChangeText={value => {
-              setSearch(value);
-              setPage(1);
-            }}
-            placeholder="Search name, email, phone or application ID"
-            placeholderTextColor="#9AA6A1"
-            className="min-h-12 text-sm text-[#173F35]"
-          />
-        </View>
-        <LoanDateRangeFilter onApply={changeDateRange} />
-        <CustomDropdown
-          label="Application Status"
-          value={status}
-          options={STATUS_OPTIONS}
-          onSelect={changeStatus}
+        <LoanListFilters
+          search={search}
+          onSearchChange={value => {
+            setSearch(value);
+            setPage(1);
+          }}
+          searchAccessibilityLabel="Search KYC applications"
+          searchPlaceholder="Search name, email, phone or application ID"
+          onDateRangeChange={changeDateRange}
+          statusLabel="Application Status"
+          statusValue={status}
+          statusOptions={STATUS_OPTIONS}
+          onStatusChange={changeStatus}
         />
 
         {listError ? (
@@ -493,7 +478,7 @@ export default function KycReview() {
           applications.map((application, index) => (
             <View
               key={String(application.id)}
-              className="mb-3 rounded-2xl border border-[#ECE7D8] bg-white p-4"
+              className="mb-3 rounded-2xl border border-[#DDBB57] bg-white p-4 shadow-sm"
             >
               <View className="flex-row items-start justify-between gap-3">
                 <View className="flex-1">

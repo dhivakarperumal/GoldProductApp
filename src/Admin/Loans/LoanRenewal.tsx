@@ -5,7 +5,6 @@ import {
   RefreshControl,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import {
@@ -15,8 +14,8 @@ import {
   ShieldCheck,
 } from 'lucide-react-native';
 import api from '../../api';
-import { CustomDropdown } from './FormControls';
-import LoanDateRangeFilter from './LoanDateRangeFilter';
+import LoanListFilters from './LoanListFilters';
+import LoanStatCard from './LoanStatCard';
 import LoanRenewalFlow from './LoanRenewalFlow';
 
 type Loan = {
@@ -198,20 +197,7 @@ export default function LoanRenewal() {
           />
         }
       >
-        <View className="mb-4 rounded-2xl bg-[#064A41] p-4">
-          <Text className="text-[10px] font-bold uppercase tracking-[1.5px] text-[#EAD78A]">
-            Loan Management
-          </Text>
-          <Text className="mt-1 text-xl font-extrabold text-white">
-            Loan Renewal
-          </Text>
-          <Text className="mt-1 text-xs leading-5 text-white/75">
-            Review upcoming renewals, record payments, and manage eligible
-            manual reviews.
-          </Text>
-        </View>
-
-        <View className="mb-3 flex-row flex-wrap gap-2">
+        <View className="mb-3 flex-row flex-wrap gap-3">
           {[
             { label: 'Total Loans', value: loans.length, icon: Layers },
             {
@@ -221,42 +207,41 @@ export default function LoanRenewal() {
             },
             { label: 'Past Maturity', value: pastMaturity, icon: AlertCircle },
             { label: '15-Month Reviews', value: reviewsDue, icon: ShieldCheck },
-          ].map(({ label, value, icon: Icon }) => (
-            <View
+          ].map(({ label, value, icon: Icon }, index) => (
+            <LoanStatCard
               key={label}
-              className="min-h-[82px] w-[48%] flex-1 rounded-xl border border-[#ECE7D8] bg-white p-3"
-            >
-              <Icon size={16} color="#A77B15" />
-              <Text className="mt-2 text-[10px] font-semibold text-[#6B7280]">
-                {label}
-              </Text>
-              <Text className="mt-0.5 text-lg font-extrabold text-[#173F35]">
-                {loading ? '—' : value}
-              </Text>
-            </View>
+              id={label}
+              label={label}
+              value={loading ? '—' : value}
+              icon={Icon}
+              trend={
+                label === 'Total Loans'
+                  ? 'Loans in review'
+                  : label === 'Maturing Today'
+                  ? 'Due today'
+                  : label === 'Past Maturity'
+                  ? 'Past due'
+                  : 'Review due'
+              }
+              paletteIndex={index}
+            />
           ))}
         </View>
 
-        <View className="mb-3 rounded-xl border border-[#E6E9E3] bg-white px-3">
-          <TextInput
-            accessibilityLabel="Search loans for renewal"
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search loan number or customer"
-            placeholderTextColor="#9AA6A1"
-            className="min-h-12 text-sm text-[#173F35]"
-          />
-        </View>
-        <LoanDateRangeFilter onApply={setDateRange} />
-        <CustomDropdown
-          label="Loan Status"
-          value={statusFilter}
-          options={[
+        <LoanListFilters
+          search={search}
+          onSearchChange={setSearch}
+          searchAccessibilityLabel="Search loans for renewal"
+          searchPlaceholder="Search loan number or customer"
+          onDateRangeChange={setDateRange}
+          statusLabel="Loan Status"
+          statusValue={statusFilter}
+          statusOptions={[
             { value: 'All', label: 'All Statuses' },
             { value: 'Active', label: 'Active' },
             { value: 'Suspended', label: 'Suspended' },
           ]}
-          onSelect={setStatusFilter}
+          onStatusChange={setStatusFilter}
         />
 
         {loadError ? (
@@ -278,7 +263,7 @@ export default function LoanRenewal() {
           filteredLoans.map(loan => (
             <View
               key={String(loan.id)}
-              className="mb-3 rounded-2xl border border-[#ECE7D8] bg-white p-4"
+              className="mb-3 rounded-2xl border border-[#DDBB57] bg-white p-4 shadow-sm"
             >
               <View className="flex-row items-start justify-between">
                 <View className="flex-1 pr-3">
