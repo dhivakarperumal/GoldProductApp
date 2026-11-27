@@ -367,7 +367,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
           </View>
         </View>
         {metric.trend ? (
-          <View className="absolute bottom-2 left-[58px] right-2 flex-row items-center rounded-full bg-black/25 py-1 pl-1 pr-2">
+          <View className="absolute bottom-2 left-3 flex-row items-center rounded-full bg-black/25 py-1 pl-1 pr-2">
             <View
               className="mr-1 h-4 w-4 shrink-0 items-center justify-center rounded-full"
               style={{ backgroundColor: trendColor }}>
