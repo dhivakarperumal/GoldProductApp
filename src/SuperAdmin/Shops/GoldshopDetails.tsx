@@ -4,6 +4,7 @@ import {
   Alert,
   Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -246,6 +247,7 @@ export default function GoldShopDetails({
   const insets = useSafeAreaInsets();
   const [shop, setShop] = useState<GoldShop | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [retryCount, setRetryCount] = useState(0);
   const [activeTab, setActiveTab] = useState<DetailTab>('overview');
@@ -258,8 +260,8 @@ export default function GoldShopDetails({
   });
 
   const loadShop = useCallback(
-    async (signal?: AbortSignal) => {
-      setLoading(true);
+    async (signal?: AbortSignal, isRefresh = false) => {
+      if (!isRefresh) setLoading(true);
       setLoadError('');
       try {
         const { data } = await api.get(`/super-admin/gold-shops/${shopId}`, {
@@ -277,7 +279,13 @@ export default function GoldShopDetails({
           );
         }
       } finally {
-        if (!signal?.aborted) setLoading(false);
+        if (!signal?.aborted) {
+          if (isRefresh) {
+            setRefreshing(false);
+          } else {
+            setLoading(false);
+          }
+        }
       }
     },
     [shopId],
@@ -383,6 +391,16 @@ export default function GoldShopDetails({
         <>
           <ScrollView
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={() => {
+                  setRefreshing(true);
+                  return loadShop(undefined, true);
+                }}
+                tintColor="#08745D"
+              />
+            }
             contentContainerClassName="gap-4 px-4 pb-8 pt-4"
           >
             <View className="overflow-hidden rounded-2xl bg-[#123B32] p-4">
