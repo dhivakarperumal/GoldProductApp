@@ -63,6 +63,7 @@ type DashboardAnalytics = {
 
 type HomeProps = {
   onNavigate: (tab: SuperAdminTab) => void;
+  todayRegistrationCount?: number | null;
 };
 
 const numberFormatter = new Intl.NumberFormat('en-IN');
@@ -90,6 +91,7 @@ function MetricCard({
   trend,
   icon: Icon,
   accent,
+  footerLabel = 'Current total',
 }: {
   label: string;
   value: string;
@@ -97,6 +99,7 @@ function MetricCard({
   trend?: number[];
   icon: typeof Store;
   accent: string;
+  footerLabel?: string;
 }) {
   const isPositive = (change || 0) >= 0;
   const showChange = typeof change === 'number';
@@ -157,7 +160,7 @@ function MetricCard({
               style={{ backgroundColor: accent }}
             />
             <Text className="text-[10px] font-semibold text-[#7B817D]">
-              Current total
+              {footerLabel}
             </Text>
           </View>
         )}
@@ -253,7 +256,10 @@ function MiniBarChart({
   );
 }
 
-export default function Home({ onNavigate }: HomeProps) {
+export default function Home({
+  onNavigate,
+  todayRegistrationCount = null,
+}: HomeProps) {
   const { width: windowWidth } = useWindowDimensions();
   const bannerWidth = Math.max(windowWidth - 32, 1);
   const bannerRef = useRef<ScrollViewInstance>(null);
@@ -264,6 +270,10 @@ export default function Home({ onNavigate }: HomeProps) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [todaySubscriptionPayments, setTodaySubscriptionPayments] = useState<
+    number | null
+  >(null);
+  const [todayPaymentError, setTodayPaymentError] = useState('');
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -286,17 +296,43 @@ export default function Home({ onNavigate }: HomeProps) {
       setErrorMessage(message);
     } finally {
       setLoading(false);
-      setRefreshing(false);
+    }
+  }, []);
+
+  const loadTodaySubscriptionPayments = useCallback(async () => {
+    try {
+      const { data } = await api.get('/super-admin/revenue-reports/overview');
+      const rawAmount = data?.data?.todayRevenue;
+      const amount = Number(rawAmount);
+      if (rawAmount == null || !Number.isFinite(amount)) {
+        throw new TypeError('Today subscription payment data is invalid.');
+      }
+
+      setTodaySubscriptionPayments(amount);
+      setTodayPaymentError('');
+    } catch (error) {
+      const message =
+        typeof error === 'object' &&
+        error !== null &&
+        'message' in error &&
+        typeof error.message === 'string'
+          ? error.message
+          : "Today's subscription payments could not be loaded.";
+      setTodayPaymentError(message);
     }
   }, []);
 
   useEffect(() => {
-    void loadDashboard();
-  }, [loadDashboard]);
+    loadDashboard();
+    loadTodaySubscriptionPayments();
+  }, [loadDashboard, loadTodaySubscriptionPayments]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    void loadDashboard();
+    Promise.all([
+      loadDashboard(),
+      loadTodaySubscriptionPayments(),
+    ]).finally(() => setRefreshing(false));
   };
 
   const monthlyRevenue = analytics?.monthlyRevenue || [];
@@ -312,6 +348,26 @@ export default function Home({ onNavigate }: HomeProps) {
   const activeShops = analytics?.shopStatus?.active || 0;
   const expiredShops = analytics?.shopStatus?.expired || 0;
   const metrics = [
+    {
+      label: "Today's registrations",
+      value:
+        todayRegistrationCount === null
+          ? '—'
+          : formatCount(todayRegistrationCount),
+      footerLabel: 'Today',
+      icon: Store,
+      accent: '#07564B',
+    },
+    {
+      label: "Today's subscription payments",
+      value:
+        todaySubscriptionPayments === null
+          ? '—'
+          : formatCurrency(todaySubscriptionPayments),
+      footerLabel: 'Paid today',
+      icon: CreditCard,
+      accent: '#B8860B',
+    },
     {
       label: 'Gold Shops',
       value: formatCount(stats?.totalGoldShops),
@@ -516,6 +572,14 @@ export default function Home({ onNavigate }: HomeProps) {
           >
             <Text className="text-sm font-bold text-[#991B1B]">Try again</Text>
           </Pressable>
+        </View>
+      ) : null}
+      {todayPaymentError ? (
+        <View className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-3 py-2">
+          <Text className="text-xs text-[#991B1B]">
+            Today&apos;s subscription payments are unavailable:{' '}
+            {todayPaymentError}
+          </Text>
         </View>
       ) : null}
 

@@ -121,9 +121,12 @@ test('notification dropdown shows only shops registered today', async () => {
     },
   });
   let renderer!: ReactTestRenderer.ReactTestRenderer;
+  const onTodayRegistrationsChange = jest.fn();
 
   await act(async () => {
-    renderer = ReactTestRenderer.create(<TopHeader />);
+    renderer = ReactTestRenderer.create(
+      <TopHeader onTodayRegistrationsChange={onTodayRegistrationsChange} />,
+    );
     activeRenderers.push(renderer);
   });
 
@@ -137,6 +140,7 @@ test('notification dropdown shows only shops registered today', async () => {
     params: { page: 1, pageSize: 50, search: '', status: 'all' },
   });
   expect(renderer.root.findByProps({ children: 'Today Gold' })).toBeDefined();
+  expect(onTodayRegistrationsChange).toHaveBeenCalledWith(1);
   expect(
     renderer.root
       .findAllByType(Text)
@@ -197,7 +201,8 @@ test('shows Home sparklines only for metrics with historical data', async () => 
               activeSubscriptions: 8,
               totalRevenue: 12000,
             }
-          : {
+          : url.endsWith('/analytics')
+            ? {
               shopRegistrations: [
                 { label: 'May', registrations: 3 },
                 { label: 'Jun', registrations: 7 },
@@ -210,14 +215,17 @@ test('shows Home sparklines only for metrics with historical data', async () => 
                 { label: 'May', revenue: 6000 },
                 { label: 'Jun', revenue: 12000 },
               ],
-            },
+            }
+            : { todayRevenue: 12000 },
       },
     }),
   );
   let renderer!: ReactTestRenderer.ReactTestRenderer;
 
   await act(async () => {
-    renderer = ReactTestRenderer.create(<Home onNavigate={jest.fn()} />);
+    renderer = ReactTestRenderer.create(
+      <Home onNavigate={jest.fn()} todayRegistrationCount={4} />,
+    );
     activeRenderers.push(renderer);
     await new Promise<void>(resolve => setImmediate(resolve));
   });
@@ -242,6 +250,19 @@ test('shows Home sparklines only for metrics with historical data', async () => 
       accessibilityLabel: 'Recent trend for Active Shops',
     }),
   ).toHaveLength(0);
+  expect(
+    renderer.root.findByProps({ children: "Today's registrations" }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findByProps({
+      children: "Today's subscription payments",
+    }),
+  ).toBeDefined();
+  expect(
+    renderer.root
+      .findAllByType(Text)
+      .some(text => String(text.props.children).includes('12,000')),
+  ).toBe(true);
   expect(
     renderer.root.findAll(
       node => node.props.style?.backgroundColor === '#F4C95D',

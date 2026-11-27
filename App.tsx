@@ -142,6 +142,9 @@ function AppContent() {
   const [accountRole, setAccountRole] = useState<AccountRole | null>(null);
   const [adminName, setAdminName] = useState('Super Admin');
   const [adminEmail, setAdminEmail] = useState('');
+  const [todayRegistrationCount, setTodayRegistrationCount] = useState<
+    number | null
+  >(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -324,6 +327,7 @@ function AppContent() {
       setAccountRole(null);
       setAdminName('Super Admin');
       setAdminEmail('');
+      setTodayRegistrationCount(null);
       setSuperAdminTab('Home');
       setVisitedSuperAdminScreens(new Set(['Home']));
       setAdminTab('Dashboard');
@@ -723,6 +727,7 @@ function AppContent() {
         <TopHeader
           adminName={adminName}
           adminEmail={adminEmail}
+          onTodayRegistrationsChange={setTodayRegistrationCount}
           onLogout={handleLogout}
           onProfilePress={() => handleTabChange('Profile')}
         />
@@ -733,7 +738,10 @@ function AppContent() {
         visited={visitedSuperAdminScreens.has('Home')}
         active={superAdminTab === 'Home'}
       >
-        <SuperAdminHome onNavigate={handleTabChange} />
+        <SuperAdminHome
+          onNavigate={handleTabChange}
+          todayRegistrationCount={todayRegistrationCount}
+        />
       </CachedScreen>
       <CachedScreen
         cacheKey="superadmin-G-Shops"

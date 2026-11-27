@@ -73,6 +73,7 @@ type TopHeaderProps = {
   adminEmail?: string;
   notificationCount?: number;
   onNotificationPress?: () => void;
+  onTodayRegistrationsChange?: (count: number | null) => void;
   onProfilePress?: () => void;
   onLogout?: () => void;
 };
@@ -82,6 +83,7 @@ export default function TopHeader({
   adminEmail = '',
   notificationCount,
   onNotificationPress,
+  onTodayRegistrationsChange,
   onProfilePress,
   onLogout,
 }: TopHeaderProps) {
@@ -144,7 +146,9 @@ export default function TopHeader({
       }
 
       setTodayRegistrations(registrations);
+      onTodayRegistrationsChange?.(registrations.length);
     } catch (error) {
+      onTodayRegistrationsChange?.(null);
       setRegistrationError(
         getErrorMessage(error, "Today's shop registrations could not be loaded."),
       );
@@ -152,7 +156,7 @@ export default function TopHeader({
       setIsLoadingRegistrations(false);
       setHasLoadedRegistrations(true);
     }
-  }, []);
+  }, [onTodayRegistrationsChange]);
 
   useEffect(() => {
     loadTodayRegistrations();
