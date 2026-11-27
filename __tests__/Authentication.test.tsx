@@ -395,6 +395,16 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   });
   expect(renderer.root.findByProps({ testID: 'create-bill-screen' })).toBeDefined();
   expect(
+    renderer.root.findByProps({ testID: 'billing-form-scroll' }).props,
+  ).toMatchObject({
+    automaticallyAdjustKeyboardInsets: true,
+    contentContainerStyle: { paddingBottom: expect.any(Number) },
+  });
+  expect(
+    renderer.root.findByProps({ testID: 'billing-form-scroll' }).props
+      .contentContainerStyle.paddingBottom,
+  ).toBeGreaterThanOrEqual(24);
+  expect(
     renderer.root.findByProps({ testID: 'admin-header-container' }).props.style,
   ).toEqual({ display: 'none' });
   expect(
@@ -431,6 +441,16 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   expect(
     renderer.root.findByProps({ testID: 'create-tack-order-screen' }),
   ).toBeDefined();
+  expect(
+    renderer.root.findByProps({ testID: 'take-order-form-scroll' }).props,
+  ).toMatchObject({
+    automaticallyAdjustKeyboardInsets: true,
+    contentContainerStyle: { paddingBottom: expect.any(Number) },
+  });
+  expect(
+    renderer.root.findByProps({ testID: 'take-order-form-scroll' }).props
+      .contentContainerStyle.paddingBottom,
+  ).toBeGreaterThanOrEqual(24);
   expect(
     renderer.root.findByProps({ testID: 'admin-header-container' }).props.style,
   ).toEqual({ display: 'none' });

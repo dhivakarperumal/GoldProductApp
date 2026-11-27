@@ -10,6 +10,7 @@ import {
   View,
   type TextInputProps,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   CalendarDays,
   Check,
@@ -539,6 +540,7 @@ export default function OrdersManagement({
   onFormVisibilityChange,
 }: OrdersManagementProps) {
   const { showAlert } = useCustomAlert();
+  const insets = useSafeAreaInsets();
   const [section, setSection] = useState<Section>(requestedSection ?? 'billing');
   const [ordersPage, setOrdersPage] = useState<'list' | 'create'>('list');
   const [billPage, setBillPage] = useState<'list' | 'form'>('list');
@@ -1459,8 +1461,13 @@ export default function OrdersManagement({
   );
 
   const renderBillForm = () => (
-    <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
-      <View className="p-4 pb-6">
+    <ScrollView
+      testID="billing-form-scroll"
+      className="flex-1"
+      keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets
+      contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 24) }}>
+      <View className="p-4">
         {billDraft.tackOrder ? (
           <View className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
             <Text className="text-sm font-extrabold text-emerald-900">
@@ -1867,8 +1874,13 @@ export default function OrdersManagement({
   );
 
   const renderOrderForm = () => (
-    <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
-      <View className="p-4 pb-6">
+    <ScrollView
+      testID="take-order-form-scroll"
+      className="flex-1"
+      keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets
+      contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 24) }}>
+      <View className="p-4">
         <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
           <Text className="mb-2 text-base font-extrabold text-[#173F35]">Catalog products</Text>
           <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-[#F8FAF8] px-3">
