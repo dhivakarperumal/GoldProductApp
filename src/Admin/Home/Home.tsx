@@ -333,54 +333,56 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
   return (
     <View
       testID={`dashboard-metric-${metric.id}`}
-      className="min-h-[104px] flex-1 basis-[45%] overflow-hidden rounded-[20px] border p-3"
+      className="min-h-[104px] flex-1 basis-[45%] overflow-hidden rounded-[20px] border"
       style={[
         styles.metricCard,
         { backgroundColor: palette.start, borderColor: palette.border },
       ]}>
       <MetricCardArtwork id={metric.id} palette={palette} />
-      <View className="flex-row items-start">
-        <View
-          className="mr-2 h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#FFE078] bg-black/20"
-          style={styles.metricIcon}>
-          <Icon size={23} color="#FFE08A" strokeWidth={2.4} />
-        </View>
-        <View className="min-w-0 flex-1 pt-0.5">
-          <Text
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.75}
-            className="text-[11px] font-semibold leading-[14px] text-white">
-            {metric.label}
-          </Text>
-          <Text
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.7}
-            className="mt-0.5 text-[21px] font-black text-[#FFE28A]">
-            {metric.value}
-          </Text>
-        </View>
-        <View className="ml-1 h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/25 bg-black/10">
-          <ChevronRight size={15} color="#FFF4C7" />
-        </View>
-      </View>
-      {metric.trend ? (
-        <View className="absolute bottom-2 left-[58px] right-2 flex-row items-center rounded-full bg-black/25 py-1 pl-1 pr-2">
+      <View className="flex-1 p-3">
+        <View className="flex-row items-start">
           <View
-            className="mr-1 h-4 w-4 shrink-0 items-center justify-center rounded-full"
-            style={{ backgroundColor: trendColor }}>
-            <TrendIcon size={11} color="#FFFFFF" strokeWidth={3} />
+            className="mr-2 h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#FFE078] bg-black/20"
+            style={styles.metricIcon}>
+            <Icon size={23} color="#FFE08A" strokeWidth={2.4} />
           </View>
-          <Text
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.7}
-            className="min-w-0 flex-1 text-[9px] font-bold text-white">
-            {metric.trend}
-          </Text>
+          <View className="min-w-0 flex-1 pt-0.5">
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+              className="text-[11px] font-semibold leading-[14px] text-white">
+              {metric.label}
+            </Text>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              className="mt-0.5 text-[21px] font-black text-[#FFE28A]">
+              {metric.value}
+            </Text>
+          </View>
+          <View className="ml-1 h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/25 bg-black/10">
+            <ChevronRight size={15} color="#FFF4C7" />
+          </View>
         </View>
-      ) : null}
+        {metric.trend ? (
+          <View className="absolute bottom-2 left-[58px] right-2 flex-row items-center rounded-full bg-black/25 py-1 pl-1 pr-2">
+            <View
+              className="mr-1 h-4 w-4 shrink-0 items-center justify-center rounded-full"
+              style={{ backgroundColor: trendColor }}>
+              <TrendIcon size={11} color="#FFFFFF" strokeWidth={3} />
+            </View>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              className="min-w-0 flex-1 text-[9px] font-bold text-white">
+              {metric.trend}
+            </Text>
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 }
