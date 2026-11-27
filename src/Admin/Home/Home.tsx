@@ -8,9 +8,11 @@ import {
   View,
 } from 'react-native';
 import {
-  Building2,
+  ArrowDownRight,
+  ArrowUpRight,
   CalendarDays,
   ChartNoAxesColumn,
+  ChevronRight,
   CreditCard,
   Gem,
   Package,
@@ -89,23 +91,23 @@ type HomeProps = {
 const metricIcons = {
   total_customers: Users,
   active_gold_loans: ShieldCheck,
-  today_collection: ChartNoAxesColumn,
-  gold_stock_value: ShieldCheck,
-  total_products: Building2,
+  today_collection: CalendarDays,
+  gold_stock_value: Gem,
+  total_products: Package,
   total_categories: Store,
   completed_loans: CalendarDays,
   low_stock_products: XCircle,
 } as const;
 
 const metricAccents: Record<string, string> = {
-  total_customers: '#07564B',
-  active_gold_loans: '#B8860B',
-  today_collection: '#28708A',
-  gold_stock_value: '#536D76',
-  total_products: '#7138E8',
-  total_categories: '#087D70',
-  completed_loans: '#28708A',
-  low_stock_products: '#A94760',
+  total_customers: '#087532',
+  active_gold_loans: '#795000',
+  today_collection: '#A00970',
+  gold_stock_value: '#006A75',
+  total_products: '#B85C00',
+  total_categories: '#75168B',
+  completed_loans: '#176A8A',
+  low_stock_products: '#A12A45',
 };
 
 function getErrorMessage(error: unknown) {
@@ -142,26 +144,54 @@ function formatDate(value: string | undefined) {
 function MetricCard({ metric }: { metric: DashboardMetric }) {
   const Icon = metricIcons[metric.id as keyof typeof metricIcons] || Store;
   const accent = metricAccents[metric.id] || '#07564B';
+  const TrendIcon = metric.trendUp === false ? ArrowDownRight : ArrowUpRight;
+  const trendColor = metric.trendUp === false ? '#E53935' : '#2EAD48';
+
   return (
-    <View className="min-h-[142px] flex-1 basis-[145px] rounded-2xl border border-[#ECE7D8] bg-white p-4">
+    <View
+      testID={`dashboard-metric-${metric.id}`}
+      className="min-h-[124px] flex-1 basis-[45%] overflow-hidden rounded-[20px] border border-white/40 p-3"
+      style={{ backgroundColor: accent }}>
       <View
-        className="mb-3 h-10 w-10 items-center justify-center rounded-xl"
-        style={{ backgroundColor: accent }}>
-        <Icon size={20} color="#FFFFFF" strokeWidth={2} />
+        pointerEvents="none"
+        className="absolute -right-7 -top-8 h-28 w-28 rounded-full border-[14px] border-white/10"
+      />
+      <View
+        pointerEvents="none"
+        className="absolute -bottom-8 -right-2 h-16 w-16 rounded-full bg-white/10"
+      />
+      <View className="flex-row items-start">
+        <View className="mr-2 h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-[#FFD76E] bg-white/10">
+          <Icon size={22} color="#FFE08A" strokeWidth={2.2} />
+        </View>
+        <View className="min-w-0 flex-1 pt-0.5">
+          <Text
+            numberOfLines={2}
+            className="text-[11px] font-semibold leading-4 text-white/95">
+            {metric.label}
+          </Text>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            className="mt-0.5 text-xl font-black text-[#FFE28A]">
+            {metric.value}
+          </Text>
+        </View>
+        <View className="ml-1 h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/25 bg-black/10">
+          <ChevronRight size={15} color="#FFF4C7" />
+        </View>
       </View>
-      <Text className="text-xs font-semibold text-[#6B7280]">
-        {metric.label}
-      </Text>
-      <Text className="mt-1 text-xl font-extrabold text-[#173F35]">
-        {metric.value}
-      </Text>
       {metric.trend ? (
-        <Text
-          className={`mt-2 text-[10px] ${
-            metric.trendUp === false ? 'text-[#A94760]' : 'text-[#6B7280]'
-          }`}>
-          {metric.trend}
-        </Text>
+        <View className="ml-[52px] mt-2 max-w-[85%] flex-row items-center self-start rounded-full bg-black/20 py-1 pl-1 pr-2">
+          <View
+            className="mr-1 h-4 w-4 items-center justify-center rounded-full"
+            style={{ backgroundColor: trendColor }}>
+            <TrendIcon size={11} color="#FFFFFF" strokeWidth={3} />
+          </View>
+          <Text numberOfLines={1} className="flex-1 text-[9px] font-bold text-white">
+            {metric.trend}
+          </Text>
+        </View>
       ) : null}
     </View>
   );
@@ -298,6 +328,16 @@ export default function Home({ onNavigate }: HomeProps) {
         </View>
       ) : null}
 
+      <View className="mb-3 flex-row items-center">
+        <View className="h-px flex-1 bg-[#D7AA3D]" />
+        <View className="mx-3 h-2 w-2 rotate-45 bg-[#D7AA3D]" />
+        <Text className="text-base font-extrabold text-[#173F35]">Overview</Text>
+        <View className="mx-3 h-2 w-2 rotate-45 bg-[#D7AA3D]" />
+        <View className="h-px flex-1 bg-[#D7AA3D]" />
+      </View>
+      <Text className="mb-3 -mt-2 text-center text-xs text-[#8A8F8B]">
+        Track your key numbers
+      </Text>
       <View className="mb-5 flex-row flex-wrap gap-3">
         {(dashboard?.stats || []).map(metric => (
           <MetricCard key={metric.id} metric={metric} />
