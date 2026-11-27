@@ -904,6 +904,26 @@ export default function Register({ onBack, onSubmitted }: Props) {
                 onChangeText={value => setField('city', value)}
                 maxLength={100}
                 placeholder="City"
+                labelAction={
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Fetch current location"
+                    testID="register-fetch-location"
+                    disabled={fetchingLocation}
+                    onPress={fetchCurrentLocation}
+                    className="flex-row items-center rounded-lg border border-emerald-300 px-2.5 py-1.5 disabled:opacity-60">
+                    {fetchingLocation ? (
+                      <ActivityIndicator size="small" color="#07564B" />
+                    ) : (
+                      <MapPin size={14} color="#07564B" />
+                    )}
+                    <Text className="ml-1 text-[11px] font-bold text-[#07564B]">
+                      {fetchingLocation
+                        ? 'Fetching location...'
+                        : 'Fetch current location'}
+                    </Text>
+                  </Pressable>
+                }
               />
               <CustomDropdown
                 label="State"
@@ -932,26 +952,6 @@ export default function Register({ onBack, onSubmitted }: Props) {
                   multiline
                   maxLength={5000}
                   placeholder="Street address"
-                  labelAction={
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Fetch current location"
-                      testID="register-fetch-location"
-                      disabled={fetchingLocation}
-                      onPress={fetchCurrentLocation}
-                      className="flex-row items-center rounded-lg border border-emerald-300 px-2.5 py-1.5 disabled:opacity-60">
-                      {fetchingLocation ? (
-                        <ActivityIndicator size="small" color="#07564B" />
-                      ) : (
-                        <MapPin size={14} color="#07564B" />
-                      )}
-                      <Text className="ml-1 text-[11px] font-bold text-[#07564B]">
-                        {fetchingLocation
-                          ? 'Fetching location...'
-                          : 'Fetch current location'}
-                      </Text>
-                    </Pressable>
-                  }
                 />
                 {currentLocation ? (
                   <View className="mb-3 -mt-2 flex-row flex-wrap items-center">
