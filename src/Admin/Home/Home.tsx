@@ -179,7 +179,7 @@ const metricPalettes: Record<string, MetricPalette> = {
 
 const styles = StyleSheet.create({
   metricCard: {
-    aspectRatio: 1.95,
+    aspectRatio: 1.75,
     borderWidth: 1.5,
     elevation: 5,
     shadowColor: '#FFC837',
@@ -333,7 +333,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
   return (
     <View
       testID={`dashboard-metric-${metric.id}`}
-      className="min-h-[82px] flex-1 basis-[45%] overflow-hidden rounded-[20px] border p-2"
+      className="min-h-[104px] flex-1 basis-[45%] overflow-hidden rounded-[20px] border p-3"
       style={[
         styles.metricCard,
         { backgroundColor: palette.start, borderColor: palette.border },
@@ -341,7 +341,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
       <MetricCardArtwork id={metric.id} palette={palette} />
       <View className="flex-row items-start">
         <View
-          className="mr-2 h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-[#FFE078] bg-black/20"
+          className="mr-2 h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#FFE078] bg-black/20"
           style={styles.metricIcon}>
           <Icon size={23} color="#FFE08A" strokeWidth={2.4} />
         </View>
@@ -366,13 +366,17 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
         </View>
       </View>
       {metric.trend ? (
-        <View className="absolute bottom-1 left-[51px] right-2 flex-row items-center rounded-full bg-black/25 py-0.5 pl-1 pr-2">
+        <View className="absolute bottom-2 left-[58px] right-2 flex-row items-center rounded-full bg-black/25 py-1 pl-1 pr-2">
           <View
             className="mr-1 h-4 w-4 shrink-0 items-center justify-center rounded-full"
             style={{ backgroundColor: trendColor }}>
             <TrendIcon size={11} color="#FFFFFF" strokeWidth={3} />
           </View>
-          <Text numberOfLines={1} className="text-[9px] font-bold text-white">
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+            className="min-w-0 flex-1 text-[9px] font-bold text-white">
             {metric.trend}
           </Text>
         </View>
