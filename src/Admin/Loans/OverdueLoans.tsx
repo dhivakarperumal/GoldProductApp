@@ -18,6 +18,7 @@ import {
 import api from '../../api';
 import { CustomDropdown } from './FormControls';
 import LoanDateRangeFilter from './LoanDateRangeFilter';
+import LoanStatCard from './LoanStatCard';
 import LoanRenewalFlow from './LoanRenewalFlow';
 
 type Loan = {
@@ -240,18 +241,6 @@ export default function OverdueLoans() {
           />
         }
       >
-        <View className="mb-4 rounded-2xl bg-[#064A41] p-4">
-          <Text className="text-[10px] font-bold uppercase tracking-[1.5px] text-[#EAD78A]">
-            Loan Management
-          </Text>
-          <Text className="mt-1 text-xl font-extrabold text-white">
-            Overdue Loans
-          </Text>
-          <Text className="mt-1 text-xs leading-5 text-white/75">
-            Review overdue balances and follow up with customers.
-          </Text>
-        </View>
-
         <View className="mb-3 flex-row flex-wrap gap-2">
           {[
             {
@@ -271,21 +260,13 @@ export default function OverdueLoans() {
               icon: CalendarDays,
             },
           ].map(({ label, value, icon: Icon }) => (
-            <View
+            <LoanStatCard
               key={label}
-              className="min-h-[82px] w-[48%] flex-1 rounded-xl border border-[#ECE7D8] bg-white p-3"
-            >
-              <Icon size={16} color="#A77B15" />
-              <Text className="mt-2 text-[10px] font-semibold text-[#6B7280]">
-                {label}
-              </Text>
-              <Text
-                numberOfLines={1}
-                className="mt-0.5 text-sm font-extrabold text-[#173F35]"
-              >
-                {loading ? '—' : value}
-              </Text>
-            </View>
+              className="w-[48%]"
+              label={label}
+              value={loading ? '—' : value}
+              icon={Icon}
+            />
           ))}
         </View>
 

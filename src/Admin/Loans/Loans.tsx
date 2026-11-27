@@ -23,6 +23,7 @@ import { useCustomAlert } from '../../Components/CustomAlert';
 import CompleteLoan from './CompleteLoan';
 import GoldRelease from './GoldRelease';
 import KycReview from './KycReview';
+import LoanStatCard from './LoanStatCard';
 import LoanRenewal from './LoanRenewal';
 import { printLoanAgreement } from './loanActions';
 import OverdueLoans from './OverdueLoans';
@@ -304,18 +305,6 @@ export default function Loans({
               />
             }
           >
-            <View className="mb-4 rounded-3xl bg-[#173F35] p-5">
-              <Text className="text-xs font-bold uppercase tracking-[2px] text-[#EAD78A]">
-                Shop Administration
-              </Text>
-              <Text className="mt-1 text-2xl font-extrabold text-white">
-                All Loans
-              </Text>
-              <Text className="mt-2 text-sm text-[#DCE8E4]">
-                Manage customer gold loans and balances.
-              </Text>
-            </View>
-
             <View className="mb-4 flex-row gap-3">
               {[
                 { label: 'Total Loans', value: loans.length, icon: HandCoins },
@@ -326,18 +315,12 @@ export default function Loans({
                   icon: CalendarDays,
                 },
               ].map(({ label, value, icon: Icon }) => (
-                <View
+                <LoanStatCard
                   key={label}
-                  className="min-h-[88px] flex-1 rounded-2xl border border-[#ECE7D8] bg-white p-3"
-                >
-                  <Icon size={17} color="#A77B15" />
-                  <Text className="mt-2 text-[10px] font-semibold text-[#6B7280]">
-                    {label}
-                  </Text>
-                  <Text className="mt-0.5 text-lg font-extrabold text-[#173F35]">
-                    {loading ? '—' : value}
-                  </Text>
-                </View>
+                  label={label}
+                  value={loading ? '—' : value}
+                  icon={Icon}
+                />
               ))}
             </View>
 
