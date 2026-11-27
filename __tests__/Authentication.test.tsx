@@ -386,6 +386,9 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   expect(
     renderer.root.findByProps({ testID: 'dashboard-metric-billing-total-billed' }),
   ).toBeDefined();
+  expect(
+    renderer.root.findByProps({ testID: 'dashboard-metric-billing-invoice-count' }),
+  ).toBeDefined();
   expect(renderer.root.findAllByProps({ children: 'Billing overview' })).toHaveLength(0);
   await act(async () => {
     renderer.root.findByProps({ testID: 'billing-new-button' }).props.onPress();
@@ -420,7 +423,7 @@ test('routes shop admins to the admin dashboard and its API', async () => {
     renderer.root.findByProps({ testID: 'dashboard-metric-orders-total' }),
   ).toBeDefined();
   expect(
-    renderer.root.findAllByProps({ children: 'Tack order overview' }),
+    renderer.root.findAllByProps({ children: 'Take order overview' }),
   ).toHaveLength(0);
   await act(async () => {
     renderer.root.findByProps({ testID: 'tack-new-button' }).props.onPress();
@@ -435,7 +438,7 @@ test('routes shop admins to the admin dashboard and its API', async () => {
     renderer.root.findByProps({ testID: 'admin-tab-bar-container' }).props.style,
   ).toEqual({ display: 'none' });
   expect(
-    renderer.root.findByProps({ accessibilityLabel: 'Back to tack orders' }),
+    renderer.root.findByProps({ accessibilityLabel: 'Back to Take Orders' }),
   ).toBeDefined();
 });
 

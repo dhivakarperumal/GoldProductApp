@@ -64,7 +64,7 @@ const ORDERS_OPTIONS: Array<{
   },
   {
     option: 'orders',
-    title: 'Tack Order',
+    title: 'Take Order',
     description: 'Custom jewellery orders, advances & status',
     icon: ShoppingBag,
     testID: 'orders-sheet-tack-order',

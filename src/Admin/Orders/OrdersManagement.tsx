@@ -296,12 +296,12 @@ function parseCustomer(value: unknown, label: string): Customer {
 
 function parseTackOrder(value: unknown): TackOrder {
   if (!isRecord(value) || value.id == null) {
-    throw new TypeError('The server returned an invalid tack order.');
+    throw new TypeError('The server returned an invalid take order.');
   }
-  const rawItems = parseArray(value.items, 'tack order items');
+  const rawItems = parseArray(value.items, 'take order items');
   const items = rawItems.map((rawItem, index) => {
     if (!isRecord(rawItem) || rawItem.product_id == null) {
-      throw new TypeError(`Tack order item ${index + 1} is invalid.`);
+      throw new TypeError(`Take order item ${index + 1} is invalid.`);
     }
     return {
       product_id: rawItem.product_id as number | string,
@@ -322,7 +322,7 @@ function parseTackOrder(value: unknown): TackOrder {
     order_no: typeof value.order_no === 'string' ? value.order_no : `ORDER-${value.id}`,
     order_status: typeof value.order_status === 'string' ? value.order_status : 'Order Placed',
     payment_status: typeof value.payment_status === 'string' ? value.payment_status : 'Pending',
-    customer: parseCustomer(value.customer, 'tack order customer'),
+    customer: parseCustomer(value.customer, 'take order customer'),
     items,
     sub_total: Number(value.sub_total) || 0,
     gst_included: value.gst_included === true,
@@ -614,14 +614,14 @@ export default function OrdersManagement({
     try {
       const response = await api.get('/tack-orders');
       if (!Array.isArray(response.data)) {
-        throw new TypeError('The server returned an invalid tack-orders list.');
+        throw new TypeError('The server returned an invalid take-orders list.');
       }
       setOrders(response.data.map(parseTackOrder));
     } catch (error) {
-      const message = errorText(error, 'Could not load tack orders.');
+      const message = errorText(error, 'Could not load take orders.');
       setOrdersError(message);
       setOrders([]);
-      console.error('[Orders] Could not load tack orders:', error);
+      console.error('[Orders] Could not load take orders:', error);
     } finally {
       setOrdersLoading(false);
     }
@@ -898,7 +898,7 @@ export default function OrdersManagement({
       return;
     }
     if (orderDraft.items.length === 0) {
-      showAlert('Products required', 'Add at least one catalog product to this tack order.', { variant: 'warning' });
+      showAlert('Products required', 'Add at least one catalog product to this take order.', { variant: 'warning' });
       return;
     }
     const gstRate = Number(orderDraft.gstRate);
@@ -950,15 +950,15 @@ export default function OrdersManagement({
       setOrderSearchCatalog('');
       setOrdersPage('list');
       showAlert(
-        'Tack order created',
+        'Take order created',
         `${created.order_no} was created with status ${created.order_status}.`,
         { variant: 'success' },
       );
     } catch (error) {
-      const message = errorText(error, 'Could not create tack order.');
+      const message = errorText(error, 'Could not create take order.');
       setOrdersError(message);
-      showAlert('Could not create tack order', message, { variant: 'error' });
-      console.error('[Orders] Could not create tack order:', error);
+      showAlert('Could not create take order', message, { variant: 'error' });
+      console.error('[Orders] Could not create take order:', error);
     } finally {
       setOrderSaving(false);
     }
@@ -981,7 +981,7 @@ export default function OrdersManagement({
     } catch (error) {
       const message = errorText(error, 'Could not update order status.');
       showAlert('Could not update order', message, { variant: 'error' });
-      console.error('[Orders] Could not update tack order status:', error);
+      console.error('[Orders] Could not update take order status:', error);
     } finally {
       setUpdatingOrderId(null);
     }
@@ -1002,7 +1002,7 @@ export default function OrdersManagement({
       items: order.items.map(item => ({
         product_id: item.product_id,
         product_name: item.product_name,
-        category: item.category || 'Tack Order',
+        category: item.category || 'Take Order',
         purity: item.purity || '',
         quantity: item.quantity,
         price: item.price,
@@ -1129,7 +1129,7 @@ export default function OrdersManagement({
     }
     const advanceAmount = Number(billDraft.tackOrder?.advance_amount) || 0;
     if (advanceAmount > billTotals.total) {
-      showAlert('Invalid advance', 'The tack order advance cannot exceed the bill total.', { variant: 'warning' });
+      showAlert('Invalid advance', 'The take order advance cannot exceed the bill total.', { variant: 'warning' });
       return;
     }
 
@@ -1182,7 +1182,7 @@ export default function OrdersManagement({
       showAlert(
         'Bill saved',
         response.data.already_exists
-          ? 'This tack order already has a bill.'
+          ? 'This take order already has a bill.'
           : `${savedBill.invoice_no} was saved successfully.`,
         { variant: 'success' },
       );
@@ -1296,10 +1296,11 @@ export default function OrdersManagement({
           <RefreshControl refreshing={billsLoading} onRefresh={() => void loadBills()} />
         }>
       <View className="p-4 pb-24">
-        <View className="mb-4 flex-row flex-wrap gap-3">
+        <View className="mb-2 flex-row flex-wrap gap-3">
           <SummaryCard id="billing-total-billed" label="Total billed" value={currency(billedTotal)} icon={CreditCard} palette="total_products" />
           <SummaryCard id="billing-collected" label="Collected" value={currency(paidTotal)} icon={CheckCircle2} palette="completed_loans" />
           <SummaryCard id="billing-balance-due" label="Balance due" value={currency(outstandingTotal)} icon={CalendarDays} palette="low_stock_products" />
+          <SummaryCard id="billing-invoice-count" label="Total invoices" value={String(bills.length)} icon={FileText} palette="total_customers" />
         </View>
 
         <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-3">
@@ -1386,7 +1387,7 @@ export default function OrdersManagement({
                 <Text className="text-[10px] font-bold uppercase tracking-wider text-[#7B8A83]">Invoice</Text>
                 <Text className="mt-1 text-base font-extrabold text-[#07564B]">{bill.invoice_no}</Text>
                 {bill.source_tack_order_id != null ? (
-                  <Text className="mt-1 text-[10px] font-bold text-emerald-700">Linked tack order</Text>
+                  <Text className="mt-1 text-[10px] font-bold text-emerald-700">Linked take order</Text>
                 ) : null}
               </View>
               <View className={`rounded-full px-2.5 py-1 ${billStatus(bill) === 'Paid' ? 'bg-emerald-50' : billStatus(bill) === 'Partial' ? 'bg-amber-50' : 'bg-rose-50'}`}>
@@ -1464,7 +1465,7 @@ export default function OrdersManagement({
         {billDraft.tackOrder ? (
           <View className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
             <Text className="text-sm font-extrabold text-emerald-900">
-              Tack order {billDraft.tackOrder.order_no}
+              Take order {billDraft.tackOrder.order_no}
             </Text>
             <Text className="mt-1 text-xs leading-5 text-emerald-800">
               Product quantities and saved order totals will be used. Advance {currency(billDraft.tackOrder.advance_amount)} will be added to the bill as a payment.
@@ -1586,7 +1587,7 @@ export default function OrdersManagement({
           </View>
           {billDraft.tackOrder && Number(billDraft.tackOrder.advance_amount) > 0 ? (
             <CustomDropdown
-              label="Tack order advance method"
+              label="Take order advance method"
               value={billDraft.advancePaymentMethod}
               options={PAYMENT_METHODS.map(method => ({ value: method, label: method }))}
               onSelect={value => setBillDraft(current => ({ ...current, advancePaymentMethod: value as PaymentMethod }))}
@@ -1718,7 +1719,7 @@ export default function OrdersManagement({
           <View className="mb-2 flex-row items-center rounded-xl border border-[#E6E9E3] bg-[#F8FAF8] px-3">
             <Search size={17} color="#7B8A83" />
             <TextInput
-              accessibilityLabel="Search tack orders"
+              accessibilityLabel="Search take orders"
               value={orderSearch}
               onChangeText={setOrderSearch}
               placeholder="Search order, customer or phone"
@@ -1747,12 +1748,12 @@ export default function OrdersManagement({
 
         <View className="mb-2 flex-row items-center justify-between">
           <View>
-            <Text className="text-base font-extrabold text-[#173F35]">Recent tack orders</Text>
+            <Text className="text-base font-extrabold text-[#173F35]">Recent take orders</Text>
             <Text className="mt-0.5 text-xs text-[#6B7E76]">
               {ordersLoading ? 'Loading orders…' : `${filteredOrders.length} order${filteredOrders.length === 1 ? '' : 's'}`}
             </Text>
           </View>
-          <Pressable accessibilityRole="button" accessibilityLabel="Refresh tack orders" onPress={() => void loadOrders()} className="h-10 w-10 items-center justify-center rounded-xl bg-white">
+          <Pressable accessibilityRole="button" accessibilityLabel="Refresh take orders" onPress={() => void loadOrders()} className="h-10 w-10 items-center justify-center rounded-xl bg-white">
             <RefreshCw size={17} color="#07564B" />
           </Pressable>
         </View>
@@ -1767,13 +1768,13 @@ export default function OrdersManagement({
         ) : ordersLoading && orders.length === 0 ? (
           <View className="items-center rounded-2xl bg-white py-10">
             <ActivityIndicator color="#07564B" />
-            <Text className="mt-3 text-sm text-[#6B7E76]">Loading tack orders…</Text>
+            <Text className="mt-3 text-sm text-[#6B7E76]">Loading take orders…</Text>
           </View>
         ) : filteredOrders.length === 0 ? (
           <View className="items-center rounded-2xl border border-dashed border-[#D7E2DC] bg-white px-5 py-10">
             <Package size={28} color="#7B8A83" />
             <Text className="mt-3 text-base font-bold text-[#173F35]">
-              {orders.length === 0 ? 'No tack orders yet' : 'No matching orders'}
+              {orders.length === 0 ? 'No take orders yet' : 'No matching orders'}
             </Text>
             <Text className="mt-1 text-center text-xs text-[#6B7E76]">
               {orders.length === 0 ? 'Orders you create will appear here.' : 'Adjust your filters to see more orders.'}
@@ -1787,7 +1788,7 @@ export default function OrdersManagement({
             <View key={String(order.id)} className="mb-3 rounded-2xl border border-[#E6E9E3] bg-white p-4">
               <View className="mb-3 flex-row items-start justify-between">
                 <View className="mr-2 flex-1">
-                  <Text className="text-[10px] font-bold uppercase tracking-wider text-orange-700">Tack order</Text>
+                  <Text className="text-[10px] font-bold uppercase tracking-wider text-orange-700">Take order</Text>
                   <Text className="mt-1 text-base font-black text-[#173F35]">{order.order_no}</Text>
                 </View>
                 <View className={`rounded-full px-2.5 py-1 ${status === 'Ready' ? 'bg-sky-50' : status === 'Completed' ? 'bg-emerald-50' : 'bg-amber-50'}`}>
@@ -1858,7 +1859,7 @@ export default function OrdersManagement({
     <Pressable
         testID="tack-new-button"
         accessibilityRole="button"
-        accessibilityLabel="Create new tack order"
+        accessibilityLabel="Create new take order"
         onPress={openOrderForm}
         className="absolute bottom-6 right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
         <Plus size={26} color="white" />
@@ -1874,7 +1875,7 @@ export default function OrdersManagement({
           <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-[#F8FAF8] px-3">
             <Search size={16} color="#7B8A83" />
             <TextInput
-              accessibilityLabel="Search catalog products for tack order"
+              accessibilityLabel="Search catalog products for take order"
               value={orderSearchCatalog}
               onChangeText={setOrderSearchCatalog}
               placeholder="Search by name, category or ID"
@@ -1903,7 +1904,7 @@ export default function OrdersManagement({
                       </Text>
                       <Text className="mt-1 text-xs font-bold text-[#07564B]">{currency(productPrice(product))}</Text>
                     </View>
-                    <Pressable accessibilityRole="button" accessibilityLabel={`Add ${product.name} to tack order`} onPress={() => addOrderProduct(product)} className="h-9 w-9 items-center justify-center rounded-full bg-[#07564B]">
+                    <Pressable accessibilityRole="button" accessibilityLabel={`Add ${product.name} to take order`} onPress={() => addOrderProduct(product)} className="h-9 w-9 items-center justify-center rounded-full bg-[#07564B]">
                       <Plus size={17} color="white" />
                     </Pressable>
                   </View>
@@ -2009,7 +2010,7 @@ export default function OrdersManagement({
           onPress={() => void createTackOrder()}
           className={`min-h-12 flex-row items-center justify-center rounded-xl px-5 ${orderSaving ? 'bg-[#8DA69B]' : 'bg-[#07564B]'}`}>
           {orderSaving ? <ActivityIndicator color="white" /> : <Check size={18} color="white" />}
-          <Text className="ml-2 text-sm font-extrabold text-white">{orderSaving ? 'Creating order…' : 'Create tack order'}</Text>
+          <Text className="ml-2 text-sm font-extrabold text-white">{orderSaving ? 'Creating order…' : 'Create take order'}</Text>
         </Pressable>
       </View>
     </ScrollView>

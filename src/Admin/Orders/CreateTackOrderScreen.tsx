@@ -14,10 +14,10 @@ export default function CreateTackOrderScreen({
   return (
     <View testID="create-tack-order-screen" className="flex-1 bg-[#F8F7F2]">
       <InnerHeader
-        title="New tack order"
+        title="New Take Order"
         sectionLabel="Order management"
         onBack={onBack}
-        backAccessibilityLabel="Back to tack orders"
+        backAccessibilityLabel="Back to Take Orders"
       />
       <View className="flex-1">{children}</View>
     </View>

@@ -384,7 +384,7 @@ export default function AdminHeader({
     try {
       const response = await api.get('/tack-orders');
       if (!Array.isArray(response.data)) {
-        throw new TypeError('The server returned an invalid tack-orders list.');
+        throw new TypeError('The server returned an invalid take-orders list.');
       }
       setTodayTackOrders(
         response.data.filter(
@@ -394,7 +394,7 @@ export default function AdminHeader({
       );
     } catch (error) {
       setTackOrdersError(
-        getErrorMessage(error, "Unable to load today's tack orders."),
+        getErrorMessage(error, "Unable to load today's take orders."),
       );
     } finally {
       setLoadingTackOrders(false);
@@ -873,7 +873,7 @@ export default function AdminHeader({
                     <Text className="mt-0.5 text-[15px] font-extrabold text-[#173F35]">
                       {activeDropdown === 'low-stock'
                         ? 'Low Stock Products'
-                        : "Today's Tack Orders"}
+                        : "Today's Take Orders"}
                     </Text>
                   </View>
                   <View
@@ -1042,7 +1042,7 @@ export default function AdminHeader({
                 <View className="items-center py-9">
                   <ActivityIndicator size="large" color="#B8860B" />
                   <Text className="mt-3 text-xs font-medium text-[#6B7280]">
-                    Loading today&apos;s tack orders…
+                    Loading today&apos;s take orders…
                   </Text>
                 </View>
               ) : tackOrdersError ? (
@@ -1067,10 +1067,10 @@ export default function AdminHeader({
                     <ShoppingBag size={20} color="#A77B12" />
                   </View>
                   <Text className="mt-3 text-sm font-bold text-[#173F35]">
-                    No tack orders today
+                    No take orders today
                   </Text>
                   <Text className="mt-1 text-center text-xs text-[#6B7280]">
-                    New tack orders created today will appear here.
+                    New take orders created today will appear here.
                   </Text>
                 </View>
               ) : (
@@ -1084,7 +1084,7 @@ export default function AdminHeader({
                       <Pressable
                         key={order.id}
                         accessibilityRole="button"
-                        accessibilityLabel={`Open tack order ${order.order_no || order.id}`}
+                        accessibilityLabel={`Open take order ${order.order_no || order.id}`}
                         onPress={() => {
                           closeAllMenus();
                           onNavigate?.({ kind: 'tab', tab: 'Orders' });

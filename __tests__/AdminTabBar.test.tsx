@@ -46,7 +46,7 @@ function AdminTabBarHarness({
   );
 }
 
-test('switches side tabs directly and opens bottom sheet on plus tap for Billing or Tack Order', async () => {
+test('switches side tabs directly and opens bottom sheet on plus tap for Billing or Take Order', async () => {
   const onOrdersOptionSelect = jest.fn();
   let renderer!: ReactTestRenderer.ReactTestRenderer;
 
