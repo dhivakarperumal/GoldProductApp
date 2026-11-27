@@ -6,6 +6,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -32,6 +33,9 @@ import { CustomDropdown, DatePicker, Field, SubmitButton } from '../Loans/FormCo
 import { inventoryError } from '../Products/inventory';
 
 type Props = { onBack: () => void };
+const styles = StyleSheet.create({
+  floatingActionButton: { zIndex: 20, elevation: 20 },
+});
 type DateRange = { preset: string; startDate: string; endDate: string };
 type FundSummary = {
   opening_balance?: string | number;
@@ -538,7 +542,8 @@ export default function FundManagement({ onBack }: Props) {
         accessibilityLabel="Add fund entry"
         accessibilityHint="Opens the form to record a fund transaction"
         onPress={openEntryForm}
-        style={{ bottom: Math.max(insets.bottom, 20) }}
+        hitSlop={10}
+        style={[styles.floatingActionButton, { bottom: Math.max(insets.bottom, 20) }]}
         className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
         <Plus size={24} color="white" />
       </Pressable>

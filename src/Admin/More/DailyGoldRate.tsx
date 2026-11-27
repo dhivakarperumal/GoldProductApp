@@ -7,6 +7,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -29,6 +30,9 @@ import { inventoryError } from '../Products/inventory';
 import { TimePickerField } from './FundManagement';
 
 type Props = { onBack: () => void };
+const styles = StyleSheet.create({
+  floatingActionButton: { zIndex: 20, elevation: 20 },
+});
 type RateField = {
   key: string;
   label: string;
@@ -645,7 +649,8 @@ export default function DailyGoldRate({ onBack }: Props) {
         accessibilityLabel="Create new rate set"
         accessibilityHint="Opens the form to add daily metal and diamond rates"
         onPress={openNewForm}
-        style={{ bottom: Math.max(insets.bottom, 20) }}
+        hitSlop={10}
+        style={[styles.floatingActionButton, { bottom: Math.max(insets.bottom, 20) }]}
         className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
         <Plus size={24} color="white" />
       </Pressable>
