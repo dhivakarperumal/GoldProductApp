@@ -380,27 +380,9 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   ).toEqual({ flex: 1 });
   expect(dashboardScreen.props.style).toEqual({ display: 'none' });
   expect(renderer.root.findByProps({ testID: 'orders-management' })).toBeDefined();
-  expect(
-    renderer.root.findByProps({ testID: 'orders-mode-tab-billing' }),
-  ).toBeDefined();
-  expect(
-    renderer.root.findByProps({ testID: 'orders-mode-tab-orders' }),
-  ).toBeDefined();
-  await act(async () => {
-    renderer.root
-      .findByProps({ testID: 'orders-mode-tab-orders' })
-      .props.onPress();
-  });
-  expect(
-    renderer.root.findByProps({ testID: 'orders-mode-tab-orders' }).props
-      .accessibilityState.selected,
-  ).toBe(true);
-
-  await act(async () => {
-    renderer.root
-      .findByProps({ testID: 'orders-mode-tab-billing' })
-      .props.onPress();
-  });
+  expect(renderer.root.findAllByProps({ testID: 'orders-mode-bar' })).toHaveLength(0);
+  expect(renderer.root.findAllByProps({ testID: 'orders-mode-tab-billing' })).toHaveLength(0);
+  expect(renderer.root.findAllByProps({ testID: 'orders-mode-tab-orders' })).toHaveLength(0);
   await act(async () => {
     renderer.root.findByProps({ testID: 'billing-new-button' }).props.onPress();
   });
@@ -416,9 +398,7 @@ test('routes shop admins to the admin dashboard and its API', async () => {
       .props.onPress();
   });
   await act(async () => {
-    renderer.root
-      .findByProps({ testID: 'orders-mode-tab-orders' })
-      .props.onPress();
+    renderer.root.findByType(AdminTabBar).props.onOrdersOptionSelect('orders');
   });
   await act(async () => {
     renderer.root.findByProps({ testID: 'tack-new-button' }).props.onPress();

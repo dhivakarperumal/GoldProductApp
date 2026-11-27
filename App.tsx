@@ -45,8 +45,13 @@ import Dealers from './src/Admin/More/Dealers';
 import DealerPurchases from './src/Admin/More/DealerPurchases';
 import Reports from './src/Admin/More/Reports';
 import InnerHeader from './src/Components/InnerHeader';
-import AdminHeader from './src/Admin/Navigation/AdminHeader';
-import AdminTabBar, { AdminTab } from './src/Admin/Navigation/AdminTabBar';
+import AdminHeader, {
+  AdminDrawerTarget,
+} from './src/Admin/Navigation/AdminHeader';
+import AdminTabBar, {
+  AdminTab,
+  OrdersQuickOption,
+} from './src/Admin/Navigation/AdminTabBar';
 import BottomBar, {
   SuperAdminTab,
 } from './src/SuperAdmin/Navigation/Bottombar';
@@ -143,6 +148,10 @@ function AppContent() {
     useState<InventoryScreen>('all');
   const [adminProductId, setAdminProductId] = useState<number | string | null>(null);
   const [adminMoreScreen, setAdminMoreScreen] = useState<MoreScreen>('home');
+  const [ordersSectionRequest, setOrdersSectionRequest] = useState<{
+    section: OrdersQuickOption;
+    key: number;
+  }>({ section: 'billing', key: 0 });
   const [authScreen, setAuthScreen] = useState<AuthScreen>('login');
   const [registrationEmail, setRegistrationEmail] = useState('');
   const [registrationMessage, setRegistrationMessage] = useState('');
@@ -407,6 +416,30 @@ function AppContent() {
     setVisitedAdminScreens(current => new Set(current).add(`More:${screen}`));
   };
 
+  const handleAdminDrawerNavigate = (target: AdminDrawerTarget) => {
+    if (target.kind === 'tab') {
+      navigateAdminTab(target.tab);
+      return;
+    }
+    if (target.kind === 'loan') {
+      navigateAdminTab('Loans');
+      navigateAdminLoan(target.screen);
+      return;
+    }
+    if (target.kind === 'product') {
+      navigateAdminTab('Products');
+      navigateAdminProduct(target.screen);
+      return;
+    }
+    navigateAdminTab('More');
+    navigateAdminMore(target.screen);
+  };
+
+  const handleOrdersOptionSelect = (section: OrdersQuickOption) => {
+    setOrdersSectionRequest(prev => ({ section, key: prev.key + 1 }));
+    navigateAdminTab('Orders');
+  };
+
   useEffect(() => {
     if (!isAuthenticated || !accountRole) return undefined;
 
@@ -618,6 +651,8 @@ function AppContent() {
           <AdminHeader
             adminName={adminName}
             adminEmail={adminEmail}
+            activeScreen={activeAdminScreen}
+            onNavigate={handleAdminDrawerNavigate}
             onLogout={handleLogout}
             onProfilePress={() => {
               navigateAdminTab('More');
@@ -636,7 +671,10 @@ function AppContent() {
           cacheKey="admin-Orders"
           visited={visitedAdminScreens.has('Orders')}
           active={activeAdminScreen === 'Orders'}>
-          <OrdersManagement />
+          <OrdersManagement
+            requestedSection={ordersSectionRequest.section}
+            sectionRequestKey={ordersSectionRequest.key}
+          />
         </CachedScreen>
         <CachedScreen
           cacheKey="admin-Loans-list"
@@ -815,7 +853,11 @@ function AppContent() {
         </CachedScreen>
 
         <View style={isInnerAdminScreen ? screenStyles.hidden : undefined}>
-          <AdminTabBar activeTab={adminTab} onTabPress={navigateAdminTab} />
+          <AdminTabBar
+            activeTab={adminTab}
+            onTabPress={navigateAdminTab}
+            onOrdersOptionSelect={handleOrdersOptionSelect}
+          />
         </View>
       </View>
     );

@@ -5,6 +5,7 @@ import {
   Pressable,
   Platform,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -23,6 +24,7 @@ export function CustomDropdown({
   placeholder = 'Select an option',
   required = false,
   searchable = false,
+  variant = 'default',
 }: {
   label: string;
   value: string;
@@ -31,18 +33,29 @@ export function CustomDropdown({
   placeholder?: string;
   required?: boolean;
   searchable?: boolean;
+  variant?: 'default' | 'glass';
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const insets = useSafeAreaInsets();
+  const isGlass = variant === 'glass';
   const selectedLabel = options.find(option => option.value === value)?.label;
   const filteredOptions = searchable
     ? options.filter(option => option.label.toLowerCase().includes(search.trim().toLowerCase()))
     : options;
   return (
     <View className="mb-4">
-      <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]">
-        {label}{required ? ' *' : ''}
+      <Text
+        style={isGlass ? glassStyles.label : undefined}
+        className={
+          isGlass
+            ? 'mb-1.5 ml-1 text-xs font-bold uppercase tracking-[0.8px]'
+            : 'mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]'
+        }>
+        {label}
+        {required ? (
+          <Text style={isGlass ? glassStyles.required : undefined}> *</Text>
+        ) : null}
       </Text>
       <Pressable
         accessibilityRole="button"
@@ -52,11 +65,28 @@ export function CustomDropdown({
           setSearch('');
           setOpen(true);
         }}
-        className="min-h-12 flex-row items-center justify-between rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3">
-        <Text className={`text-sm ${selectedLabel ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`}>
+        style={isGlass ? glassStyles.trigger : undefined}
+        className={
+          isGlass
+            ? 'min-h-12 flex-row items-center justify-between rounded-2xl px-4 py-3'
+            : 'min-h-12 flex-row items-center justify-between rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3'
+        }>
+        <Text
+          style={
+            isGlass
+              ? selectedLabel
+                ? glassStyles.valueText
+                : glassStyles.placeholderText
+              : undefined
+          }
+          className={
+            isGlass
+              ? 'text-[15px] font-medium'
+              : `text-sm ${selectedLabel ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`
+          }>
           {selectedLabel || placeholder}
         </Text>
-        <ChevronDown size={18} color="#6B7E76" />
+        <ChevronDown size={18} color={isGlass ? '#F5C451' : '#6B7E76'} />
       </Pressable>
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <View className="flex-1 justify-end bg-black/40">
@@ -115,6 +145,7 @@ export function DatePicker({
   minimumDate,
   maximumDate = new Date(),
   initialDate = new Date(new Date().getFullYear() - 18, 0, 1),
+  variant = 'default',
 }: {
   label: string;
   value: string;
@@ -122,9 +153,11 @@ export function DatePicker({
   minimumDate?: Date;
   maximumDate?: Date | null;
   initialDate?: Date;
+  variant?: 'default' | 'glass';
 }) {
   const [open, setOpen] = useState(false);
   const [draftDate, setDraftDate] = useState(new Date());
+  const isGlass = variant === 'glass';
   const selectedDate = /^\d{4}-\d{2}-\d{2}$/.test(value)
     ? new Date(`${value}T00:00:00`)
     : initialDate;
@@ -160,14 +193,45 @@ export function DatePicker({
 
   return (
     <View className="mb-4">
-      <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]">{label}</Text>
+      <Text
+        style={isGlass ? glassStyles.label : undefined}
+        className={
+          isGlass
+            ? 'mb-1.5 ml-1 text-xs font-bold uppercase tracking-[0.8px]'
+            : 'mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]'
+        }>
+        {label}
+      </Text>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
         onPress={openPicker}
-        className="min-h-12 flex-row items-center justify-between rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3">
-        <Text className={`text-sm ${value ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`}>{dateLabel}</Text>
-        <Text className="text-sm text-[#07564B]">▦</Text>
+        style={isGlass ? glassStyles.trigger : undefined}
+        className={
+          isGlass
+            ? 'min-h-12 flex-row items-center justify-between rounded-2xl px-4 py-3'
+            : 'min-h-12 flex-row items-center justify-between rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3'
+        }>
+        <Text
+          style={
+            isGlass
+              ? value
+                ? glassStyles.valueText
+                : glassStyles.placeholderText
+              : undefined
+          }
+          className={
+            isGlass
+              ? 'text-[15px] font-medium'
+              : `text-sm ${value ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`
+          }>
+          {dateLabel}
+        </Text>
+        <Text
+          style={isGlass ? glassStyles.calendarIcon : undefined}
+          className={isGlass ? 'text-sm' : 'text-sm text-[#07564B]'}>
+          ▦
+        </Text>
       </Pressable>
       {Platform.OS === 'ios' ? (
         <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
@@ -336,3 +400,27 @@ export function errorMessage(error: unknown) {
   }
   return 'Please try again.';
 }
+
+const glassStyles = StyleSheet.create({
+  label: {
+    color: '#F5E6B8',
+  },
+  required: {
+    color: '#FCA5A5',
+  },
+  trigger: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(245, 224, 158, 0.35)',
+    borderTopColor: 'rgba(255, 255, 255, 0.32)',
+  },
+  valueText: {
+    color: '#FFFFFF',
+  },
+  placeholderText: {
+    color: 'rgba(220, 236, 228, 0.65)',
+  },
+  calendarIcon: {
+    color: '#F5C451',
+  },
+});

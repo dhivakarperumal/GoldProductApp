@@ -526,11 +526,27 @@ function SummaryCard({
   );
 }
 
-export default function OrdersManagement() {
+type OrdersManagementProps = {
+  requestedSection?: Section;
+  sectionRequestKey?: number;
+};
+
+export default function OrdersManagement({
+  requestedSection,
+  sectionRequestKey = 0,
+}: OrdersManagementProps) {
   const { showAlert } = useCustomAlert();
-  const [section, setSection] = useState<Section>('billing');
+  const [section, setSection] = useState<Section>(requestedSection ?? 'billing');
   const [ordersPage, setOrdersPage] = useState<'list' | 'create'>('list');
   const [billPage, setBillPage] = useState<'list' | 'form'>('list');
+
+  useEffect(() => {
+    if (sectionRequestKey > 0 && requestedSection) {
+      setSection(requestedSection);
+      setBillPage('list');
+      setOrdersPage('list');
+    }
+  }, [requestedSection, sectionRequestKey]);
   const [orders, setOrders] = useState<TackOrder[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
@@ -2030,29 +2046,6 @@ export default function OrdersManagement() {
                 </CreateTackOrderScreen>
               )}
       </View>
-      {billPage === 'list' && ordersPage === 'list' ? (
-        <View testID="orders-mode-bar" className="flex-row border-t border-[#E2E8E3] bg-white px-3 py-2">
-          <Pressable
-            testID="orders-mode-tab-billing"
-            accessibilityRole="button"
-            accessibilityState={{ selected: section === 'billing' }}
-            onPress={() => setSection('billing')}
-            className={`mr-2 min-h-11 flex-1 flex-row items-center justify-center rounded-xl ${section === 'billing' ? 'bg-[#07564B]' : 'bg-[#F2F5F2]'}`}>
-            <CreditCard size={17} color={section === 'billing' ? 'white' : '#52645F'} />
-            <Text className={`ml-2 text-sm font-extrabold ${section === 'billing' ? 'text-white' : 'text-[#52645F]'}`}>Billing</Text>
-          </Pressable>
-          <Pressable
-            testID="orders-mode-tab-orders"
-            accessibilityRole="button"
-            accessibilityState={{ selected: section === 'orders' }}
-            onPress={() => setSection('orders')}
-            className={`min-h-11 flex-1 flex-row items-center justify-center rounded-xl ${section === 'orders' ? 'bg-[#07564B]' : 'bg-[#F2F5F2]'}`}>
-            <ShoppingBag size={17} color={section === 'orders' ? 'white' : '#52645F'} />
-            <Text className={`ml-2 text-sm font-extrabold ${section === 'orders' ? 'text-white' : 'text-[#52645F]'}`}>Orders</Text>
-          </Pressable>
-        </View>
-      ) : null}
-
       <Modal visible={viewingBill !== null} transparent animationType="slide" onRequestClose={() => setViewingBill(null)}>
         <View className="flex-1 justify-end bg-black/40">
           <Pressable accessibilityLabel="Close bill details" onPress={() => setViewingBill(null)} className="flex-1" />
