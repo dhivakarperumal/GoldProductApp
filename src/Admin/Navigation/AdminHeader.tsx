@@ -616,28 +616,6 @@ export default function AdminHeader({
                   <X size={17} color="#FFF8E7" />
                 </Pressable>
               </View>
-
-              <View className="mt-3.5 flex-row items-center rounded-2xl border border-[#F4C95D]/30 bg-[#0F2C25]/70 px-3 py-2.5">
-                <View className="mr-2.5 h-9 w-9 items-center justify-center rounded-full border border-[#F5E6A8] bg-[#D4AF37]">
-                  <Text className="text-sm font-extrabold text-white">
-                    {initial}
-                  </Text>
-                </View>
-                <View className="flex-1">
-                  <Text
-                    numberOfLines={1}
-                    className="text-[13px] font-bold text-white"
-                  >
-                    {adminName}
-                  </Text>
-                  <Text
-                    numberOfLines={1}
-                    className="text-[11px] text-[#DCE8E4]"
-                  >
-                    {adminEmail || 'Shop Administrator'}
-                  </Text>
-                </View>
-              </View>
             </View>
 
             <ScrollView
@@ -653,8 +631,8 @@ export default function AdminHeader({
                   <Text className="mb-1.5 px-2 text-[10px] font-extrabold uppercase tracking-[1.4px] text-[#9A7620]">
                     {section.title}
                   </Text>
-                  <View className="overflow-hidden rounded-2xl border border-[#EAE4D3] bg-white">
-                    {section.items.map((item, idx) => {
+                  <View className="overflow-hidden rounded-2xl bg-white">
+                    {section.items.map(item => {
                       const Icon = item.icon;
                       const isActive = item.matchScreens.includes(activeScreen);
 
@@ -667,10 +645,8 @@ export default function AdminHeader({
                           accessibilityState={{ selected: isActive }}
                           onPress={() => handleDrawerSelect(item.target)}
                           className={`flex-row items-center px-3 py-2.5 active:bg-[#FAF7EE] ${
-                            idx < section.items.length - 1
-                              ? 'border-b border-[#F3EFE4]'
-                              : ''
-                          } ${isActive ? 'bg-[#EEF6F3]' : 'bg-white'}`}
+                            isActive ? 'bg-[#EEF6F3]' : 'bg-white'
+                          }`}
                         >
                           <View
                             className={`mr-3 h-8 w-8 items-center justify-center rounded-xl ${
@@ -709,7 +685,7 @@ export default function AdminHeader({
                 <Text className="mb-1.5 px-2 text-[10px] font-extrabold uppercase tracking-[1.4px] text-[#9A7620]">
                   Account
                 </Text>
-                <View className="overflow-hidden rounded-2xl border border-[#EAE4D3] bg-white">
+                <View className="overflow-hidden rounded-2xl bg-white">
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Admin Profile"
@@ -717,7 +693,7 @@ export default function AdminHeader({
                     onPress={() =>
                       handleDrawerSelect({ kind: 'more', screen: 'profile' })
                     }
-                    className={`flex-row items-center border-b border-[#F3EFE4] px-3 py-2.5 active:bg-[#FAF7EE] ${
+                    className={`flex-row items-center px-3 py-2.5 active:bg-[#FAF7EE] ${
                       activeScreen === 'More:profile'
                         ? 'bg-[#EEF6F3]'
                         : 'bg-white'
