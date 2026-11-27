@@ -360,6 +360,40 @@ test('routes shop admins to the admin dashboard and its API', async () => {
     renderer.root.findByProps({ testID: 'orders-mode-tab-orders' }).props
       .accessibilityState.selected,
   ).toBe(true);
+
+  await act(async () => {
+    renderer.root
+      .findByProps({ testID: 'orders-mode-tab-billing' })
+      .props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'billing-new-button' }).props.onPress();
+  });
+  expect(renderer.root.findByProps({ testID: 'create-bill-screen' })).toBeDefined();
+  expect(
+    renderer.root.findByProps({ accessibilityLabel: 'Back to bills' }),
+  ).toBeDefined();
+  expect(renderer.root.findAllByProps({ testID: 'orders-mode-bar' })).toHaveLength(0);
+
+  await act(async () => {
+    renderer.root
+      .findByProps({ accessibilityLabel: 'Back to bills' })
+      .props.onPress();
+  });
+  await act(async () => {
+    renderer.root
+      .findByProps({ testID: 'orders-mode-tab-orders' })
+      .props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'tack-new-button' }).props.onPress();
+  });
+  expect(
+    renderer.root.findByProps({ testID: 'create-tack-order-screen' }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findByProps({ accessibilityLabel: 'Back to tack orders' }),
+  ).toBeDefined();
 });
 
 test('removes the saved token only when Logout is pressed', async () => {

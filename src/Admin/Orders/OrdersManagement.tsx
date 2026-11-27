@@ -11,7 +11,6 @@ import {
   type TextInputProps,
 } from 'react-native';
 import {
-  ArrowLeft,
   CalendarDays,
   Check,
   CheckCircle2,
@@ -30,6 +29,8 @@ import {
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import { CustomDropdown } from '../Loans/FormControls';
+import CreateBillScreen from './CreateBillScreen';
+import CreateTackOrderScreen from './CreateTackOrderScreen';
 
 type Section = 'billing' | 'orders';
 type PaymentType = 'FULL_PAYMENT' | 'EXCHANGE_GOLD';
@@ -537,6 +538,7 @@ export default function OrdersManagement() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [billsLoading, setBillsLoading] = useState(false);
   const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogLoaded, setCatalogLoaded] = useState(false);
   const [ordersError, setOrdersError] = useState('');
   const [billsError, setBillsError] = useState('');
   const [catalogError, setCatalogError] = useState('');
@@ -621,6 +623,7 @@ export default function OrdersManagement() {
         page += 1;
       } while (page <= totalPages);
       setCatalog(allProducts.filter(product => product.status === 'Active'));
+      setCatalogLoaded(true);
     } catch (error) {
       const message = errorText(error, 'Could not load catalog products.');
       setCatalogError(message);
@@ -658,12 +661,12 @@ export default function OrdersManagement() {
     const formOpen =
       (section === 'orders' && ordersPage === 'create') ||
       (section === 'billing' && billPage === 'form');
-    if (formOpen && catalog.length === 0 && !catalogLoading && !catalogError) {
+    if (formOpen && !catalogLoaded && !catalogLoading && !catalogError) {
       void loadCatalog();
     }
   }, [
     billPage,
-    catalog.length,
+    catalogLoaded,
     catalogError,
     catalogLoading,
     loadCatalog,
@@ -1442,19 +1445,6 @@ export default function OrdersManagement() {
   const renderBillForm = () => (
     <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
       <View className="p-4 pb-6">
-        <View className="mb-4 flex-row items-center rounded-2xl bg-[#075348] p-4">
-          <Pressable accessibilityRole="button" accessibilityLabel="Back to bills" onPress={() => setBillPage('list')} className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-white/15">
-            <ArrowLeft size={19} color="white" />
-          </Pressable>
-          <View className="flex-1">
-            <Text className="text-[10px] font-extrabold uppercase tracking-[2px] text-emerald-200">Billing workspace</Text>
-            <Text className="mt-1 text-xl font-black text-white">{editingBillId ? 'Edit bill' : 'Create a new bill'}</Text>
-            <Text className="mt-1 text-xs text-white/70">
-              {billDraft.tackOrder ? `Prefilled from ${billDraft.tackOrder.order_no}` : 'Add customer and product details.'}
-            </Text>
-          </View>
-        </View>
-
         {billDraft.tackOrder ? (
           <View className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
             <Text className="text-sm font-extrabold text-emerald-900">
@@ -1873,17 +1863,6 @@ export default function OrdersManagement() {
   const renderOrderForm = () => (
     <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
       <View className="p-4 pb-6">
-        <View className="mb-4 flex-row items-center rounded-2xl bg-[#075348] p-4">
-          <Pressable accessibilityRole="button" accessibilityLabel="Back to tack orders" onPress={() => setOrdersPage('list')} className="mr-3 h-10 w-10 items-center justify-center rounded-xl bg-white/15">
-            <ArrowLeft size={19} color="white" />
-          </Pressable>
-          <View className="flex-1">
-            <Text className="text-[10px] font-extrabold uppercase tracking-[2px] text-emerald-200">Order management</Text>
-            <Text className="mt-1 text-xl font-black text-white">New tack order</Text>
-            <Text className="mt-1 text-xs text-white/70">Select products and enter customer details.</Text>
-          </View>
-        </View>
-
         <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
           <Text className="mb-2 text-base font-extrabold text-[#173F35]">Catalog products</Text>
           <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-[#F8FAF8] px-3">
@@ -2034,29 +2013,45 @@ export default function OrdersManagement() {
     <View testID="orders-management" className="flex-1 bg-[#F8F7F2]">
       <View className="flex-1">
         {section === 'billing'
-          ? billPage === 'list' ? renderBillList() : renderBillForm()
-          : ordersPage === 'list' ? renderOrderList() : renderOrderForm()}
+          ? billPage === 'list'
+            ? renderBillList()
+            : (
+                <CreateBillScreen
+                  title={editingBillId ? 'Edit bill' : 'Create a new bill'}
+                  onBack={() => setBillPage('list')}>
+                  {renderBillForm()}
+                </CreateBillScreen>
+              )
+          : ordersPage === 'list'
+            ? renderOrderList()
+            : (
+                <CreateTackOrderScreen onBack={() => setOrdersPage('list')}>
+                  {renderOrderForm()}
+                </CreateTackOrderScreen>
+              )}
       </View>
-      <View testID="orders-mode-bar" className="flex-row border-t border-[#E2E8E3] bg-white px-3 py-2">
-        <Pressable
-          testID="orders-mode-tab-billing"
-          accessibilityRole="button"
-          accessibilityState={{ selected: section === 'billing' }}
-          onPress={() => setSection('billing')}
-          className={`mr-2 min-h-11 flex-1 flex-row items-center justify-center rounded-xl ${section === 'billing' ? 'bg-[#07564B]' : 'bg-[#F2F5F2]'}`}>
-          <CreditCard size={17} color={section === 'billing' ? 'white' : '#52645F'} />
-          <Text className={`ml-2 text-sm font-extrabold ${section === 'billing' ? 'text-white' : 'text-[#52645F]'}`}>Billing</Text>
-        </Pressable>
-        <Pressable
-          testID="orders-mode-tab-orders"
-          accessibilityRole="button"
-          accessibilityState={{ selected: section === 'orders' }}
-          onPress={() => setSection('orders')}
-          className={`min-h-11 flex-1 flex-row items-center justify-center rounded-xl ${section === 'orders' ? 'bg-[#07564B]' : 'bg-[#F2F5F2]'}`}>
-          <ShoppingBag size={17} color={section === 'orders' ? 'white' : '#52645F'} />
-          <Text className={`ml-2 text-sm font-extrabold ${section === 'orders' ? 'text-white' : 'text-[#52645F]'}`}>Orders</Text>
-        </Pressable>
-      </View>
+      {billPage === 'list' && ordersPage === 'list' ? (
+        <View testID="orders-mode-bar" className="flex-row border-t border-[#E2E8E3] bg-white px-3 py-2">
+          <Pressable
+            testID="orders-mode-tab-billing"
+            accessibilityRole="button"
+            accessibilityState={{ selected: section === 'billing' }}
+            onPress={() => setSection('billing')}
+            className={`mr-2 min-h-11 flex-1 flex-row items-center justify-center rounded-xl ${section === 'billing' ? 'bg-[#07564B]' : 'bg-[#F2F5F2]'}`}>
+            <CreditCard size={17} color={section === 'billing' ? 'white' : '#52645F'} />
+            <Text className={`ml-2 text-sm font-extrabold ${section === 'billing' ? 'text-white' : 'text-[#52645F]'}`}>Billing</Text>
+          </Pressable>
+          <Pressable
+            testID="orders-mode-tab-orders"
+            accessibilityRole="button"
+            accessibilityState={{ selected: section === 'orders' }}
+            onPress={() => setSection('orders')}
+            className={`min-h-11 flex-1 flex-row items-center justify-center rounded-xl ${section === 'orders' ? 'bg-[#07564B]' : 'bg-[#F2F5F2]'}`}>
+            <ShoppingBag size={17} color={section === 'orders' ? 'white' : '#52645F'} />
+            <Text className={`ml-2 text-sm font-extrabold ${section === 'orders' ? 'text-white' : 'text-[#52645F]'}`}>Orders</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       <Modal visible={viewingBill !== null} transparent animationType="slide" onRequestClose={() => setViewingBill(null)}>
         <View className="flex-1 justify-end bg-black/40">
