@@ -733,17 +733,16 @@ export default function OrdersManagement({
         ? (subtotal * Math.min(requestedDiscount, 100)) / 100
         : requestedDiscount;
     const appliedDiscount = Math.min(subtotal, discount);
-    const taxableSubtotal = Math.max(0, subtotal - appliedDiscount);
     const gstRate = Number(orderDraft.gstRate);
     const gstAmount =
       orderDraft.gstIncluded && Number.isFinite(gstRate) && gstRate >= 0
-        ? (taxableSubtotal * Math.min(gstRate, 100)) / 100
+        ? (subtotal * Math.min(gstRate, 100)) / 100
         : 0;
     return {
       subtotal,
       gstAmount,
       discount: appliedDiscount,
-      total: taxableSubtotal + gstAmount,
+      total: Math.max(0, subtotal + gstAmount - appliedDiscount),
     };
   }, [orderDraft]);
 
@@ -2164,6 +2163,12 @@ export default function OrdersManagement({
                     </View>
                     <Text className="text-xs font-semibold text-white/80">Apply GST to this order</Text>
                   </Pressable>
+                  <View className="mb-2 flex-row justify-between">
+                    <Text className="text-xs text-white/70">GST on subtotal (before discount)</Text>
+                    <Text testID="take-order-gst-amount" className="text-xs font-bold text-white">
+                      {currency(orderTotals.gstAmount)}
+                    </Text>
+                  </View>
                   <View className="flex-row gap-2">
                     <View className="flex-1">
                       <CustomDropdown
@@ -2181,10 +2186,6 @@ export default function OrdersManagement({
                     </View>
                   </View>
                   <InputField label="Advance amount (₹)" value={orderDraft.advanceAmount} onChangeText={value => setOrderDraft(current => ({ ...current, advanceAmount: value }))} keyboardType="decimal-pad" placeholder="0" />
-                  <View className="flex-row justify-between border-t border-white/15 py-2">
-                    <Text className="text-xs text-white/70">GST amount</Text>
-                    <Text testID="take-order-gst-amount" className="text-xs font-bold text-white">{currency(orderTotals.gstAmount)}</Text>
-                  </View>
                   <View className="flex-row justify-between py-1">
                     <Text className="text-xs text-white/70">Discount applied</Text>
                     <Text testID="take-order-discount-amount" className="text-xs font-bold text-white">−{currency(orderTotals.discount)}</Text>

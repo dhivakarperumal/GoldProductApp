@@ -550,10 +550,10 @@ test('routes shop admins to the admin dashboard and its API', async () => {
     renderer.root.findByProps({ accessibilityLabel: 'Discount' }).props.onChangeText('10');
     renderer.root.findByProps({ accessibilityLabel: 'Advance amount (₹)' }).props.onChangeText('2000');
   });
-  expect(renderer.root.findByProps({ testID: 'take-order-gst-amount' }).props.children).toBe('₹900.00');
+  expect(renderer.root.findByProps({ testID: 'take-order-gst-amount' }).props.children).toBe('₹1,000.00');
   expect(renderer.root.findByProps({ testID: 'take-order-discount-amount' }).props.children).toEqual(['−', '₹1,000.00']);
-  expect(renderer.root.findByProps({ testID: 'take-order-total' }).props.children).toBe('₹9,900.00');
-  expect(renderer.root.findByProps({ testID: 'take-order-balance-due' }).props.children).toBe('₹7,900.00');
+  expect(renderer.root.findByProps({ testID: 'take-order-total' }).props.children).toBe('₹10,000.00');
+  expect(renderer.root.findByProps({ testID: 'take-order-balance-due' }).props.children).toBe('₹8,000.00');
   await act(async () => {
     renderer.root.findByProps({ accessibilityLabel: 'Customer name *' }).props.onChangeText('Test Customer');
     renderer.root.findByProps({ accessibilityLabel: 'Phone number *' }).props.onChangeText('9876543210');
