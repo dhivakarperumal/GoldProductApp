@@ -5,13 +5,13 @@ import {
   RefreshControl,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { CheckCircle2, Clock3, IndianRupee, Users } from 'lucide-react-native';
 import api from '../../api';
-import { CustomDropdown, errorMessage } from './FormControls';
+import { errorMessage } from './FormControls';
 import GoldReleaseFlow from './GoldReleaseFlow';
+import LoanListFilters from './LoanListFilters';
 import LoanStatCard from './LoanStatCard';
 
 type Loan = {
@@ -28,6 +28,8 @@ type Loan = {
   loan_status?: string;
   release_status?: string;
 };
+
+type DateRange = { startDate: string; endDate: string };
 
 function currency(value: number | string | undefined) {
   const amount = Number(value);
@@ -60,6 +62,10 @@ export default function GoldReleaseList({
 }) {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [search, setSearch] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: '',
+    endDate: '',
+  });
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,6 +77,12 @@ export default function GoldReleaseList({
     try {
       const { data } = await api.get(
         completionPage ? '/loans' : '/loans/gold-release',
+        {
+          params: {
+            startDate: dateRange.startDate,
+            endDate: dateRange.endDate,
+          },
+        },
       );
       if (!Array.isArray(data)) {
         throw new Error('The server returned an invalid gold release list.');
@@ -91,7 +103,7 @@ export default function GoldReleaseList({
       setLoading(false);
       setRefreshing(false);
     }
-  }, [completionPage]);
+  }, [completionPage, dateRange]);
 
   useEffect(() => {
     loadLoans();
@@ -188,27 +200,22 @@ export default function GoldReleaseList({
           ))}
         </View>
 
-        <View className="mb-3 rounded-xl border border-[#E6E9E3] bg-white px-3">
-          <TextInput
-            accessibilityLabel="Search gold release records"
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search loan, customer, mobile, pledge..."
-            placeholderTextColor="#9AA6A1"
-            className="min-h-12 text-sm text-[#173F35]"
-          />
-        </View>
-        <CustomDropdown
-          label="Release Status"
-          value={statusFilter}
-          options={[
+        <LoanListFilters
+          search={search}
+          onSearchChange={setSearch}
+          searchAccessibilityLabel="Search gold release records"
+          searchPlaceholder="Search loan, customer, mobile, pledge..."
+          onDateRangeChange={setDateRange}
+          statusLabel="Release Status"
+          statusValue={statusFilter}
+          statusOptions={[
             { value: 'All', label: 'All Statuses' },
             { value: 'Awaiting Gold Release', label: 'Awaiting Gold Release' },
             ...(completionPage
               ? [{ value: 'Completed', label: 'Completed' }]
               : []),
           ]}
-          onSelect={setStatusFilter}
+          onStatusChange={setStatusFilter}
         />
 
         {loadError ? (

@@ -5,7 +5,6 @@ import {
   RefreshControl,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import {
@@ -15,8 +14,7 @@ import {
   ShieldCheck,
 } from 'lucide-react-native';
 import api from '../../api';
-import { CustomDropdown } from './FormControls';
-import LoanDateRangeFilter from './LoanDateRangeFilter';
+import LoanListFilters from './LoanListFilters';
 import LoanStatCard from './LoanStatCard';
 import LoanRenewalFlow from './LoanRenewalFlow';
 
@@ -230,26 +228,20 @@ export default function LoanRenewal() {
           ))}
         </View>
 
-        <View className="mb-3 rounded-xl border border-[#E6E9E3] bg-white px-3">
-          <TextInput
-            accessibilityLabel="Search loans for renewal"
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search loan number or customer"
-            placeholderTextColor="#9AA6A1"
-            className="min-h-12 text-sm text-[#173F35]"
-          />
-        </View>
-        <LoanDateRangeFilter onApply={setDateRange} />
-        <CustomDropdown
-          label="Loan Status"
-          value={statusFilter}
-          options={[
+        <LoanListFilters
+          search={search}
+          onSearchChange={setSearch}
+          searchAccessibilityLabel="Search loans for renewal"
+          searchPlaceholder="Search loan number or customer"
+          onDateRangeChange={setDateRange}
+          statusLabel="Loan Status"
+          statusValue={statusFilter}
+          statusOptions={[
             { value: 'All', label: 'All Statuses' },
             { value: 'Active', label: 'Active' },
             { value: 'Suspended', label: 'Suspended' },
           ]}
-          onSelect={setStatusFilter}
+          onStatusChange={setStatusFilter}
         />
 
         {loadError ? (

@@ -5,7 +5,6 @@ import {
   RefreshControl,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import {
@@ -16,18 +15,16 @@ import {
   IndianRupee,
   Pencil,
   Printer,
-  Search,
   Trash2,
   Users,
 } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import CompleteLoan from './CompleteLoan';
-import { CustomDropdown } from './FormControls';
 import GoldRelease from './GoldRelease';
 import KycReview from './KycReview';
 import LoanStatCard from './LoanStatCard';
-import LoanDateRangeFilter from './LoanDateRangeFilter';
+import LoanListFilters from './LoanListFilters';
 import LoanRenewal from './LoanRenewal';
 import { printLoanAgreement } from './loanActions';
 import OverdueLoans from './OverdueLoans';
@@ -388,38 +385,17 @@ export default function Loans({
               ))}
             </View>
 
-            <View className="mb-3 flex-row items-center rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm">
-              <Search size={18} color="#A77B15" />
-              <TextInput
-                accessibilityLabel="Search loans"
-                value={query}
-                onChangeText={setQuery}
-                placeholder="Search loan or customer"
-                placeholderTextColor="#9AA6A1"
-                className="min-h-12 flex-1 px-3 text-sm text-[#173F35]"
-              />
-              {query ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Clear search"
-                  onPress={() => setQuery('')}
-                >
-                  <Text className="px-2 text-lg text-[#6B7280]">×</Text>
-                </Pressable>
-              ) : null}
-            </View>
-
-            <View className="mb-3 flex-row items-start gap-3">
-              <LoanDateRangeFilter compact onApply={setDateRange} />
-              <View className="min-w-0 flex-1">
-                <CustomDropdown
-                  label="Loan Status"
-                  value={statusFilter}
-                  options={statusOptions}
-                  onSelect={setStatusFilter}
-                />
-              </View>
-            </View>
+            <LoanListFilters
+              search={query}
+              onSearchChange={setQuery}
+              searchAccessibilityLabel="Search loans"
+              searchPlaceholder="Search loan or customer"
+              onDateRangeChange={setDateRange}
+              statusLabel="Loan Status"
+              statusValue={statusFilter}
+              statusOptions={statusOptions}
+              onStatusChange={setStatusFilter}
+            />
 
             {loadError ? (
               <View className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-3">

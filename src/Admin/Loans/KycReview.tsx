@@ -26,8 +26,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api, { API_BASE_URL } from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
-import { CustomDropdown, errorMessage } from './FormControls';
-import LoanDateRangeFilter from './LoanDateRangeFilter';
+import { errorMessage } from './FormControls';
+import LoanListFilters from './LoanListFilters';
 import LoanStatCard from './LoanStatCard';
 
 type KycStatus =
@@ -443,25 +443,19 @@ export default function KycReview() {
           </View>
         ) : null}
 
-        <View className="mb-3 rounded-xl border border-[#E6E9E3] bg-white px-3">
-          <TextInput
-            accessibilityLabel="Search KYC applications"
-            value={search}
-            onChangeText={value => {
-              setSearch(value);
-              setPage(1);
-            }}
-            placeholder="Search name, email, phone or application ID"
-            placeholderTextColor="#9AA6A1"
-            className="min-h-12 text-sm text-[#173F35]"
-          />
-        </View>
-        <LoanDateRangeFilter onApply={changeDateRange} />
-        <CustomDropdown
-          label="Application Status"
-          value={status}
-          options={STATUS_OPTIONS}
-          onSelect={changeStatus}
+        <LoanListFilters
+          search={search}
+          onSearchChange={value => {
+            setSearch(value);
+            setPage(1);
+          }}
+          searchAccessibilityLabel="Search KYC applications"
+          searchPlaceholder="Search name, email, phone or application ID"
+          onDateRangeChange={changeDateRange}
+          statusLabel="Application Status"
+          statusValue={status}
+          statusOptions={STATUS_OPTIONS}
+          onStatusChange={changeStatus}
         />
 
         {listError ? (
