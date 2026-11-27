@@ -609,6 +609,14 @@ export default function DealerPurchases({ onBack }: Props) {
       </ScrollView>
 
       {showActions ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close purchase actions"
+          onPress={() => setShowActions(false)}
+          className="absolute inset-0 bg-black/20"
+        />
+      ) : null}
+      {showActions ? (
         <View style={{ bottom: Math.max(insets.bottom, 20) + 72 }} className="absolute right-5 items-end gap-3">
           <Pressable
             accessibilityRole="button"
