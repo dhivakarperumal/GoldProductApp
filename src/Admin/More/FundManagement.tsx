@@ -382,7 +382,7 @@ export default function FundManagement({ onBack }: Props) {
         }
         keyboardShouldPersistTaps="handled">
         <DashboardMetricGrid
-          containerClassName="mb-0"
+          containerClassName="mb-2"
           metrics={statCards.map(({ id, label, value, detail, icon, palette, trendUp }) => ({
             id,
             label,
