@@ -24,6 +24,7 @@ import {
   Minus,
   Package,
   Plus,
+  Printer,
   RefreshCw,
   Search,
   ShoppingBag,
@@ -42,6 +43,7 @@ import { CustomDropdown, DatePicker } from '../Loans/FormControls';
 import type { Category, Metal } from '../Products/inventory';
 import CreateBillScreen from './CreateBillScreen';
 import CreateTackOrderScreen from './CreateTackOrderScreen';
+import { printBillReceipt } from './billActions';
 
 type Section = 'billing' | 'orders';
 type PaymentType = 'FULL_PAYMENT' | 'EXCHANGE_GOLD';
@@ -630,6 +632,7 @@ export default function OrdersManagement({
   const [billSearchCatalog, setBillSearchCatalog] = useState('');
   const [orderSaving, setOrderSaving] = useState(false);
   const [billSaving, setBillSaving] = useState(false);
+  const [printingBillId, setPrintingBillId] = useState<string | null>(null);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [editingBillId, setEditingBillId] = useState<number | string | null>(null);
   const [viewingBill, setViewingBill] = useState<Bill | null>(null);
@@ -1418,6 +1421,20 @@ export default function OrdersManagement({
     });
   };
 
+  const printBill = async (bill: Bill) => {
+    if (printingBillId) return;
+    setPrintingBillId(String(bill.id));
+    try {
+      await printBillReceipt(bill);
+    } catch (error) {
+      const message = errorText(error, 'Could not prepare the bill PDF.');
+      showAlert('Could not print bill', message, { variant: 'error' });
+      console.error('[Billing] Could not print bill:', error);
+    } finally {
+      setPrintingBillId(null);
+    }
+  };
+
   const saveBillPayment = async () => {
     if (!paymentDraft) return;
     const amount = Number(paymentDraft.amount);
@@ -1631,6 +1648,22 @@ export default function OrdersManagement({
               <Text className="text-xs font-semibold text-rose-700">Due {currency(bill.balance_due)}</Text>
             </View>
             <View className="flex-row flex-wrap gap-2">
+              <Pressable
+                testID={`print-bill-${String(bill.id)}`}
+                accessibilityRole="button"
+                accessibilityLabel={`Print bill ${bill.invoice_no}`}
+                disabled={printingBillId !== null}
+                onPress={() => printBill(bill)}
+                className="min-h-10 flex-row items-center rounded-lg bg-[#EAF3EF] px-3 disabled:opacity-50">
+                {printingBillId === String(bill.id) ? (
+                  <ActivityIndicator size="small" color="#07564B" />
+                ) : (
+                  <Printer size={15} color="#07564B" />
+                )}
+                <Text className="ml-1.5 text-xs font-bold text-[#07564B]">
+                  {printingBillId === String(bill.id) ? 'Preparing…' : 'Print / Share'}
+                </Text>
+              </Pressable>
               {Number(bill.balance_due) > 0 ? (
                 <Pressable accessibilityRole="button" onPress={() => startBillPayment(bill)} className="min-h-10 flex-row items-center rounded-lg bg-emerald-700 px-3">
                   <CreditCard size={14} color="white" />
