@@ -4,6 +4,8 @@ import {
   BackHandler,
   Image,
   KeyboardAvoidingView,
+  Linking,
+  PermissionsAndroid,
   Platform,
   Pressable,
   ScrollView,
@@ -19,10 +21,15 @@ import {
   Eye,
   EyeOff,
   ImagePlus,
+  MapPin,
   Store,
   UserRound,
 } from 'lucide-react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import Geolocation, {
+  PositionError,
+  type GeoPosition,
+} from 'react-native-geolocation-service';
 import api from '../api';
 import { useCustomAlert } from '../Components/CustomAlert';
 import { CustomDropdown, DatePicker } from '../Admin/Loans/FormControls';
@@ -114,6 +121,21 @@ const STATES_AND_UTS = [
   'Lakshadweep',
   'Puducherry',
 ].map(state => ({ value: state, label: state }));
+
+function matchIndianState(value: string) {
+  const normalizedValue = value.toLowerCase().replace(/[^a-z]/g, '');
+  if (!normalizedValue) return '';
+  return (
+    STATES_AND_UTS.find(option => {
+      const normalizedState = option.value.toLowerCase().replace(/[^a-z]/g, '');
+      return (
+        normalizedValue === normalizedState ||
+        normalizedValue.includes(normalizedState) ||
+        normalizedState.includes(normalizedValue)
+      );
+    })?.value || ''
+  );
+}
 
 function localDate(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
@@ -256,6 +278,7 @@ function InputField({
   secureTextEntry = false,
   editable = true,
   rightAction,
+  labelAction,
 }: {
   label: string;
   value: string;
@@ -270,13 +293,17 @@ function InputField({
   secureTextEntry?: boolean;
   editable?: boolean;
   rightAction?: ReactNode;
+  labelAction?: ReactNode;
 }) {
   return (
     <View className="mb-3">
-      <Text className="mb-1.5 ml-1 text-sm font-semibold text-[#374151]">
-        {label}
-        {required ? <Text className="text-red-600"> *</Text> : null}
-      </Text>
+      <View className="mb-1.5 ml-1 flex-row items-center justify-between">
+        <Text className="text-sm font-semibold text-[#374151]">
+          {label}
+          {required ? <Text className="text-red-600"> *</Text> : null}
+        </Text>
+        {labelAction}
+      </View>
       <View
         className={`flex-row items-center rounded-xl border bg-white px-4 ${
           error ? 'border-red-400' : 'border-[#E6E9E3]'
@@ -339,6 +366,8 @@ export default function Register({ onBack, onSubmitted }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [fetchingLocation, setFetchingLocation] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState('');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -471,6 +500,149 @@ export default function Register({ onBack, onSubmitted }: Props) {
       });
     } catch (error) {
       showAlert('Photo unavailable', getErrorMessage(error), { variant: 'error' });
+    }
+  };
+
+  const fetchCurrentLocation = async () => {
+    if (fetchingLocation) return;
+
+    setFetchingLocation(true);
+    setCurrentLocation('');
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+      if (Platform.OS === 'android') {
+        const permissions = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+        ]);
+        if (
+          permissions[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] !==
+            PermissionsAndroid.RESULTS.GRANTED &&
+          permissions[PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION] !==
+            PermissionsAndroid.RESULTS.GRANTED
+        ) {
+          throw new Error(
+            'Location permission was denied. Allow location access in settings and try again.',
+          );
+        }
+      } else {
+        const authorization = await Geolocation.requestAuthorization('whenInUse');
+        if (authorization !== 'granted') {
+          throw new Error(
+            'Location permission was denied. Allow location access in settings and try again.',
+          );
+        }
+      }
+
+      const position = await new Promise<GeoPosition>((resolve, reject) => {
+        Geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000,
+        });
+      });
+
+      const controller = new AbortController();
+      timeout = setTimeout(() => controller.abort(), 10000);
+      const params = new URLSearchParams({
+        format: 'jsonv2',
+        addressdetails: '1',
+        lat: String(position.coords.latitude),
+        lon: String(position.coords.longitude),
+      });
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?${params.toString()}`,
+        {
+          headers: {
+            'Accept-Language': 'en',
+            'User-Agent': 'SriGoldSuite/0.0.1 (registration location lookup)',
+          },
+          signal: controller.signal,
+        },
+      );
+      if (!response.ok) {
+        throw new Error(
+          'OpenStreetMap could not look up this location. Please try again.',
+        );
+      }
+
+      const result: unknown = await response.json();
+      if (
+        typeof result !== 'object' ||
+        result === null ||
+        !('address' in result) ||
+        typeof result.address !== 'object' ||
+        result.address === null
+      ) {
+        throw new Error('No address details were found for this location.');
+      }
+
+      const address = result.address as Record<string, unknown>;
+      const addressValue = (...keys: string[]) => {
+        for (const key of keys) {
+          if (typeof address[key] === 'string') return address[key];
+        }
+        return '';
+      };
+      const street = [
+        addressValue('house_number'),
+        addressValue('road', 'pedestrian', 'residential'),
+      ]
+        .filter(Boolean)
+        .join(' ');
+      const locality = addressValue('neighbourhood', 'suburb', 'quarter');
+      const shopAddress =
+        [street, locality].filter(Boolean).join(', ') ||
+        ('display_name' in result && typeof result.display_name === 'string'
+          ? result.display_name
+          : '');
+      const city = addressValue(
+        'city',
+        'town',
+        'village',
+        'municipality',
+        'city_district',
+        'county',
+      );
+      const state = matchIndianState(addressValue('state'));
+      const postalCode = addressValue('postcode').replace(/\D/g, '');
+      const pincode = /^[1-9]\d{5}$/.test(postalCode) ? postalCode : '';
+
+      setForm(current => ({
+        ...current,
+        address: shopAddress,
+        city,
+        state,
+        pincode,
+      }));
+      setCurrentLocation(
+        'Location fields filled where available. Please verify them before saving.',
+      );
+    } catch (error) {
+      let message = getErrorMessage(error);
+      if (typeof error === 'object' && error !== null && 'code' in error) {
+        if (error.code === PositionError.PERMISSION_DENIED) {
+          message =
+            'Location permission was denied. Allow location access in settings and try again.';
+        } else if (error.code === PositionError.POSITION_UNAVAILABLE) {
+          message = 'Your current location is unavailable.';
+        } else if (error.code === PositionError.TIMEOUT) {
+          message = 'Location request timed out. Please try again.';
+        }
+      } else if (
+        typeof error === 'object' &&
+        error !== null &&
+        'name' in error &&
+        error.name === 'AbortError'
+      ) {
+        message = 'Location lookup timed out. Please try again.';
+      } else if (error instanceof TypeError) {
+        message = 'Could not connect to OpenStreetMap. Please try again.';
+      }
+      showAlert('Location unavailable', message, { variant: 'error' });
+    } finally {
+      if (timeout) clearTimeout(timeout);
+      setFetchingLocation(false);
     }
   };
 
@@ -752,14 +924,60 @@ export default function Register({ onBack, onSubmitted }: Props) {
                 maxLength={6}
                 placeholder="6-digit pincode"
               />
-              <InputField
-                label="Shop address"
-                value={form.address}
-                onChangeText={value => setField('address', value)}
-                multiline
-                maxLength={5000}
-                placeholder="Street address"
-              />
+              <View>
+                <InputField
+                  label="Shop address"
+                  value={form.address}
+                  onChangeText={value => setField('address', value)}
+                  multiline
+                  maxLength={5000}
+                  placeholder="Street address"
+                  labelAction={
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Fetch current location"
+                      testID="register-fetch-location"
+                      disabled={fetchingLocation}
+                      onPress={fetchCurrentLocation}
+                      className="flex-row items-center rounded-lg border border-emerald-300 px-2.5 py-1.5 disabled:opacity-60">
+                      {fetchingLocation ? (
+                        <ActivityIndicator size="small" color="#07564B" />
+                      ) : (
+                        <MapPin size={14} color="#07564B" />
+                      )}
+                      <Text className="ml-1 text-[11px] font-bold text-[#07564B]">
+                        {fetchingLocation
+                          ? 'Fetching location...'
+                          : 'Fetch current location'}
+                      </Text>
+                    </Pressable>
+                  }
+                />
+                {currentLocation ? (
+                  <View className="mb-3 -mt-2 flex-row flex-wrap items-center">
+                    <Text className="text-[11px] text-[#6B7280]">
+                      {currentLocation}{' '}
+                    </Text>
+                    <Pressable
+                      accessibilityRole="link"
+                      onPress={() => {
+                        Linking.openURL('https://www.openstreetmap.org/copyright').catch(
+                          error => {
+                            showAlert(
+                              'Could not open attribution',
+                              getErrorMessage(error),
+                              { variant: 'error' },
+                            );
+                          },
+                        );
+                      }}>
+                      <Text className="text-[11px] font-semibold text-[#6B7280] underline">
+                        © OpenStreetMap contributors
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+              </View>
             </View>
 
           ) : activeStep === 2 ? (
