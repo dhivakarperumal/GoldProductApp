@@ -25,7 +25,7 @@ import Login, { LoginUser } from './src/Auth/Login';
 import Welcome from './src/WelcomeScreen/Welcome';
 import Register from './src/Auth/Register';
 import AdminHome from './src/Admin/Home/Home';
-import AdminSection from './src/Admin/Pages/AdminSection';
+import OrdersManagement from './src/Admin/Orders/OrdersManagement';
 import AdminLoans from './src/Admin/Loans/Loans';
 import CreateLoan from './src/Admin/Loans/CreateLoan';
 import CreateCustomer from './src/Admin/Loans/CreateCustomer';
@@ -636,7 +636,7 @@ function AppContent() {
           cacheKey="admin-Orders"
           visited={visitedAdminScreens.has('Orders')}
           active={activeAdminScreen === 'Orders'}>
-          <AdminSection section="Orders" />
+          <OrdersManagement />
         </CachedScreen>
         <CachedScreen
           cacheKey="admin-Loans-list"

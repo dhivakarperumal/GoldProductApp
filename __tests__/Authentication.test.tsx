@@ -292,6 +292,10 @@ test('routes shop admins to the admin dashboard and its API', async () => {
                   ],
                 },
               }
+            : path === '/billings' || path === '/tack-orders'
+              ? { data: [] }
+              : path === '/products/mine'
+                ? { data: { products: [], pagination: { totalPages: 1 } } }
             : { data: { user: { role: 'admin' } } },
     ),
   );
@@ -340,10 +344,55 @@ test('routes shop admins to the admin dashboard and its API', async () => {
       .style,
   ).toEqual({ flex: 1 });
   expect(dashboardScreen.props.style).toEqual({ display: 'none' });
+  expect(renderer.root.findByProps({ testID: 'orders-management' })).toBeDefined();
   expect(
-    renderer.root.findByProps({
-      children: 'Review and manage your shop orders.',
-    }),
+    renderer.root.findByProps({ testID: 'orders-mode-tab-billing' }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findByProps({ testID: 'orders-mode-tab-orders' }),
+  ).toBeDefined();
+  await act(async () => {
+    renderer.root
+      .findByProps({ testID: 'orders-mode-tab-orders' })
+      .props.onPress();
+  });
+  expect(
+    renderer.root.findByProps({ testID: 'orders-mode-tab-orders' }).props
+      .accessibilityState.selected,
+  ).toBe(true);
+
+  await act(async () => {
+    renderer.root
+      .findByProps({ testID: 'orders-mode-tab-billing' })
+      .props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'billing-new-button' }).props.onPress();
+  });
+  expect(renderer.root.findByProps({ testID: 'create-bill-screen' })).toBeDefined();
+  expect(
+    renderer.root.findByProps({ accessibilityLabel: 'Back to bills' }),
+  ).toBeDefined();
+  expect(renderer.root.findAllByProps({ testID: 'orders-mode-bar' })).toHaveLength(0);
+
+  await act(async () => {
+    renderer.root
+      .findByProps({ accessibilityLabel: 'Back to bills' })
+      .props.onPress();
+  });
+  await act(async () => {
+    renderer.root
+      .findByProps({ testID: 'orders-mode-tab-orders' })
+      .props.onPress();
+  });
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'tack-new-button' }).props.onPress();
+  });
+  expect(
+    renderer.root.findByProps({ testID: 'create-tack-order-screen' }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findByProps({ accessibilityLabel: 'Back to tack orders' }),
   ).toBeDefined();
 });
 
