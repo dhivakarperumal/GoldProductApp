@@ -4,6 +4,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -15,13 +16,23 @@ import {
   ChevronRight,
   CreditCard,
   Gem,
+  IndianRupee,
+  LayoutDashboard,
   Package,
   RefreshCw,
-  ShieldCheck,
   Store,
   Users,
   XCircle,
 } from 'lucide-react-native';
+import Svg, {
+  Circle,
+  Defs,
+  LinearGradient,
+  Path,
+  RadialGradient,
+  Rect,
+  Stop,
+} from 'react-native-svg';
 import api from '../../api';
 import type { AdminTab } from '../Navigation/AdminTabBar';
 
@@ -90,25 +101,92 @@ type HomeProps = {
 
 const metricIcons = {
   total_customers: Users,
-  active_gold_loans: ShieldCheck,
+  active_gold_loans: IndianRupee,
   today_collection: CalendarDays,
   gold_stock_value: Gem,
   total_products: Package,
-  total_categories: Store,
+  total_categories: LayoutDashboard,
   completed_loans: CalendarDays,
   low_stock_products: XCircle,
 } as const;
 
-const metricAccents: Record<string, string> = {
-  total_customers: '#087532',
-  active_gold_loans: '#795000',
-  today_collection: '#A00970',
-  gold_stock_value: '#006A75',
-  total_products: '#B85C00',
-  total_categories: '#75168B',
-  completed_loans: '#176A8A',
-  low_stock_products: '#A12A45',
+type MetricPalette = {
+  start: string;
+  middle: string;
+  end: string;
+  glow: string;
+  border: string;
 };
+
+const metricPalettes: Record<string, MetricPalette> = {
+  total_customers: {
+    start: '#003D15',
+    middle: '#07832E',
+    end: '#002E12',
+    glow: '#98FF4F',
+    border: '#F6D25D',
+  },
+  active_gold_loans: {
+    start: '#713600',
+    middle: '#C77A00',
+    end: '#5A2700',
+    glow: '#FFD33F',
+    border: '#FFE071',
+  },
+  today_collection: {
+    start: '#7C0755',
+    middle: '#D10A91',
+    end: '#4E0C70',
+    glow: '#FF79D4',
+    border: '#FFD66E',
+  },
+  gold_stock_value: {
+    start: '#004B58',
+    middle: '#008D99',
+    end: '#00364F',
+    glow: '#53F2E0',
+    border: '#FFD66E',
+  },
+  total_products: {
+    start: '#9B4100',
+    middle: '#E98200',
+    end: '#823000',
+    glow: '#FFD34D',
+    border: '#FFE071',
+  },
+  total_categories: {
+    start: '#5E0B82',
+    middle: '#A51EB5',
+    end: '#460B77',
+    glow: '#FF75DC',
+    border: '#FFD66E',
+  },
+  completed_loans: {
+    start: '#064F78',
+    middle: '#1683A8',
+    end: '#063E67',
+    glow: '#64DCFF',
+    border: '#FFD66E',
+  },
+  low_stock_products: {
+    start: '#7F1938',
+    middle: '#B83550',
+    end: '#50142E',
+    glow: '#FF8AA3',
+    border: '#FFD66E',
+  },
+};
+
+const styles = StyleSheet.create({
+  metricCard: {
+    aspectRatio: 1.95,
+    borderWidth: 1.5,
+    elevation: 5,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.58,
+    shadowRadius: 8,
+  },
+});
 
 function getErrorMessage(error: unknown) {
   if (
@@ -141,39 +219,125 @@ function formatDate(value: string | undefined) {
       });
 }
 
+function MetricCardArtwork({
+  id,
+  palette,
+}: {
+  id: string;
+  palette: MetricPalette;
+}) {
+  const gradientId = `metric-${id.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+  const glowId = `${gradientId}-glow`;
+  const shineId = `${gradientId}-shine`;
+
+  return (
+    <Svg
+      pointerEvents="none"
+      width="100%"
+      height="100%"
+      viewBox="0 0 220 112"
+      preserveAspectRatio="none"
+      style={StyleSheet.absoluteFill}>
+      <Defs>
+        <LinearGradient id={gradientId} x1="0%" y1="100%" x2="100%" y2="0%">
+          <Stop offset="0%" stopColor={palette.start} />
+          <Stop offset="48%" stopColor={palette.middle} />
+          <Stop offset="100%" stopColor={palette.end} />
+        </LinearGradient>
+        <RadialGradient id={glowId} cx="50%" cy="50%" r="50%">
+          <Stop offset="0%" stopColor={palette.glow} stopOpacity="0.8" />
+          <Stop offset="100%" stopColor={palette.glow} stopOpacity="0" />
+        </RadialGradient>
+        <LinearGradient id={shineId} x1="0%" y1="100%" x2="100%" y2="0%">
+          <Stop offset="0%" stopColor="#FFF4B0" stopOpacity="0" />
+          <Stop offset="52%" stopColor="#FFF7C6" stopOpacity="0.92" />
+          <Stop offset="100%" stopColor="#FFF4B0" stopOpacity="0" />
+        </LinearGradient>
+      </Defs>
+      <Rect width="220" height="112" rx="19" fill={`url(#${gradientId})`} />
+      <Circle cx="16" cy="104" r="52" fill={`url(#${glowId})`} opacity="0.62" />
+      <Circle cx="205" cy="18" r="54" fill={`url(#${glowId})`} opacity="0.46" />
+      <Path
+        d="M-18 105 C36 79 56 10 101 17 S172 98 239 14"
+        fill="none"
+        stroke={`url(#${shineId})`}
+        strokeWidth="17"
+        opacity="0.64"
+      />
+      <Path
+        d="M-18 105 C36 79 56 10 101 17 S172 98 239 14"
+        fill="none"
+        stroke="#FFF8D6"
+        strokeWidth="1.5"
+        opacity="0.78"
+      />
+      <Path
+        d="M126 120 C159 86 178 59 236 44"
+        fill="none"
+        stroke={`url(#${shineId})`}
+        strokeWidth="24"
+        opacity="0.3"
+      />
+      <Circle cx="22" cy="14" r="2" fill="#FFF8D6" />
+      <Circle
+        cx="22"
+        cy="14"
+        r="8"
+        fill="none"
+        stroke="#FFF8D6"
+        strokeOpacity="0.48"
+      />
+      <Circle cx="202" cy="95" r="2" fill="#FFF8D6" />
+      <Circle
+        cx="202"
+        cy="95"
+        r="8"
+        fill="none"
+        stroke="#FFF8D6"
+        strokeOpacity="0.42"
+      />
+    </Svg>
+  );
+}
+
 function MetricCard({ metric }: { metric: DashboardMetric }) {
   const Icon = metricIcons[metric.id as keyof typeof metricIcons] || Store;
-  const accent = metricAccents[metric.id] || '#07564B';
+  const palette = metricPalettes[metric.id] || {
+    start: '#064D42',
+    middle: '#087A68',
+    end: '#063A37',
+    glow: '#75F0C1',
+    border: '#F6D25D',
+  };
   const TrendIcon = metric.trendUp === false ? ArrowDownRight : ArrowUpRight;
   const trendColor = metric.trendUp === false ? '#E53935' : '#2EAD48';
 
   return (
     <View
       testID={`dashboard-metric-${metric.id}`}
-      className="min-h-[124px] flex-1 basis-[45%] overflow-hidden rounded-[20px] border border-white/40 p-3"
-      style={{ backgroundColor: accent }}>
-      <View
-        pointerEvents="none"
-        className="absolute -right-7 -top-8 h-28 w-28 rounded-full border-[14px] border-white/10"
-      />
-      <View
-        pointerEvents="none"
-        className="absolute -bottom-8 -right-2 h-16 w-16 rounded-full bg-white/10"
-      />
+      className="min-h-[82px] flex-1 basis-[45%] overflow-hidden rounded-[20px] border p-2"
+      style={[
+        styles.metricCard,
+        { borderColor: palette.border, shadowColor: palette.glow },
+      ]}>
+      <MetricCardArtwork id={metric.id} palette={palette} />
       <View className="flex-row items-start">
         <View className="mr-2 h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-[#FFD76E] bg-white/10">
-          <Icon size={22} color="#FFE08A" strokeWidth={2.2} />
+          <Icon size={23} color="#FFE08A" strokeWidth={2.4} />
         </View>
         <View className="min-w-0 flex-1 pt-0.5">
           <Text
-            numberOfLines={2}
-            className="text-[11px] font-semibold leading-4 text-white/95">
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+            className="text-[11px] font-semibold leading-[14px] text-white">
             {metric.label}
           </Text>
           <Text
             numberOfLines={1}
             adjustsFontSizeToFit
-            className="mt-0.5 text-xl font-black text-[#FFE28A]">
+            minimumFontScale={0.7}
+            className="mt-0.5 text-[21px] font-black text-[#FFE28A]">
             {metric.value}
           </Text>
         </View>
@@ -182,13 +346,13 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
         </View>
       </View>
       {metric.trend ? (
-        <View className="ml-[52px] mt-2 max-w-[85%] flex-row items-center self-start rounded-full bg-black/20 py-1 pl-1 pr-2">
+        <View className="absolute bottom-1 left-[51px] right-2 flex-row items-center rounded-full bg-black/25 py-0.5 pl-1 pr-2">
           <View
-            className="mr-1 h-4 w-4 items-center justify-center rounded-full"
+            className="mr-1 h-4 w-4 shrink-0 items-center justify-center rounded-full"
             style={{ backgroundColor: trendColor }}>
             <TrendIcon size={11} color="#FFFFFF" strokeWidth={3} />
           </View>
-          <Text numberOfLines={1} className="flex-1 text-[9px] font-bold text-white">
+          <Text numberOfLines={1} className="text-[9px] font-bold text-white">
             {metric.trend}
           </Text>
         </View>

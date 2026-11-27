@@ -28,6 +28,7 @@ module.exports = {
   HandCoins: MockIcon,
   Home: MockIcon,
   ImagePlus: MockIcon,
+  IndianRupee: MockIcon,
   LayoutDashboard: MockIcon,
   LockKeyhole: MockIcon,
   LogOut: MockIcon,
