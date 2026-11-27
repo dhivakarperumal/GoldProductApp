@@ -28,6 +28,9 @@ import {
 } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
+import DashboardMetricCard, {
+  dashboardMetricPalettes,
+} from '../Components/DashboardMetricCard';
 import { CustomDropdown } from '../Loans/FormControls';
 import CreateBillScreen from './CreateBillScreen';
 import CreateTackOrderScreen from './CreateTackOrderScreen';
@@ -498,31 +501,28 @@ function InputField({
 }
 
 function SummaryCard({
+  id,
   label,
   value,
   icon,
-  tint,
+  palette,
 }: {
+  id: string;
   label: string;
   value: string;
   icon: React.ComponentType<{ size?: number; color?: string }>;
-  tint: string;
+  palette: keyof typeof dashboardMetricPalettes;
 }) {
-  const Icon = icon;
   return (
-    <View className="min-w-[48%] flex-1 flex-row items-center rounded-2xl border border-[#E6E9E3] bg-white p-3">
-      <View className="mr-3 h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: tint }}>
-        <Icon size={18} color="#07564B" />
-      </View>
-      <View className="min-w-0 flex-1">
-        <Text numberOfLines={1} className="text-[10px] font-bold uppercase tracking-wide text-[#7B8A83]">
-          {label}
-        </Text>
-        <Text numberOfLines={1} className="mt-1 text-base font-extrabold text-[#173F35]">
-          {value}
-        </Text>
-      </View>
-    </View>
+    <DashboardMetricCard
+      id={id}
+      label={label}
+      value={value}
+      icon={icon}
+      palette={dashboardMetricPalettes[palette]}
+      testID={`dashboard-metric-${id}`}
+      className="min-w-[45%] flex-1 basis-[45%]"
+    />
   );
 }
 
@@ -1287,37 +1287,18 @@ export default function OrdersManagement({
   };
 
   const renderBillList = () => (
+    <>
     <ScrollView
-      className="flex-1"
-      keyboardShouldPersistTaps="handled"
-      refreshControl={
-        <RefreshControl refreshing={billsLoading} onRefresh={() => void loadBills()} />
-      }>
-      <View className="p-4 pb-5">
-        <View className="mb-4 flex-row items-center justify-between rounded-2xl bg-[#075348] p-4">
-          <View className="mr-3 flex-1">
-            <Text className="text-[10px] font-extrabold uppercase tracking-[2px] text-emerald-200">
-              Payments & invoices
-            </Text>
-            <Text className="mt-1 text-xl font-black text-white">Billing overview</Text>
-            <Text className="mt-1 text-xs leading-5 text-white/70">
-              Review invoices, collections and customer payments.
-            </Text>
-          </View>
-          <Pressable
-            testID="billing-new-button"
-            accessibilityRole="button"
-            onPress={openNewBill}
-            className="min-h-11 flex-row items-center rounded-xl bg-white px-3">
-            <Plus size={16} color="#075348" />
-            <Text className="ml-1 text-xs font-extrabold text-[#075348]">New bill</Text>
-          </Pressable>
-        </View>
-
-        <View className="mb-4 flex-row flex-wrap gap-2">
-          <SummaryCard label="Total billed" value={currency(billedTotal)} icon={CreditCard} tint="#E4F4ED" />
-          <SummaryCard label="Collected" value={currency(paidTotal)} icon={CheckCircle2} tint="#E7F1FB" />
-          <SummaryCard label="Balance due" value={currency(outstandingTotal)} icon={CalendarDays} tint="#FFF0D9" />
+        className="flex-1"
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl refreshing={billsLoading} onRefresh={() => void loadBills()} />
+        }>
+      <View className="p-4 pb-24">
+        <View className="mb-4 flex-row flex-wrap gap-3">
+          <SummaryCard id="billing-total-billed" label="Total billed" value={currency(billedTotal)} icon={CreditCard} palette="total_products" />
+          <SummaryCard id="billing-collected" label="Collected" value={currency(paidTotal)} icon={CheckCircle2} palette="completed_loans" />
+          <SummaryCard id="billing-balance-due" label="Balance due" value={currency(outstandingTotal)} icon={CalendarDays} palette="low_stock_products" />
         </View>
 
         <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-3">
@@ -1465,6 +1446,15 @@ export default function OrdersManagement({
         ))}
       </View>
     </ScrollView>
+    <Pressable
+        testID="billing-new-button"
+        accessibilityRole="button"
+        accessibilityLabel="Create new bill"
+        onPress={openNewBill}
+        className="absolute bottom-6 right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
+        <Plus size={26} color="white" />
+    </Pressable>
+    </>
   );
 
   const renderBillForm = () => (
@@ -1708,38 +1698,19 @@ export default function OrdersManagement({
   );
 
   const renderOrderList = () => (
+    <>
     <ScrollView
-      className="flex-1"
-      keyboardShouldPersistTaps="handled"
-      refreshControl={
-        <RefreshControl refreshing={ordersLoading} onRefresh={() => void loadOrders()} />
-      }>
-      <View className="p-4 pb-5">
-        <View className="mb-4 flex-row items-center justify-between rounded-2xl bg-[#075348] p-4">
-          <View className="mr-3 flex-1">
-            <Text className="text-[10px] font-extrabold uppercase tracking-[2px] text-emerald-200">
-              Order management
-            </Text>
-            <Text className="mt-1 text-xl font-black text-white">Tack order overview</Text>
-            <Text className="mt-1 text-xs leading-5 text-white/70">
-              Manage pre-orders, order status and billing progress.
-            </Text>
-          </View>
-          <Pressable
-            testID="tack-new-button"
-            accessibilityRole="button"
-            onPress={openOrderForm}
-            className="min-h-11 items-center justify-center rounded-xl bg-white px-3">
-            <Plus size={18} color="#075348" />
-            <Text className="mt-0.5 text-[10px] font-extrabold text-[#075348]">New order</Text>
-          </Pressable>
-        </View>
-
-        <View className="mb-4 flex-row flex-wrap gap-2">
-          <SummaryCard label="Total orders" value={String(orders.length)} icon={ShoppingBag} tint="#E4F4ED" />
-          <SummaryCard label="Awaiting confirmation" value={String(pendingOrderCount)} icon={CalendarDays} tint="#FFF0D9" />
-          <SummaryCard label="Ready for billing" value={String(readyOrderCount)} icon={CheckCircle2} tint="#E7F1FB" />
-          <SummaryCard label="Outstanding" value={currency(orderOutstanding)} icon={CreditCard} tint="#FCE9E9" />
+        className="flex-1"
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl refreshing={ordersLoading} onRefresh={() => void loadOrders()} />
+        }>
+      <View className="p-4 pb-24">
+        <View className="mb-4 flex-row flex-wrap gap-3">
+          <SummaryCard id="orders-total" label="Total orders" value={String(orders.length)} icon={ShoppingBag} palette="total_categories" />
+          <SummaryCard id="orders-awaiting-confirmation" label="Awaiting confirmation" value={String(pendingOrderCount)} icon={CalendarDays} palette="active_gold_loans" />
+          <SummaryCard id="orders-ready-for-billing" label="Ready for billing" value={String(readyOrderCount)} icon={CheckCircle2} palette="total_customers" />
+          <SummaryCard id="orders-outstanding" label="Outstanding" value={currency(orderOutstanding)} icon={CreditCard} palette="low_stock_products" />
         </View>
 
         <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-3">
@@ -1878,11 +1849,20 @@ export default function OrdersManagement({
                   <Text className="ml-2 text-xs text-[#6B7E76]">Updating order…</Text>
                 </View>
               ) : null}
-            </View>
+            </>
           );
         })}
       </View>
     </ScrollView>
+    <Pressable
+        testID="tack-new-button"
+        accessibilityRole="button"
+        accessibilityLabel="Create new tack order"
+        onPress={openOrderForm}
+        className="absolute bottom-6 right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
+        <Plus size={26} color="white" />
+    </Pressable>
+        </>
   );
 
   const renderOrderForm = () => (

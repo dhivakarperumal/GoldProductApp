@@ -383,6 +383,10 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   expect(renderer.root.findAllByProps({ testID: 'orders-mode-bar' })).toHaveLength(0);
   expect(renderer.root.findAllByProps({ testID: 'orders-mode-tab-billing' })).toHaveLength(0);
   expect(renderer.root.findAllByProps({ testID: 'orders-mode-tab-orders' })).toHaveLength(0);
+  expect(
+    renderer.root.findByProps({ testID: 'dashboard-metric-billing-total-billed' }),
+  ).toBeDefined();
+  expect(renderer.root.findAllByProps({ children: 'Billing overview' })).toHaveLength(0);
   await act(async () => {
     renderer.root.findByProps({ testID: 'billing-new-button' }).props.onPress();
   });
@@ -412,6 +416,12 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   await act(async () => {
     renderer.root.findByType(AdminTabBar).props.onOrdersOptionSelect('orders');
   });
+  expect(
+    renderer.root.findByProps({ testID: 'dashboard-metric-orders-total' }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findAllByProps({ children: 'Tack order overview' }),
+  ).toHaveLength(0);
   await act(async () => {
     renderer.root.findByProps({ testID: 'tack-new-button' }).props.onPress();
   });
