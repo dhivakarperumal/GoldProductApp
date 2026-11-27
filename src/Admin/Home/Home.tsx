@@ -181,10 +181,18 @@ const styles = StyleSheet.create({
   metricCard: {
     aspectRatio: 1.95,
     borderWidth: 1.5,
-    elevation: 5,
+    elevation: 8,
+    shadowColor: '#FFC837',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.58,
-    shadowRadius: 8,
+    shadowOpacity: 0.9,
+    shadowRadius: 11,
+  },
+  metricIcon: {
+    elevation: 4,
+    shadowColor: '#FFD34D',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 5,
   },
 });
 
@@ -228,6 +236,7 @@ function MetricCardArtwork({
 }) {
   const gradientId = `metric-${id.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
   const glowId = `${gradientId}-glow`;
+  const goldGlowId = `${gradientId}-gold-glow`;
   const shineId = `${gradientId}-shine`;
 
   return (
@@ -248,15 +257,38 @@ function MetricCardArtwork({
           <Stop offset="0%" stopColor={palette.glow} stopOpacity="0.8" />
           <Stop offset="100%" stopColor={palette.glow} stopOpacity="0" />
         </RadialGradient>
+        <RadialGradient id={goldGlowId} cx="50%" cy="50%" r="50%">
+          <Stop offset="0%" stopColor="#FFF3A6" stopOpacity="0.95" />
+          <Stop offset="42%" stopColor="#FFC629" stopOpacity="0.65" />
+          <Stop offset="100%" stopColor="#FFC629" stopOpacity="0" />
+        </RadialGradient>
         <LinearGradient id={shineId} x1="0%" y1="100%" x2="100%" y2="0%">
           <Stop offset="0%" stopColor="#FFF4B0" stopOpacity="0" />
-          <Stop offset="52%" stopColor="#FFF7C6" stopOpacity="0.92" />
+          <Stop offset="42%" stopColor="#FFC928" stopOpacity="0.82" />
+          <Stop offset="54%" stopColor="#FFFBE5" stopOpacity="1" />
+          <Stop offset="64%" stopColor="#FFD44B" stopOpacity="0.88" />
           <Stop offset="100%" stopColor="#FFF4B0" stopOpacity="0" />
         </LinearGradient>
       </Defs>
       <Rect width="220" height="112" rx="19" fill={`url(#${gradientId})`} />
       <Circle cx="16" cy="104" r="52" fill={`url(#${glowId})`} opacity="0.62" />
       <Circle cx="205" cy="18" r="54" fill={`url(#${glowId})`} opacity="0.46" />
+      <Circle cx="12" cy="15" r="42" fill={`url(#${goldGlowId})`} opacity="0.56" />
+      <Circle cx="211" cy="98" r="48" fill={`url(#${goldGlowId})`} opacity="0.72" />
+      <Path
+        d="M-18 105 C36 79 56 10 101 17 S172 98 239 14"
+        fill="none"
+        stroke="#FFBC21"
+        strokeWidth="29"
+        opacity="0.6"
+      />
+      <Path
+        d="M-18 105 C36 79 56 10 101 17 S172 98 239 14"
+        fill="none"
+        stroke="#FFE06B"
+        strokeWidth="10"
+        opacity="0.6"
+      />
       <Path
         d="M-18 105 C36 79 56 10 101 17 S172 98 239 14"
         fill="none"
@@ -296,6 +328,17 @@ function MetricCardArtwork({
         stroke="#FFF8D6"
         strokeOpacity="0.42"
       />
+      <Rect
+        x="1"
+        y="1"
+        width="218"
+        height="110"
+        rx="18"
+        fill="none"
+        stroke="#FFF0A6"
+        strokeOpacity="0.68"
+        strokeWidth="1.5"
+      />
     </Svg>
   );
 }
@@ -316,13 +359,12 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
     <View
       testID={`dashboard-metric-${metric.id}`}
       className="min-h-[82px] flex-1 basis-[45%] overflow-hidden rounded-[20px] border p-2"
-      style={[
-        styles.metricCard,
-        { borderColor: palette.border, shadowColor: palette.glow },
-      ]}>
+      style={[styles.metricCard, { borderColor: palette.border }]}>
       <MetricCardArtwork id={metric.id} palette={palette} />
       <View className="flex-row items-start">
-        <View className="mr-2 h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-[#FFD76E] bg-white/10">
+        <View
+          className="mr-2 h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-[#FFE078] bg-black/20"
+          style={styles.metricIcon}>
           <Icon size={23} color="#FFE08A" strokeWidth={2.4} />
         </View>
         <View className="min-w-0 flex-1 pt-0.5">
