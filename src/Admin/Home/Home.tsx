@@ -237,6 +237,7 @@ function MetricCardArtwork({
   const gradientId = `metric-${id.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
   const glowId = `${gradientId}-glow`;
   const goldGlowId = `${gradientId}-gold-glow`;
+  const sweepId = `${gradientId}-gold-sweep`;
   const shineId = `${gradientId}-shine`;
 
   return (
@@ -262,6 +263,12 @@ function MetricCardArtwork({
           <Stop offset="42%" stopColor="#FFC629" stopOpacity="0.5" />
           <Stop offset="100%" stopColor="#FFC629" stopOpacity="0" />
         </RadialGradient>
+        <LinearGradient id={sweepId} x1="0%" y1="0%" x2="100%" y2="0%">
+          <Stop offset="0%" stopColor="#E99F11" stopOpacity="0.16" />
+          <Stop offset="48%" stopColor="#FFC62F" stopOpacity="0.3" />
+          <Stop offset="78%" stopColor="#FFE077" stopOpacity="0.46" />
+          <Stop offset="100%" stopColor="#FFF2A6" stopOpacity="0.68" />
+        </LinearGradient>
         <LinearGradient id={shineId} x1="0%" y1="100%" x2="100%" y2="0%">
           <Stop offset="0%" stopColor="#E5970E" stopOpacity="0" />
           <Stop offset="45%" stopColor="#FFD454" stopOpacity="0.72" />
@@ -277,31 +284,21 @@ function MetricCardArtwork({
       <Circle cx="214" cy="105" r="72" fill={`url(#${goldGlowId})`} opacity="0.9" />
       <Circle cx="184" cy="86" r="58" fill={`url(#${goldGlowId})`} opacity="0.48" />
       <Path
-        d="M-20 116 C47 112 77 103 113 83 C154 61 176 42 239 22"
+        d="M-8 101 C39 91 71 105 109 94 C149 82 179 98 228 68 L228 120 L-8 120 Z"
+        fill={`url(#${sweepId})`}
+      />
+      <Path
+        d="M-8 101 C39 91 71 105 109 94 C149 82 179 98 228 68"
         fill="none"
         stroke={`url(#${shineId})`}
-        strokeWidth="32"
-        opacity="0.72"
+        strokeWidth="25"
+        opacity="0.9"
       />
       <Path
-        d="M-16 116 C52 112 82 102 119 83 C160 61 183 43 239 28"
-        fill="none"
-        stroke="#FFD54B"
-        strokeWidth="17"
-        opacity="0.88"
-      />
-      <Path
-        d="M-4 110 C57 108 88 96 125 78 C166 57 190 41 226 31"
-        fill="none"
-        stroke={`url(#${shineId})`}
-        strokeWidth="4.5"
-        opacity="0.96"
-      />
-      <Path
-        d="M-2 107 C58 105 88 93 126 75 C167 54 190 39 222 29"
+        d="M-5 99 C41 89 73 103 111 92 C151 80 181 96 228 66"
         fill="none"
         stroke="#FFF9D7"
-        strokeWidth="1.4"
+        strokeWidth="2"
         opacity="0.9"
       />
       <Rect
