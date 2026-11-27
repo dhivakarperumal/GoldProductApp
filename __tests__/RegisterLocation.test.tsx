@@ -140,11 +140,15 @@ test('fetches current location and fills the registration shop address', async (
   expect(
     renderer.root.findByProps({ accessibilityLabel: 'Shop address' }).props.value,
   ).toBe('12 Anna Salai, Teynampet');
-  expect(
-    renderer.root
-      .findByProps({ accessibilityLabel: 'State' })
-      .findByType(Text).props.children,
-  ).toBe('Tamil Nadu');
+  const stateSelector = renderer.root.findByProps({
+    accessibilityLabel: 'State',
+  });
+  expect(stateSelector.findByType(Text).props.children).toBe('Tamil Nadu');
+  expect(stateSelector.props.style).toEqual(
+    expect.objectContaining({
+      backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    }),
+  );
   expect(
     renderer.root.findAllByType(Text).some(text =>
       String(text.props.children).includes('Please verify them before saving.'),

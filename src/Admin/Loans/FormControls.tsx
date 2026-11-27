@@ -61,16 +61,31 @@ export function CustomDropdown({
         accessibilityRole="button"
         accessibilityLabel={label}
         accessibilityState={{ expanded: open }}
+        style={isGlass ? glassStyles.trigger : undefined}
         onPress={() => {
           setSearch('');
           setOpen(true);
         }}
         className={`min-h-12 flex-row items-center justify-between py-3 ${
-          variant === 'filter'
-            ? 'rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm'
-            : 'rounded-xl border border-[#E6E9E3] bg-white px-3.5'
+          isGlass
+            ? 'rounded-2xl px-4'
+            : variant === 'filter'
+              ? 'rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm'
+              : 'rounded-xl border border-[#E6E9E3] bg-white px-3.5'
         }`}>
-        <Text className={`text-sm ${selectedLabel ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`}>
+        <Text
+          style={
+            isGlass
+              ? selectedLabel
+                ? glassStyles.valueText
+                : glassStyles.placeholderText
+              : undefined
+          }
+          className={
+            isGlass
+              ? 'text-sm'
+              : `text-sm ${selectedLabel ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`
+          }>
           {selectedLabel || placeholder}
         </Text>
         <ChevronDown size={18} color={isGlass ? '#F5C451' : '#6B7E76'} />
