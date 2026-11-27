@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -8,11 +8,13 @@ import {
   Text,
   TextInput,
   View,
+  type TextInputInstance,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Check, Eye, EyeOff, LockKeyhole, UserRound } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import api, { setTokenCache } from '../api';
+import useKeyboardScroll from './useKeyboardScroll';
 
 export type LoginUser = {
   name?: string;
@@ -63,6 +65,9 @@ export default function Login({
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const identifierInputRef = useRef<TextInputInstance>(null);
+  const passwordInputRef = useRef<TextInputInstance>(null);
+  const { scrollViewRef, onInputFocus, onScroll } = useKeyboardScroll();
 
   const handleSubmit = async () => {
     const trimmedIdentifier = identifier.trim();
@@ -111,9 +116,12 @@ export default function Login({
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
+          ref={scrollViewRef}
           contentContainerClassName="flex-grow justify-center px-6 py-10"
           automaticallyAdjustKeyboardInsets
-          keyboardShouldPersistTaps="handled">
+          keyboardShouldPersistTaps="handled"
+          onScroll={onScroll}
+          scrollEventThrottle={16}>
           <View className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#F3E8C1]" />
           <View className="absolute -bottom-16 -left-20 h-56 w-56 rounded-full bg-[#E3EEE8]" />
 
@@ -146,6 +154,11 @@ export default function Login({
                 autoCapitalize="none"
                 autoComplete="username"
                 keyboardType="email-address"
+                onFocus={() => {
+                  if (identifierInputRef.current) {
+                    onInputFocus(identifierInputRef.current);
+                  }
+                }}
                 onChangeText={value => {
                   setIdentifier(value);
                   setErrorMessage('');
@@ -153,6 +166,7 @@ export default function Login({
                 onSubmitEditing={handleSubmit}
                 placeholder="Enter your email or mobile number"
                 placeholderTextColor="#9CA3AF"
+                ref={identifierInputRef}
                 returnKeyType="next"
                 value={identifier}
                 className="flex-1 py-3.5 pl-3 text-sm text-[#374151]"
@@ -169,6 +183,11 @@ export default function Login({
               <TextInput
                 accessibilityLabel="Password"
                 autoCapitalize="none"
+                onFocus={() => {
+                  if (passwordInputRef.current) {
+                    onInputFocus(passwordInputRef.current);
+                  }
+                }}
                 onChangeText={value => {
                   setPassword(value);
                   setErrorMessage('');
@@ -176,6 +195,7 @@ export default function Login({
                 onSubmitEditing={handleSubmit}
                 placeholder="Enter your password"
                 placeholderTextColor="#9CA3AF"
+                ref={passwordInputRef}
                 returnKeyType="done"
                 secureTextEntry={!showPassword}
                 value={password}

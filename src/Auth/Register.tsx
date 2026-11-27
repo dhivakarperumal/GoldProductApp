@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   BackHandler,
@@ -11,6 +11,7 @@ import {
   Text,
   TextInput,
   View,
+  type TextInputInstance,
 } from 'react-native';
 import {
   ArrowLeft,
@@ -33,6 +34,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../api';
 import { useCustomAlert } from '../Components/CustomAlert';
 import { CustomDropdown, DatePicker } from '../Admin/Loans/FormControls';
+import useKeyboardScroll from './useKeyboardScroll';
 
 type RegistrationPlan = {
   id: number | string;
@@ -279,6 +281,7 @@ function InputField({
   editable = true,
   rightAction,
   labelAction,
+  onFocus,
 }: {
   label: string;
   value: string;
@@ -294,7 +297,10 @@ function InputField({
   editable?: boolean;
   rightAction?: ReactNode;
   labelAction?: ReactNode;
+  onFocus?: (input: TextInputInstance) => void;
 }) {
+  const inputRef = useRef<TextInputInstance>(null);
+
   return (
     <View className="mb-3">
       <View className="mb-1.5 ml-1 flex-row items-center justify-between">
@@ -316,8 +322,12 @@ function InputField({
           maxLength={maxLength}
           multiline={multiline}
           onChangeText={onChangeText}
+          onFocus={() => {
+            if (inputRef.current) onFocus?.(inputRef.current);
+          }}
           placeholder={placeholder}
           placeholderTextColor="#9AA6A1"
+          ref={inputRef}
           secureTextEntry={secureTextEntry}
           value={value}
           className={`flex-1 text-sm font-medium text-stone-800 ${
@@ -368,6 +378,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [fetchingLocation, setFetchingLocation] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('');
+  const { scrollViewRef, onInputFocus, onScroll } = useKeyboardScroll();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -758,10 +769,13 @@ export default function Register({ onBack, onSubmitted }: Props) {
 
           <View className="min-h-0 flex-1 rounded-3xl border border-[#EAE7DC] bg-white p-5 shadow-lg">
             <ScrollView
+              ref={scrollViewRef}
               className="flex-1"
               contentContainerClassName="flex-grow"
               automaticallyAdjustKeyboardInsets
-              keyboardShouldPersistTaps="handled">
+              keyboardShouldPersistTaps="handled"
+              onScroll={onScroll}
+              scrollEventThrottle={16}>
             {plansLoading ? (
               <View className="mb-4 flex-row items-center rounded-xl bg-[#F0F8F5] p-3">
                 <ActivityIndicator size="small" color="#07564B" />
@@ -800,6 +814,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
               <View className="mb-5">
               <InputField
                 label="Name"
+                onFocus={onInputFocus}
                 value={form.ownerName}
                 onChangeText={value => setField('ownerName', value)}
                 error={fieldErrors.ownerName}
@@ -809,6 +824,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
               />
               <InputField
                 label="Mobile number"
+                onFocus={onInputFocus}
                 value={form.mobile}
                 onChangeText={value =>
                   setField('mobile', value.replace(/\D/g, '').slice(0, 10))
@@ -821,6 +837,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
               />
               <InputField
                 label="Email ID"
+                onFocus={onInputFocus}
                 value={form.email}
                 onChangeText={value => setField('email', value)}
                 error={fieldErrors.email}
@@ -832,6 +849,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
               />
               <InputField
                 label="Aadhaar number"
+                onFocus={onInputFocus}
                 value={form.aadhaarNumber}
                 onChangeText={value =>
                   setField('aadhaarNumber', value.replace(/\D/g, '').slice(0, 12))
@@ -880,6 +898,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
             <View className="mb-5">
               <InputField
                 label="Shop name"
+                onFocus={onInputFocus}
                 value={form.shopName}
                 onChangeText={value => setField('shopName', value)}
                 error={fieldErrors.shopName}
@@ -889,6 +908,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
               />
               <InputField
                 label="GST number"
+                onFocus={onInputFocus}
                 value={form.gstNumber}
                 onChangeText={value => setField('gstNumber', value.toUpperCase())}
                 error={fieldErrors.gstNumber}
@@ -898,6 +918,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
               />
               <InputField
                 label="City"
+                onFocus={onInputFocus}
                 value={form.city}
                 onChangeText={value => setField('city', value)}
                 maxLength={100}
@@ -933,6 +954,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
               />
               <InputField
                 label="Pincode"
+                onFocus={onInputFocus}
                 value={form.pincode}
                 onChangeText={value =>
                   setField('pincode', value.replace(/\D/g, '').slice(0, 6))
@@ -945,6 +967,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
               <View>
                 <InputField
                   label="Shop address"
+                  onFocus={onInputFocus}
                   value={form.address}
                   onChangeText={value => setField('address', value)}
                   multiline
@@ -1040,6 +1063,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
             <View>
               <InputField
                 label="Email ID"
+                onFocus={onInputFocus}
                 value={form.email}
                 onChangeText={() => undefined}
                 autoCapitalize="none"
@@ -1047,6 +1071,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
               />
               <InputField
                 label="Username"
+                onFocus={onInputFocus}
                 value={form.loginUsername}
                 onChangeText={value => setField('loginUsername', value)}
                 error={fieldErrors.loginUsername}
@@ -1057,6 +1082,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
               />
               <InputField
                 label="Password"
+                onFocus={onInputFocus}
                 value={form.loginPassword}
                 onChangeText={value => setField('loginPassword', value)}
                 error={fieldErrors.loginPassword}
@@ -1080,6 +1106,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
               />
               <InputField
                 label="Confirm password"
+                onFocus={onInputFocus}
                 value={form.confirmPassword}
                 onChangeText={value => setField('confirmPassword', value)}
                 error={fieldErrors.confirmPassword}
