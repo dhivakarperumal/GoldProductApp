@@ -1543,17 +1543,17 @@ export default function CreateLoan({
             accessibilityRole="button"
             disabled={saving}
             onPress={onBack}
-            className="min-h-12 flex-1 items-center justify-center rounded-xl border border-[#D9DED9] bg-white px-3">
-            <Text className="text-sm font-bold text-[#52645F]">Cancel</Text>
+            className="min-h-12 flex-1 items-center justify-center rounded-xl border border-[#DDBB57] bg-white px-3">
+            <Text className="text-sm font-bold text-[#173F35]">Cancel</Text>
           </Pressable>
           {!loanId ? (
             <Pressable
               accessibilityRole="button"
               disabled={saving}
               onPress={resetForm}
-              className="min-h-12 flex-row items-center justify-center rounded-xl border border-[#D9DED9] bg-white px-3">
-              <RotateCcw size={15} color="#52645F" />
-              <Text className="ml-1.5 text-sm font-bold text-[#52645F]">Reset</Text>
+              className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-[#A7D6C9] bg-[#EFF9F5] px-3">
+              <RotateCcw size={15} color="#07564B" />
+              <Text className="ml-1.5 text-sm font-bold text-[#173F35]">Reset</Text>
             </Pressable>
           ) : null}
           <View className="flex-[1.4]">
