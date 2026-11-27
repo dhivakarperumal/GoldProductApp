@@ -292,6 +292,10 @@ test('routes shop admins to the admin dashboard and its API', async () => {
                   ],
                 },
               }
+            : path === '/billings' || path === '/tack-orders'
+              ? { data: [] }
+              : path === '/products/mine'
+                ? { data: { products: [], pagination: { totalPages: 1 } } }
             : { data: { user: { role: 'admin' } } },
     ),
   );
@@ -340,11 +344,22 @@ test('routes shop admins to the admin dashboard and its API', async () => {
       .style,
   ).toEqual({ flex: 1 });
   expect(dashboardScreen.props.style).toEqual({ display: 'none' });
+  expect(renderer.root.findByProps({ testID: 'orders-management' })).toBeDefined();
   expect(
-    renderer.root.findByProps({
-      children: 'Review and manage your shop orders.',
-    }),
+    renderer.root.findByProps({ testID: 'orders-mode-tab-billing' }),
   ).toBeDefined();
+  expect(
+    renderer.root.findByProps({ testID: 'orders-mode-tab-orders' }),
+  ).toBeDefined();
+  await act(async () => {
+    renderer.root
+      .findByProps({ testID: 'orders-mode-tab-orders' })
+      .props.onPress();
+  });
+  expect(
+    renderer.root.findByProps({ testID: 'orders-mode-tab-orders' }).props
+      .accessibilityState.selected,
+  ).toBe(true);
 });
 
 test('removes the saved token only when Logout is pressed', async () => {
