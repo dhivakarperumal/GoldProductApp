@@ -34,7 +34,16 @@ import { inventoryError } from '../Products/inventory';
 
 type Props = { onBack: () => void };
 const styles = StyleSheet.create({
-  floatingActionButton: { zIndex: 20, elevation: 20 },
+  floatingActionButtonLayer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 100,
+    elevation: 100,
+  },
+  floatingActionButton: { zIndex: 100, elevation: 100 },
 });
 type DateRange = { preset: string; startDate: string; endDate: string };
 type FundSummary = {
@@ -258,6 +267,7 @@ export default function FundManagement({ onBack }: Props) {
     { id: 'fund-credits', label: 'Total Credits', value: summary?.total_credit, detail: 'Credit transactions', icon: ArrowDownLeft, palette: 'total_products' as const },
     { id: 'fund-debits', label: 'Total Debits', value: summary?.total_debit, detail: 'Debit transactions', icon: ArrowUpRight, palette: 'low_stock_products' as const, trendUp: false },
     { id: 'fund-available', label: 'Available Balance', value: summary?.current_balance, detail: 'Current ledger balance', icon: Wallet, palette: 'active_gold_loans' as const },
+    { id: 'fund-entry-count', label: 'Entries Found', value: total, detail: 'Matching fund entries', icon: List, palette: 'total_categories' as const },
   ];
 
   const selectPreset = (value: string) => {
@@ -372,10 +382,13 @@ export default function FundManagement({ onBack }: Props) {
         }
         keyboardShouldPersistTaps="handled">
         <DashboardMetricGrid
+          containerClassName="mb-0"
           metrics={statCards.map(({ id, label, value, detail, icon, palette, trendUp }) => ({
             id,
             label,
-            value: loading && value == null ? '—' : currency(value),
+            value: id === 'fund-entry-count'
+              ? loading ? '—' : Number(value || 0).toLocaleString('en-IN')
+              : loading && value == null ? '—' : currency(value),
             icon,
             palette,
             trend: detail,
@@ -537,16 +550,21 @@ export default function FundManagement({ onBack }: Props) {
         </View>
       </ScrollView>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Add fund entry"
-        accessibilityHint="Opens the form to record a fund transaction"
-        onPress={openEntryForm}
-        hitSlop={10}
-        style={[styles.floatingActionButton, { bottom: Math.max(insets.bottom, 20) }]}
-        className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
-        <Plus size={24} color="white" />
-      </Pressable>
+      <View
+        pointerEvents="box-none"
+        collapsable={false}
+        style={styles.floatingActionButtonLayer}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Add fund entry"
+          accessibilityHint="Opens the form to record a fund transaction"
+          onPress={openEntryForm}
+          hitSlop={10}
+          style={[styles.floatingActionButton, { bottom: Math.max(insets.bottom, 20) }]}
+          className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
+          <Plus size={24} color="white" />
+        </Pressable>
+      </View>
 
       <Modal visible={formOpen} animationType="slide" onRequestClose={() => { if (!saving) setFormOpen(false); }}>
         <View className="flex-1 bg-[#F8F7F2]">

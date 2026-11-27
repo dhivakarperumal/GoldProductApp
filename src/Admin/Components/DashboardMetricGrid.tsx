@@ -16,11 +16,15 @@ type DashboardMetric = {
 
 type Props = {
   metrics: DashboardMetric[];
+  containerClassName?: string;
 };
 
-export default function DashboardMetricGrid({ metrics }: Props) {
+export default function DashboardMetricGrid({
+  metrics,
+  containerClassName = 'mb-4',
+}: Props) {
   return (
-    <View className="mb-4 flex-row flex-wrap gap-3">
+    <View className={`flex-row flex-wrap gap-3 ${containerClassName}`}>
       {metrics.map(metric => (
         <DashboardMetricCard
           key={metric.id}

@@ -31,7 +31,16 @@ import { TimePickerField } from './FundManagement';
 
 type Props = { onBack: () => void };
 const styles = StyleSheet.create({
-  floatingActionButton: { zIndex: 20, elevation: 20 },
+  floatingActionButtonLayer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 100,
+    elevation: 100,
+  },
+  floatingActionButton: { zIndex: 100, elevation: 100 },
 });
 type RateField = {
   key: string;
@@ -644,16 +653,21 @@ export default function DailyGoldRate({ onBack }: Props) {
         )}
       </ScrollView>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Create new rate set"
-        accessibilityHint="Opens the form to add daily metal and diamond rates"
-        onPress={openNewForm}
-        hitSlop={10}
-        style={[styles.floatingActionButton, { bottom: Math.max(insets.bottom, 20) }]}
-        className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
-        <Plus size={24} color="white" />
-      </Pressable>
+      <View
+        pointerEvents="box-none"
+        collapsable={false}
+        style={styles.floatingActionButtonLayer}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Create new rate set"
+          accessibilityHint="Opens the form to add daily metal and diamond rates"
+          onPress={openNewForm}
+          hitSlop={10}
+          style={[styles.floatingActionButton, { bottom: Math.max(insets.bottom, 20) }]}
+          className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
+          <Plus size={24} color="white" />
+        </Pressable>
+      </View>
 
       <Modal visible={formOpen} animationType="slide" onRequestClose={() => { if (!saving) setFormOpen(false); }}>
         <KeyboardAvoidingView
