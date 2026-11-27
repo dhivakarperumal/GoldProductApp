@@ -10,10 +10,12 @@ import {
 import {
   CalendarDays,
   Check,
+  Coins,
   Eye,
   HandCoins,
   IndianRupee,
   Pencil,
+  Percent,
   Printer,
   Trash2,
   Users,
@@ -425,7 +427,10 @@ export default function Loans({
                   key={String(loan.id)}
                   className="mb-3 rounded-2xl border border-[#E8D596] bg-[#FFFDF7] p-4 shadow-sm"
                 >
-                  <View className="flex-row items-start justify-between">
+                  <View className="flex-row items-start">
+                    <View className="mr-3 mt-1 h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#E2B94F] bg-[#07564B] shadow-sm">
+                      <HandCoins size={24} color="#FFE08A" strokeWidth={2.2} />
+                    </View>
                     <View className="flex-1 pr-3">
                       <View className="self-start rounded-full border border-[#F2D98B] bg-[#FFF3C4] px-3 py-1">
                         <Text className="text-[11px] font-bold uppercase tracking-wide text-[#8A5A00]">
@@ -441,38 +446,68 @@ export default function Loans({
                           'Customer details unavailable'}
                       </Text>
                     </View>
-                    <View className="rounded-full bg-[#EFF9F5] px-2.5 py-1.5">
+                    <View className="rounded-full border border-[#CFE6D5] bg-[#EFF9F5] px-2.5 py-1.5">
                       <Text className="text-[10px] font-bold text-[#07564B]">
                         {displayLoanStatus(loan)}
                       </Text>
                     </View>
                   </View>
-                  <View className="mt-4 flex-row border-t border-[#F1F2EE] pt-3">
-                    <View className="flex-1">
-                      <Text className="text-[10px] font-semibold text-[#8A8F8B]">
-                        OUTSTANDING
-                      </Text>
-                      <Text className="mt-1 text-sm font-extrabold text-[#173F35]">
-                        {formatCurrency(
-                          loan.outstanding_principal ?? loan.principal_amount,
-                        )}
-                      </Text>
+                  <View className="mt-4 flex-row border-t border-[#E8D596] pt-3">
+                    <View className="min-w-0 flex-1 flex-row items-center border-r border-[#E8D596] pr-2">
+                      <Coins size={19} color="#07564B" />
+                      <View className="ml-1.5 min-w-0 flex-1">
+                        <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          className="text-[9px] font-semibold text-[#8A8F8B]">
+                          OUTSTANDING
+                        </Text>
+                        <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.65}
+                          className="mt-1 text-xs font-extrabold text-[#173F35]">
+                          {formatCurrency(
+                            loan.outstanding_principal ?? loan.principal_amount,
+                          )}
+                        </Text>
+                      </View>
                     </View>
-                    <View className="flex-1">
-                      <Text className="text-[10px] font-semibold text-[#8A8F8B]">
-                        INTEREST
-                      </Text>
-                      <Text className="mt-1 text-sm font-bold text-[#52645F]">
-                        {loan.interest_rate ?? '—'}%
-                      </Text>
+                    <View className="min-w-0 flex-1 flex-row items-center border-r border-[#E8D596] px-2">
+                      <Percent size={19} color="#A77B15" />
+                      <View className="ml-1.5 min-w-0 flex-1">
+                        <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          className="text-[9px] font-semibold text-[#8A8F8B]">
+                          INTEREST
+                        </Text>
+                        <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.65}
+                          className="mt-1 text-xs font-bold text-[#52645F]">
+                          {loan.interest_rate ?? '—'}%
+                        </Text>
+                      </View>
                     </View>
-                    <View className="flex-1">
-                      <Text className="text-[10px] font-semibold text-[#8A8F8B]">
-                        MATURITY
-                      </Text>
-                      <Text className="mt-1 text-xs font-bold text-[#52645F]">
-                        {formatDate(loan.maturity_date)}
-                      </Text>
+                    <View className="min-w-0 flex-1 flex-row items-center pl-2">
+                      <CalendarDays size={19} color="#A77B15" />
+                      <View className="ml-1.5 min-w-0 flex-1">
+                        <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          className="text-[9px] font-semibold text-[#8A8F8B]">
+                          MATURITY
+                        </Text>
+                        <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.65}
+                          className="mt-1 text-[10px] font-bold text-[#52645F]">
+                          {formatDate(loan.maturity_date)}
+                        </Text>
+                      </View>
                     </View>
                   </View>
                   {loan.jewellery_type || loan.gold_purity ? (
