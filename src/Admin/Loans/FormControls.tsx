@@ -342,17 +342,23 @@ export function SubmitButton({
   label,
   loading,
   onPress,
+  compact = false,
 }: {
   label: string;
   loading: boolean;
   onPress: () => void;
+  compact?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
       disabled={loading}
       onPress={onPress}
-      className="mb-6 min-h-12 flex-row items-center justify-center rounded-2xl border border-[#DDBB57] bg-[#07564B] px-4 py-3 disabled:opacity-60">
+      className={`flex-row items-center justify-center border border-[#DDBB57] bg-[#07564B] disabled:opacity-60 ${
+        compact
+          ? 'min-h-10 rounded-xl px-3 py-2'
+          : 'mb-6 min-h-12 rounded-2xl px-4 py-3'
+      }`}>
       {loading ? (
         <ActivityIndicator color="#FFFFFF" />
       ) : (
