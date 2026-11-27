@@ -2043,36 +2043,36 @@ export default function OrdersManagement({
                   )}
                 </View>
 
-                <View className="mb-2 rounded-[24px] bg-[#064D42] p-4">
-                  <View className="mb-3 flex-row items-center justify-between border-b border-white/15 pb-3">
+                <View className="mb-2 rounded-2xl border border-[#E6E9E3] bg-white p-4">
+                  <View className="mb-3 flex-row items-center justify-between border-b border-[#E6E9E3] pb-3">
                     <View>
-                      <Text className="text-base font-extrabold text-white">Order Summary</Text>
-                      <Text className="mt-0.5 text-xs text-white/70">
+                      <Text className="text-base font-extrabold text-[#173F35]">Order Summary</Text>
+                      <Text className="mt-0.5 text-xs text-[#6B7E76]">
                         {orderDraft.items.reduce((count, item) => count + item.quantity, 0)} items in this order
                       </Text>
                     </View>
-                    <View className="rounded-full border border-white/20 bg-white/10 px-3 py-1">
-                      <Text className="text-xs font-bold text-white">{orderDraft.items.length} products</Text>
+                    <View className="rounded-full border border-[#DDE6E0] bg-[#EAF3EF] px-3 py-1">
+                      <Text className="text-xs font-bold text-[#07564B]">{orderDraft.items.length} products</Text>
                     </View>
                   </View>
 
                   {orderDraft.items.length === 0 ? (
-                    <Text className="py-5 text-center text-xs text-white/70">
+                    <Text className="py-5 text-center text-xs text-[#6B7E76]">
                       Add products above to start this order.
                     </Text>
                   ) : orderDraft.items.map(item => (
-                    <View key={item.key} className="mb-3 rounded-2xl border border-white/10 bg-white/5 p-3">
+                    <View key={item.key} className="mb-3 rounded-2xl border border-[#E6E9E3] bg-[#F8FAF8] p-3">
                       <View className="flex-row items-start">
                         {item.image ? (
                           <Image source={{ uri: item.image }} className="mr-3 h-12 w-12 rounded-xl bg-white" />
                         ) : (
-                          <View className="mr-3 h-12 w-12 items-center justify-center rounded-xl bg-white/10">
-                            <Package size={19} color="#EAD78A" />
+                          <View className="mr-3 h-12 w-12 items-center justify-center rounded-xl bg-[#EAF3EF]">
+                            <Package size={19} color="#07564B" />
                           </View>
                         )}
                         <View className="min-w-0 flex-1">
-                          <Text numberOfLines={1} className="text-sm font-extrabold text-white">{item.product_name}</Text>
-                          <Text numberOfLines={1} className="mt-0.5 text-[10px] text-white/65">
+                          <Text numberOfLines={1} className="text-sm font-extrabold text-[#173F35]">{item.product_name}</Text>
+                          <Text numberOfLines={1} className="mt-0.5 text-[10px] text-[#6B7E76]">
                             {item.variant_color || 'Default'} / {item.variant_size || 'Free size'}
                           </Text>
                         </View>
@@ -2081,24 +2081,24 @@ export default function OrdersManagement({
                           accessibilityLabel={`Remove ${item.product_name}`}
                           onPress={() => updateOrderQuantity(item.key, 0)}
                           className="ml-2 h-8 w-8 items-center justify-center">
-                          <Trash2 size={16} color="#D8E5E0" />
+                          <Trash2 size={16} color="#6B7E76" />
                         </Pressable>
                       </View>
                       <View className="mt-2 flex-row items-center justify-between">
                         <View className="flex-row items-center">
-                          <Text className="mr-2 text-[10px] text-white/65">Net weight</Text>
+                          <Text className="mr-2 text-[10px] text-[#6B7E76]">Net weight</Text>
                           <TextInput
                             accessibilityLabel={`Net weight for ${item.product_name}`}
                             value={String(item.net_gold_weight ?? '')}
                             onChangeText={value => updateOrderWeight(item.key, value)}
                             keyboardType="decimal-pad"
                             placeholder="0.000"
-                            placeholderTextColor="#B8D0C8"
-                            className="h-8 w-20 rounded-lg border border-white/20 bg-white/10 px-2 text-xs font-bold text-white"
+                            placeholderTextColor="#9AA6A1"
+                            className="h-8 w-20 rounded-lg border border-[#DDE6E0] bg-white px-2 text-xs font-bold text-[#173F35]"
                           />
-                          <Text className="ml-1 text-[10px] text-white/70">g</Text>
+                          <Text className="ml-1 text-[10px] text-[#6B7E76]">g</Text>
                         </View>
-                        <Text className="text-xs font-extrabold text-white">
+                        <Text className="text-xs font-extrabold text-[#173F35]">
                           {currency(item.price * item.quantity)}
                         </Text>
                       </View>
@@ -2108,19 +2108,19 @@ export default function OrdersManagement({
                             accessibilityRole="button"
                             accessibilityLabel={`Decrease ${item.product_name} quantity`}
                             onPress={() => updateOrderQuantity(item.key, item.quantity - 1)}
-                            className="h-8 w-8 items-center justify-center rounded-lg border border-white/15">
-                            <Minus size={14} color="white" />
+                            className="h-8 w-8 items-center justify-center rounded-lg border border-[#DDE6E0] bg-white">
+                            <Minus size={14} color="#07564B" />
                           </Pressable>
-                          <Text className="mx-3 min-w-4 text-center text-sm font-bold text-white">{item.quantity}</Text>
+                          <Text className="mx-3 min-w-4 text-center text-sm font-bold text-[#173F35]">{item.quantity}</Text>
                           <Pressable
                             accessibilityRole="button"
                             accessibilityLabel={`Increase ${item.product_name} quantity`}
                             onPress={() => updateOrderQuantity(item.key, item.quantity + 1)}
-                            className="h-8 w-8 items-center justify-center rounded-lg border border-white/15">
-                            <Plus size={14} color="white" />
+                            className="h-8 w-8 items-center justify-center rounded-lg border border-[#DDE6E0] bg-white">
+                            <Plus size={14} color="#07564B" />
                           </Pressable>
                         </View>
-                        <Text className="text-[10px] text-white/60">{currency(item.price)} each</Text>
+                        <Text className="text-[10px] text-[#6B7E76]">{currency(item.price)} each</Text>
                       </View>
                     </View>
                   ))}
