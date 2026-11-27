@@ -464,6 +464,8 @@ test('routes shop admins to the admin dashboard and its API', async () => {
     renderer.root.findByProps({ testID: 'dashboard-metric-billing-invoice-count' }),
   ).toBeDefined();
   expect(renderer.root.findAllByProps({ children: 'Billing overview' })).toHaveLength(0);
+  expect(renderer.root.findByProps({ accessibilityLabel: 'From' })).toBeDefined();
+  expect(renderer.root.findByProps({ accessibilityLabel: 'To' })).toBeDefined();
   await act(async () => {
     renderer.root.findByProps({ testID: 'billing-new-button' }).props.onPress();
   });

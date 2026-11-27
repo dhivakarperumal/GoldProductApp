@@ -38,7 +38,7 @@ import { mediaUrl, parseArray as parseImageArray } from '../Products/inventory';
 import DashboardMetricCard, {
   dashboardMetricPalettes,
 } from '../Components/DashboardMetricCard';
-import { CustomDropdown } from '../Loans/FormControls';
+import { CustomDropdown, DatePicker } from '../Loans/FormControls';
 import type { Category, Metal } from '../Products/inventory';
 import CreateBillScreen from './CreateBillScreen';
 import CreateTackOrderScreen from './CreateTackOrderScreen';
@@ -1536,19 +1536,19 @@ export default function OrdersManagement({
           </View>
           <View className="flex-row gap-2">
             <View className="flex-1">
-              <InputField
+              <DatePicker
                 label="From"
                 value={billStartDate}
-                onChangeText={setBillStartDate}
-                placeholder="YYYY-MM-DD"
+                onChange={setBillStartDate}
+                maximumDate={billEndDate ? new Date(`${billEndDate}T00:00:00`) : undefined}
               />
             </View>
             <View className="flex-1">
-              <InputField
+              <DatePicker
                 label="To"
                 value={billEndDate}
-                onChangeText={setBillEndDate}
-                placeholder="YYYY-MM-DD"
+                onChange={setBillEndDate}
+                minimumDate={billStartDate ? new Date(`${billStartDate}T00:00:00`) : undefined}
               />
             </View>
           </View>
