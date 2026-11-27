@@ -731,9 +731,9 @@ export default function Home({ onNavigate }: HomeProps) {
             key={label}
             accessibilityRole="button"
             onPress={() => onNavigate(tab)}
-            className="min-h-[88px] flex-1 basis-[100px] items-center justify-center rounded-xl border border-[#ECE7D8] bg-white px-2">
-            <Icon size={22} color="#B8860B" />
-            <Text className="mt-2 text-center text-xs font-bold text-[#374151]">
+            className="min-h-[88px] flex-1 basis-[100px] items-center justify-center rounded-xl border border-[#DDBB57] bg-[#07564B] px-2 shadow-sm">
+            <Icon size={22} color="#FFE08A" />
+            <Text className="mt-2 text-center text-xs font-bold text-white">
               {label}
             </Text>
           </Pressable>

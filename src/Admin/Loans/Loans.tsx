@@ -577,6 +577,14 @@ export default function Loans({
             )}
           </ScrollView>
 
+          {showCreateOptions ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close create options"
+              onPress={() => setShowCreateOptions(false)}
+              className="absolute inset-0 bg-black/20"
+            />
+          ) : null}
           <View className="absolute bottom-5 right-4 items-end">
             {showCreateOptions ? (
               <>
