@@ -274,30 +274,31 @@ function MetricCardArtwork({
       <Circle cx="16" cy="104" r="52" fill={`url(#${glowId})`} opacity="0.62" />
       <Circle cx="205" cy="18" r="54" fill={`url(#${glowId})`} opacity="0.46" />
       <Circle cx="9" cy="14" r="28" fill={`url(#${goldGlowId})`} opacity="0.42" />
-      <Circle cx="218" cy="106" r="42" fill={`url(#${goldGlowId})`} opacity="0.78" />
+      <Circle cx="214" cy="105" r="36" fill={`url(#${goldGlowId})`} opacity="0.9" />
+      <Circle cx="184" cy="86" r="29" fill={`url(#${goldGlowId})`} opacity="0.48" />
       <Path
-        d="M126 119 C157 105 177 84 235 62"
+        d="M92 116 C126 111 148 101 166 82 C185 62 199 42 239 22"
         fill="none"
         stroke={`url(#${shineId})`}
-        strokeWidth="23"
+        strokeWidth="16"
         opacity="0.62"
       />
       <Path
-        d="M149 119 C174 103 192 88 235 72"
+        d="M102 116 C133 110 154 100 172 82 C190 63 204 45 239 28"
         fill="none"
         stroke="#FFD54B"
-        strokeWidth="9"
+        strokeWidth="8.5"
         opacity="0.78"
       />
       <Path
-        d="M167 118 C187 104 204 91 235 80"
+        d="M112 110 C140 105 160 95 178 77 C195 58 208 42 226 31"
         fill="none"
         stroke={`url(#${shineId})`}
-        strokeWidth="4"
-        opacity="0.92"
+        strokeWidth="2.25"
+        opacity="0.88"
       />
       <Path
-        d="M171 111 C190 98 207 86 220 79"
+        d="M115 107 C143 102 162 92 180 74 C197 55 209 40 222 29"
         fill="none"
         stroke="#FFF9D7"
         strokeWidth="1.4"
