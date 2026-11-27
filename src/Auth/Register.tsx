@@ -4,7 +4,6 @@ import {
   BackHandler,
   Image,
   KeyboardAvoidingView,
-  Linking,
   PermissionsAndroid,
   Platform,
   Pressable,
@@ -958,23 +957,9 @@ export default function Register({ onBack, onSubmitted }: Props) {
                     <Text className="text-[11px] text-[#6B7280]">
                       {currentLocation}{' '}
                     </Text>
-                    <Pressable
-                      accessibilityRole="link"
-                      onPress={() => {
-                        Linking.openURL('https://www.openstreetmap.org/copyright').catch(
-                          error => {
-                            showAlert(
-                              'Could not open attribution',
-                              getErrorMessage(error),
-                              { variant: 'error' },
-                            );
-                          },
-                        );
-                      }}>
-                      <Text className="text-[11px] font-semibold text-[#6B7280] underline">
-                        © OpenStreetMap contributors
-                      </Text>
-                    </Pressable>
+                    <Text className="text-[11px] font-semibold text-[#6B7280]">
+                      © OpenStreetMap contributors
+                    </Text>
                   </View>
                 ) : null}
               </View>
