@@ -22,9 +22,11 @@ import {
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import CompleteLoan from './CompleteLoan';
+import { CustomDropdown } from './FormControls';
 import GoldRelease from './GoldRelease';
 import KycReview from './KycReview';
 import LoanStatCard from './LoanStatCard';
+import LoanDateRangeFilter from './LoanDateRangeFilter';
 import LoanRenewal from './LoanRenewal';
 import { printLoanAgreement } from './loanActions';
 import OverdueLoans from './OverdueLoans';
@@ -61,6 +63,8 @@ type Loan = {
   jewellery_type?: string;
   gold_purity?: string;
 };
+
+type DateRange = { startDate: string; endDate: string };
 
 type LoansProps = {
   onCreateLoan: () => void;
@@ -137,6 +141,11 @@ export default function Loans({
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [query, setQuery] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: '',
+    endDate: '',
+  });
+  const [statusFilter, setStatusFilter] = useState('All');
   const [showCreateOptions, setShowCreateOptions] = useState(false);
   const [activeSection, setActiveSection] = useState<LoanSection>('all');
   const [actionLoanId, setActionLoanId] = useState<number | string | null>(null);
@@ -144,7 +153,12 @@ export default function Loans({
   const loadLoans = useCallback(async () => {
     setLoadError('');
     try {
-      const response = await api.get('/loans');
+      const response = await api.get('/loans', {
+        params: {
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        },
+      });
       if (!Array.isArray(response.data)) {
         throw new Error('The server returned an invalid loan list.');
       }
@@ -163,7 +177,7 @@ export default function Loans({
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [dateRange]);
 
   useEffect(() => {
     loadLoans();
@@ -171,21 +185,38 @@ export default function Loans({
 
   const visibleLoans = useMemo(() => {
     const search = query.trim().toLowerCase();
-    if (!search) return loans;
-    return loans.filter(loan =>
-      [
-        loan.loan_number,
-        loan.customer_name,
-        loan.customer_code,
-        loan.customer_mobile,
-        loan.loan_status,
-      ].some(value =>
-        String(value || '')
-          .toLowerCase()
-          .includes(search),
-      ),
+    return loans.filter(loan => {
+      const matchesSearch =
+        !search ||
+        [
+          loan.loan_number,
+          loan.customer_name,
+          loan.customer_code,
+          loan.customer_mobile,
+          loan.loan_status,
+        ].some(value =>
+          String(value || '')
+            .toLowerCase()
+            .includes(search),
+        );
+      const matchesStatus =
+        statusFilter === 'All' ||
+        displayLoanStatus(loan).toLowerCase() === statusFilter.toLowerCase();
+      return matchesSearch && matchesStatus;
+    });
+  }, [loans, query, statusFilter]);
+  const statusOptions = useMemo(() => {
+    const statuses = Array.from(new Set(loans.map(displayLoanStatus))).sort(
+      (left, right) => left.localeCompare(right),
     );
-  }, [loans, query]);
+    if (statusFilter !== 'All' && !statuses.includes(statusFilter)) {
+      statuses.push(statusFilter);
+    }
+    return [
+      { value: 'All', label: 'All Statuses' },
+      ...statuses.map(status => ({ value: status, label: status })),
+    ];
+  }, [loans, statusFilter]);
 
   const activeCount = loans.filter(
     loan =>
@@ -377,6 +408,14 @@ export default function Loans({
               ) : null}
             </View>
 
+            <LoanDateRangeFilter onApply={setDateRange} />
+            <CustomDropdown
+              label="Loan Status"
+              value={statusFilter}
+              options={statusOptions}
+              onSelect={setStatusFilter}
+            />
+
             {loadError ? (
               <View className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-3">
                 <Text className="text-sm text-[#991B1B]">{loadError}</Text>
@@ -506,8 +545,11 @@ export default function Loans({
               <View className="items-center rounded-2xl border border-[#ECE7D8] bg-white px-5 py-10">
                 <HandCoins size={28} color="#A77B15" />
                 <Text className="mt-3 text-sm font-bold text-[#173F35]">
-                  {loans.length
-                    ? 'No loans match your search.'
+                  {query.trim() ||
+                  statusFilter !== 'All' ||
+                  dateRange.startDate ||
+                  dateRange.endDate
+                    ? 'No loans match your filters.'
                     : 'No loans created yet.'}
                 </Text>
                 <Text className="mt-1 text-center text-xs text-[#6B7280]">
