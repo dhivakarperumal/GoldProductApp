@@ -61,6 +61,11 @@ jest.mock('react-native-html-to-pdf', () => ({
   generatePDF: jest.fn(),
 }));
 
+jest.mock('../src/SuperAdmin/Home/Home', () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
 jest.mock('@react-native-async-storage/async-storage', () => ({
   __esModule: true,
   default: {
@@ -94,7 +99,9 @@ jest.mock('react-native-safe-area-context', () => {
 });
 
 beforeEach(() => {
-  mockGetItem.mockReset().mockResolvedValue(null);
+  mockGetItem.mockReset().mockImplementation((key: unknown) =>
+    Promise.resolve(key === 'hasSeenWelcomeScreen' ? 'true' : null),
+  );
   mockSetItem.mockReset().mockResolvedValue(undefined);
   mockRemoveItem.mockReset().mockResolvedValue(undefined);
   mockPost.mockReset();
@@ -142,7 +149,9 @@ test('shows Admin navigation tabs in the requested order', async () => {
 });
 
 test('restores a saved session without showing the login screen', async () => {
-  mockGetItem.mockResolvedValue('saved-token');
+  mockGetItem.mockImplementation((key: unknown) =>
+    Promise.resolve(key === 'hasSeenWelcomeScreen' ? 'true' : 'saved-token'),
+  );
   let renderer!: ReactTestRenderer.ReactTestRenderer;
 
   await act(async () => {
@@ -162,7 +171,11 @@ test('restores a saved session without showing the login screen', async () => {
 });
 
 test('does not redirect to login when session storage cannot be read', async () => {
-  mockGetItem.mockRejectedValue(new Error('Storage unavailable'));
+  mockGetItem.mockImplementation((key: unknown) =>
+    key === 'hasSeenWelcomeScreen'
+      ? Promise.resolve('true')
+      : Promise.reject(new Error('Storage unavailable')),
+  );
   let renderer!: ReactTestRenderer.ReactTestRenderer;
 
   await act(async () => {
@@ -335,7 +348,9 @@ test('routes shop admins to the admin dashboard and its API', async () => {
 });
 
 test('removes the saved token only when Logout is pressed', async () => {
-  mockGetItem.mockResolvedValue('saved-token');
+  mockGetItem.mockImplementation((key: unknown) =>
+    Promise.resolve(key === 'hasSeenWelcomeScreen' ? 'true' : 'saved-token'),
+  );
   let renderer!: ReactTestRenderer.ReactTestRenderer;
 
   await act(async () => {
