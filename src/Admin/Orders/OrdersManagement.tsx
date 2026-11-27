@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
   Modal,
   Pressable,
+  Platform,
   RefreshControl,
   ScrollView,
   Text,
@@ -30,6 +33,7 @@ import {
 import type { LucideIcon } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
+import { mediaUrl, parseArray as parseImageArray } from '../Products/inventory';
 import DashboardMetricCard, {
   dashboardMetricPalettes,
 } from '../Components/DashboardMetricCard';
@@ -55,6 +59,8 @@ type Customer = {
 type CatalogProduct = {
   id: number | string;
   name: string;
+  product_code?: string;
+  images?: unknown;
   category?: string;
   purity?: string;
   metal_type?: string;
@@ -139,8 +145,11 @@ type OrderCartItem = {
   key: string;
   product_id: number | string;
   product_name: string;
+  product_code: string;
+  image?: string;
   category: string;
   purity: string;
+  metal_type: string;
   variant_color: string;
   variant_size: string;
   quantity: number;
@@ -399,16 +408,27 @@ function parseProduct(value: unknown): CatalogProduct {
   return {
     id: value.id as number | string,
     name: value.name,
+    product_code: typeof value.product_code === 'string' ? value.product_code : '',
+    images: value.images,
     category: typeof value.category === 'string' ? value.category : '',
     purity: typeof value.purity === 'string' ? value.purity : '',
     metal_type: typeof value.metal_type === 'string' ? value.metal_type : '',
     status: typeof value.status === 'string' ? value.status : '',
-    final_selling_price: value.final_selling_price as number | string | undefined,
+    final_selling_price: (value.final_selling_price ?? value.final_price) as number | string | undefined,
     offer_price: value.offer_price as number | string | undefined,
     mrp: value.mrp as number | string | undefined,
-    net_gold_weight: value.net_gold_weight as number | string | null | undefined,
+    net_gold_weight: (value.net_gold_weight ?? value.net_weight) as number | string | null | undefined,
     variants: value.variants,
   };
+}
+
+function firstCatalogImage(product: CatalogProduct): string | undefined {
+  const image = parseImageArray(product.images)[0];
+  if (image) return image;
+  const firstVariant = Array.isArray(product.variants) && isRecord(product.variants[0])
+    ? product.variants[0]
+    : null;
+  return firstVariant ? parseImageArray(firstVariant.images)[0] : undefined;
 }
 
 function currency(value: number | string | null | undefined): string {
@@ -543,6 +563,7 @@ export default function OrdersManagement({
   const insets = useSafeAreaInsets();
   const [section, setSection] = useState<Section>(requestedSection ?? 'billing');
   const [ordersPage, setOrdersPage] = useState<'list' | 'create'>('list');
+  const [orderFormStep, setOrderFormStep] = useState<'products' | 'details'>('products');
   const [billPage, setBillPage] = useState<'list' | 'form'>('list');
 
   useEffect(() => {
@@ -706,22 +727,23 @@ export default function OrdersManagement({
       (total, item) => total + item.price * item.quantity,
       0,
     );
-    const gstRate = Number(orderDraft.gstRate);
-    const gstAmount =
-      orderDraft.gstIncluded && Number.isFinite(gstRate) && gstRate >= 0
-        ? (subtotal * Math.min(gstRate, 100)) / 100
-        : 0;
     const requestedDiscount = Math.max(0, Number(orderDraft.discountValue) || 0);
     const discount =
       orderDraft.discountType === 'Percent'
         ? (subtotal * Math.min(requestedDiscount, 100)) / 100
         : requestedDiscount;
     const appliedDiscount = Math.min(subtotal, discount);
+    const taxableSubtotal = Math.max(0, subtotal - appliedDiscount);
+    const gstRate = Number(orderDraft.gstRate);
+    const gstAmount =
+      orderDraft.gstIncluded && Number.isFinite(gstRate) && gstRate >= 0
+        ? (taxableSubtotal * Math.min(gstRate, 100)) / 100
+        : 0;
     return {
       subtotal,
       gstAmount,
       discount: appliedDiscount,
-      total: Math.max(0, subtotal + gstAmount - appliedDiscount),
+      total: taxableSubtotal + gstAmount,
     };
   }, [orderDraft]);
 
@@ -812,9 +834,12 @@ export default function OrdersManagement({
 
   const orderProductResults = useMemo(() => {
     const query = orderSearchCatalog.trim().toLowerCase();
-    return catalog
-      .filter(product => !query || `${product.name} ${product.category} ${product.purity} ${product.id}`.toLowerCase().includes(query))
-      .slice(0, 30);
+    return catalog.filter(product =>
+      !query ||
+      `${product.name} ${product.category} ${product.purity} ${product.product_code} ${product.id}`
+        .toLowerCase()
+        .includes(query),
+    );
   }, [catalog, orderSearchCatalog]);
 
   const billedTotal = bills.reduce((total, bill) => total + Number(bill.total_amount || 0), 0);
@@ -859,17 +884,32 @@ export default function OrdersManagement({
             key,
             product_id: product.id,
             product_name: product.name,
+            product_code: product.product_code || '',
+            image: mediaUrl(firstCatalogImage(product)),
             category: product.category || '',
             purity: product.purity || '',
+            metal_type: product.metal_type || '',
             variant_color: variantColor,
             variant_size: variantSize,
             quantity: 1,
             price: productPrice(product),
-            net_gold_weight: product.net_gold_weight ?? undefined,
+            net_gold_weight:
+              product.net_gold_weight == null
+                ? undefined
+                : String(product.net_gold_weight),
           },
         ],
       };
     });
+  };
+
+  const updateOrderWeight = (key: string, netGoldWeight: string) => {
+    setOrderDraft(current => ({
+      ...current,
+      items: current.items.map(item =>
+        item.key === key ? { ...item, net_gold_weight: netGoldWeight } : item,
+      ),
+    }));
   };
 
   const updateOrderQuantity = (key: string, quantity: number) => {
@@ -894,6 +934,17 @@ export default function OrdersManagement({
     }
     if (orderDraft.items.length === 0) {
       showAlert('Products required', 'Add at least one catalog product to this take order.', { variant: 'warning' });
+      return;
+    }
+    const invalidWeight = orderDraft.items.some(item => {
+      if (item.net_gold_weight == null || String(item.net_gold_weight).trim() === '') {
+        return false;
+      }
+      const weight = Number(item.net_gold_weight);
+      return !Number.isFinite(weight) || weight < 0;
+    });
+    if (invalidWeight) {
+      showAlert('Invalid product weight', 'Enter a valid non-negative net weight for each product.', { variant: 'warning' });
       return;
     }
     const gstRate = Number(orderDraft.gstRate);
@@ -932,7 +983,9 @@ export default function OrdersManagement({
           quantity: item.quantity,
           variant_color: item.variant_color,
           variant_size: item.variant_size,
-          ...(item.net_gold_weight != null ? { net_gold_weight: Number(item.net_gold_weight) } : {}),
+          ...(item.net_gold_weight != null && String(item.net_gold_weight).trim() !== ''
+            ? { net_gold_weight: Number(item.net_gold_weight) }
+            : {}),
         })),
         gst_included: orderDraft.gstIncluded,
         gst_rate: gstRate,
@@ -943,6 +996,7 @@ export default function OrdersManagement({
       const created = parseTackOrder(response.data);
       setOrderDraft(emptyOrderDraft());
       setOrderSearchCatalog('');
+      setOrderFormStep('products');
       onFormVisibilityChange?.(false);
       setOrdersPage('list');
       showAlert(
@@ -1285,6 +1339,7 @@ export default function OrdersManagement({
     onFormVisibilityChange?.(true);
     setOrderDraft(emptyOrderDraft());
     setOrderSearchCatalog('');
+    setOrderFormStep('products');
     setOrdersPage('create');
   };
 
@@ -1874,157 +1929,315 @@ export default function OrdersManagement({
   );
 
   const renderOrderForm = () => (
-    <ScrollView
-      testID="take-order-form-scroll"
+    <KeyboardAvoidingView
+      testID="take-order-form"
       className="flex-1"
-      keyboardShouldPersistTaps="handled"
-      automaticallyAdjustKeyboardInsets
-      contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 24) }}>
-      <View className="p-4">
-        <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
-          <Text className="mb-2 text-base font-extrabold text-[#173F35]">Catalog products</Text>
-          <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-[#F8FAF8] px-3">
-            <Search size={16} color="#7B8A83" />
-            <TextInput
-              accessibilityLabel="Search catalog products for take order"
-              value={orderSearchCatalog}
-              onChangeText={setOrderSearchCatalog}
-              placeholder="Search by name, category or ID"
-              placeholderTextColor="#9AA6A1"
-              className="min-h-11 flex-1 px-2 text-sm text-[#173F35]"
-            />
-          </View>
-          {catalogLoading ? (
-            <ActivityIndicator color="#07564B" />
-          ) : catalogError ? (
-            <View>
-              <Text className="text-sm text-rose-700">{catalogError}</Text>
-              <Pressable onPress={() => void loadCatalog()} className="mt-2 self-start rounded-lg bg-rose-700 px-3 py-2">
-                <Text className="text-xs font-bold text-white">Retry</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <View className="max-h-64">
-              <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
-                {orderProductResults.map(product => (
-                  <View key={String(product.id)} className="mb-2 flex-row items-center justify-between rounded-xl bg-[#F8FAF8] p-3">
-                    <View className="mr-2 flex-1">
-                      <Text numberOfLines={1} className="text-sm font-bold text-[#173F35]">{product.name}</Text>
-                      <Text numberOfLines={1} className="mt-0.5 text-xs text-[#6B7E76]">
-                        {product.category || 'Uncategorized'} · {product.purity || 'Purity not set'}
-                      </Text>
-                      <Text className="mt-1 text-xs font-bold text-[#07564B]">{currency(productPrice(product))}</Text>
-                    </View>
-                    <Pressable accessibilityRole="button" accessibilityLabel={`Add ${product.name} to take order`} onPress={() => addOrderProduct(product)} className="h-9 w-9 items-center justify-center rounded-full bg-[#07564B]">
-                      <Plus size={17} color="white" />
-                    </Pressable>
-                  </View>
-                ))}
-                {orderProductResults.length === 0 && !catalogLoading ? (
-                  <Text className="py-4 text-center text-xs text-[#6B7E76]">No matching active products.</Text>
-                ) : null}
-              </ScrollView>
-            </View>
-          )}
-        </View>
-
-        <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
-          <Text className="mb-3 text-base font-extrabold text-[#173F35]">Pre-order items · {orderDraft.items.length}</Text>
-          {orderDraft.items.length === 0 ? (
-            <Text className="rounded-xl bg-[#F8FAF8] p-4 text-center text-xs text-[#6B7E76]">Choose a catalog product to start this order.</Text>
-          ) : orderDraft.items.map(item => (
-            <View key={item.key} className="mb-2 flex-row items-center rounded-xl bg-[#F8FAF8] p-3">
-              <View className="mr-2 flex-1">
-                <Text numberOfLines={1} className="text-sm font-bold text-[#173F35]">{item.product_name}</Text>
-                <Text className="mt-0.5 text-xs text-[#6B7E76]">{item.category || 'Product'} · {currency(item.price)} each</Text>
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View className="flex-1">
+        <ScrollView
+          testID="take-order-form-scroll"
+          className="flex-1"
+          keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets
+          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 24) }}>
+          <View className="p-4">
+            <View className="mb-4 flex-row items-center justify-between rounded-xl bg-[#EAF3EF] p-3">
+              <View>
+                <Text className="text-xs font-extrabold text-[#07564B]">
+                  {orderFormStep === 'products' ? 'Step 1 of 2 · Products' : 'Step 2 of 2 · Details'}
+                </Text>
+                <Text className="mt-0.5 text-[10px] text-[#52645F]">
+                  {orderFormStep === 'products'
+                    ? 'Select products and confirm their weights.'
+                    : 'Enter customer, tax and payment details.'}
+                </Text>
               </View>
-              <Pressable accessibilityRole="button" accessibilityLabel={`Decrease ${item.product_name} quantity`} onPress={() => updateOrderQuantity(item.key, item.quantity - 1)} className="h-8 w-8 items-center justify-center rounded-lg bg-white">
-                <Minus size={14} color="#07564B" />
-              </Pressable>
-              <Text className="mx-3 min-w-5 text-center text-sm font-extrabold text-[#173F35]">{item.quantity}</Text>
-              <Pressable accessibilityRole="button" accessibilityLabel={`Increase ${item.product_name} quantity`} onPress={() => updateOrderQuantity(item.key, item.quantity + 1)} className="h-8 w-8 items-center justify-center rounded-lg bg-white">
-                <Plus size={14} color="#07564B" />
-              </Pressable>
-              <Text className="ml-3 text-xs font-bold text-[#173F35]">{currency(item.price * item.quantity)}</Text>
+              <Text className="text-xs font-extrabold text-[#07564B]">
+                {orderDraft.items.length} item{orderDraft.items.length === 1 ? '' : 's'}
+              </Text>
             </View>
-          ))}
-        </View>
 
-        <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
-          <Text className="mb-3 text-base font-extrabold text-[#173F35]">Customer details</Text>
-          <InputField label="Customer name *" value={orderDraft.customer.name} onChangeText={value => updateOrderCustomer('name', value)} placeholder="Enter customer name" />
-          <InputField label="Phone number *" value={orderDraft.customer.phone} onChangeText={value => updateOrderCustomer('phone', value)} keyboardType="phone-pad" placeholder="Enter phone number" />
-          <InputField label="Email address" value={orderDraft.customer.email} onChangeText={value => updateOrderCustomer('email', value)} keyboardType="email-address" placeholder="Optional" />
-          <InputField label="Address" value={orderDraft.customer.address} onChangeText={value => updateOrderCustomer('address', value)} multiline placeholder="Street address" />
-          <View className="flex-row gap-2">
-            <View className="flex-1"><InputField label="City" value={orderDraft.customer.city || ''} onChangeText={value => updateOrderCustomer('city', value)} placeholder="City" /></View>
-            <View className="flex-1"><InputField label="District" value={orderDraft.customer.district || ''} onChangeText={value => updateOrderCustomer('district', value)} placeholder="District" /></View>
-          </View>
-          <View className="flex-row gap-2">
-            <View className="flex-1"><InputField label="State" value={orderDraft.customer.state || ''} onChangeText={value => updateOrderCustomer('state', value)} placeholder="State" /></View>
-            <View className="flex-1"><InputField label="PIN code" value={orderDraft.customer.pincode || ''} onChangeText={value => updateOrderCustomer('pincode', value)} keyboardType="number-pad" placeholder="6 digits" /></View>
-          </View>
-        </View>
+            {orderFormStep === 'products' ? (
+              <>
+                <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-3">
+                  <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-[#F8FAF8] px-3">
+                    <Search size={16} color="#7B8A83" />
+                    <TextInput
+                      accessibilityLabel="Search catalog products for take order"
+                      value={orderSearchCatalog}
+                      onChangeText={setOrderSearchCatalog}
+                      placeholder="Search products by name or ID"
+                      placeholderTextColor="#9AA6A1"
+                      className="min-h-11 flex-1 px-2 text-sm text-[#173F35]"
+                    />
+                  </View>
+                  {catalogLoading ? (
+                    <View className="items-center py-8">
+                      <ActivityIndicator color="#07564B" />
+                      <Text className="mt-2 text-xs text-[#6B7E76]">Loading products…</Text>
+                    </View>
+                  ) : catalogError ? (
+                    <View className="py-3">
+                      <Text className="text-sm text-rose-700">{catalogError}</Text>
+                      <Pressable onPress={() => void loadCatalog()} className="mt-2 self-start rounded-lg bg-rose-700 px-3 py-2">
+                        <Text className="text-xs font-bold text-white">Retry</Text>
+                      </Pressable>
+                    </View>
+                  ) : orderProductResults.length === 0 ? (
+                    <View className="items-center py-8">
+                      <Package size={26} color="#7B8A83" />
+                      <Text className="mt-2 text-center text-xs text-[#6B7E76]">
+                        {catalog.length === 0 ? 'No active products available.' : 'No matching products.'}
+                      </Text>
+                    </View>
+                  ) : (
+                    <View className="flex-row flex-wrap justify-between">
+                      {orderProductResults.map(product => {
+                        const image = mediaUrl(firstCatalogImage(product));
+                        const isAdded = orderDraft.items.some(
+                          item => String(item.product_id) === String(product.id),
+                        );
+                        return (
+                          <View
+                            testID={`take-order-product-${String(product.id)}`}
+                            key={String(product.id)}
+                            className="mb-3 w-[48%] overflow-hidden rounded-xl border border-[#E6E9E3] bg-white">
+                            {image ? (
+                              <Image
+                                source={{ uri: image }}
+                                resizeMode="cover"
+                                className="h-24 w-full bg-[#F3F4F1]"
+                              />
+                            ) : (
+                              <View className="h-24 items-center justify-center bg-[#EAF3EF]">
+                                <Package size={24} color="#07564B" />
+                              </View>
+                            )}
+                            <View className="p-2.5">
+                              <Text numberOfLines={1} className="text-sm font-extrabold text-[#173F35]">
+                                {product.name}
+                              </Text>
+                              <Text numberOfLines={1} className="mt-0.5 text-[10px] text-[#6B7E76]">
+                                Product ID: {product.product_code || product.id}
+                              </Text>
+                              <Text numberOfLines={1} className="mt-1 text-[10px] text-[#6B7E76]">
+                                {product.metal_type || 'Metal'} / {product.purity || 'Purity'}
+                              </Text>
+                              <View className="mt-2 flex-row items-center justify-between">
+                                <Text numberOfLines={1} className="mr-1 flex-1 text-xs font-extrabold text-[#07564B]">
+                                  {currency(productPrice(product))}
+                                </Text>
+                                <Pressable
+                                  accessibilityRole="button"
+                                  accessibilityLabel={`${isAdded ? 'Add another' : 'Add'} ${product.name} to take order`}
+                                  onPress={() => addOrderProduct(product)}
+                                  className="h-9 w-9 items-center justify-center rounded-lg bg-[#07564B]">
+                                  <Plus size={18} color="white" />
+                                </Pressable>
+                              </View>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View>
 
-        <View className="mb-4 rounded-2xl bg-[#173F35] p-4">
-          <Text className="mb-3 text-base font-extrabold text-white">Order summary</Text>
-          <View className="mb-2 flex-row justify-between">
-            <Text className="text-xs text-white/70">Subtotal</Text>
-            <Text className="text-xs font-bold text-white">{currency(orderTotals.subtotal)}</Text>
-          </View>
-          <InputField label="GST rate (%)" value={orderDraft.gstRate} onChangeText={value => setOrderDraft(current => ({ ...current, gstRate: value }))} keyboardType="decimal-pad" placeholder="0" />
-          <Pressable
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: orderDraft.gstIncluded }}
-            onPress={() => setOrderDraft(current => ({ ...current, gstIncluded: !current.gstIncluded }))}
-            className="mb-3 min-h-10 flex-row items-center">
-            <View className={`mr-2 h-5 w-5 items-center justify-center rounded border ${orderDraft.gstIncluded ? 'border-emerald-300 bg-emerald-600' : 'border-white/50'}`}>
-              {orderDraft.gstIncluded ? <Check size={13} color="white" /> : null}
-            </View>
-            <Text className="text-xs font-semibold text-white/80">Apply GST to this order</Text>
-          </Pressable>
-          <View className="flex-row gap-2">
-            <View className="flex-1">
-              <CustomDropdown
-                label="Discount type"
-                value={orderDraft.discountType}
-                options={[
-                  { value: 'Percent', label: 'Percent' },
-                  { value: 'Fixed', label: 'Fixed amount' },
-                ]}
-                onSelect={value => setOrderDraft(current => ({ ...current, discountType: value as OrderDraft['discountType'] }))}
-              />
-            </View>
-            <View className="flex-1">
-              <InputField label="Discount" value={orderDraft.discountValue} onChangeText={value => setOrderDraft(current => ({ ...current, discountValue: value }))} keyboardType="decimal-pad" placeholder="0" />
-            </View>
-          </View>
-          <InputField label="Advance amount (₹)" value={orderDraft.advanceAmount} onChangeText={value => setOrderDraft(current => ({ ...current, advanceAmount: value }))} keyboardType="decimal-pad" placeholder="0" />
-          <View className="flex-row justify-between border-t border-white/15 py-2">
-            <Text className="text-xs text-white/70">GST amount</Text>
-            <Text className="text-xs font-bold text-white">{currency(orderTotals.gstAmount)}</Text>
-          </View>
-          <View className="flex-row justify-between py-1">
-            <Text className="text-xs text-white/70">Discount applied</Text>
-            <Text className="text-xs font-bold text-white">−{currency(orderTotals.discount)}</Text>
-          </View>
-          <View className="flex-row justify-between border-t border-white/15 pt-3">
-            <Text className="text-sm font-extrabold text-white">Total</Text>
-            <Text className="text-lg font-black text-amber-200">{currency(orderTotals.total)}</Text>
-          </View>
-        </View>
+                <View className="mb-2 rounded-[24px] bg-[#064D42] p-4">
+                  <View className="mb-3 flex-row items-center justify-between border-b border-white/15 pb-3">
+                    <View>
+                      <Text className="text-base font-extrabold text-white">Order Summary</Text>
+                      <Text className="mt-0.5 text-xs text-white/70">
+                        {orderDraft.items.reduce((count, item) => count + item.quantity, 0)} items in this order
+                      </Text>
+                    </View>
+                    <View className="rounded-full border border-white/20 bg-white/10 px-3 py-1">
+                      <Text className="text-xs font-bold text-white">{orderDraft.items.length} products</Text>
+                    </View>
+                  </View>
 
-        <Pressable
-          testID="tack-order-save-button"
-          accessibilityRole="button"
-          disabled={orderSaving}
-          onPress={() => void createTackOrder()}
-          className={`min-h-12 flex-row items-center justify-center rounded-xl px-5 ${orderSaving ? 'bg-[#8DA69B]' : 'bg-[#07564B]'}`}>
-          {orderSaving ? <ActivityIndicator color="white" /> : <Check size={18} color="white" />}
-          <Text className="ml-2 text-sm font-extrabold text-white">{orderSaving ? 'Creating order…' : 'Create take order'}</Text>
-        </Pressable>
+                  {orderDraft.items.length === 0 ? (
+                    <Text className="py-5 text-center text-xs text-white/70">
+                      Add products above to start this order.
+                    </Text>
+                  ) : orderDraft.items.map(item => (
+                    <View key={item.key} className="mb-3 rounded-2xl border border-white/10 bg-white/5 p-3">
+                      <View className="flex-row items-start">
+                        {item.image ? (
+                          <Image source={{ uri: item.image }} className="mr-3 h-12 w-12 rounded-xl bg-white" />
+                        ) : (
+                          <View className="mr-3 h-12 w-12 items-center justify-center rounded-xl bg-white/10">
+                            <Package size={19} color="#EAD78A" />
+                          </View>
+                        )}
+                        <View className="min-w-0 flex-1">
+                          <Text numberOfLines={1} className="text-sm font-extrabold text-white">{item.product_name}</Text>
+                          <Text numberOfLines={1} className="mt-0.5 text-[10px] text-white/65">
+                            {item.variant_color || 'Default'} / {item.variant_size || 'Free size'}
+                          </Text>
+                        </View>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={`Remove ${item.product_name}`}
+                          onPress={() => updateOrderQuantity(item.key, 0)}
+                          className="ml-2 h-8 w-8 items-center justify-center">
+                          <Trash2 size={16} color="#D8E5E0" />
+                        </Pressable>
+                      </View>
+                      <View className="mt-2 flex-row items-center justify-between">
+                        <View className="flex-row items-center">
+                          <Text className="mr-2 text-[10px] text-white/65">Net weight</Text>
+                          <TextInput
+                            accessibilityLabel={`Net weight for ${item.product_name}`}
+                            value={String(item.net_gold_weight ?? '')}
+                            onChangeText={value => updateOrderWeight(item.key, value)}
+                            keyboardType="decimal-pad"
+                            placeholder="0.000"
+                            placeholderTextColor="#B8D0C8"
+                            className="h-8 w-20 rounded-lg border border-white/20 bg-white/10 px-2 text-xs font-bold text-white"
+                          />
+                          <Text className="ml-1 text-[10px] text-white/70">g</Text>
+                        </View>
+                        <Text className="text-xs font-extrabold text-white">
+                          {currency(item.price * item.quantity)}
+                        </Text>
+                      </View>
+                      <View className="mt-3 flex-row items-center justify-between">
+                        <View className="flex-row items-center">
+                          <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel={`Decrease ${item.product_name} quantity`}
+                            onPress={() => updateOrderQuantity(item.key, item.quantity - 1)}
+                            className="h-8 w-8 items-center justify-center rounded-lg border border-white/15">
+                            <Minus size={14} color="white" />
+                          </Pressable>
+                          <Text className="mx-3 min-w-4 text-center text-sm font-bold text-white">{item.quantity}</Text>
+                          <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel={`Increase ${item.product_name} quantity`}
+                            onPress={() => updateOrderQuantity(item.key, item.quantity + 1)}
+                            className="h-8 w-8 items-center justify-center rounded-lg border border-white/15">
+                            <Plus size={14} color="white" />
+                          </Pressable>
+                        </View>
+                        <Text className="text-[10px] text-white/60">{currency(item.price)} each</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </>
+            ) : (
+              <>
+                <View testID="take-order-customer-details" className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
+                  <Text className="mb-3 text-base font-extrabold text-[#173F35]">Customer details</Text>
+                  <InputField label="Customer name *" value={orderDraft.customer.name} onChangeText={value => updateOrderCustomer('name', value)} placeholder="Enter customer name" />
+                  <InputField label="Phone number *" value={orderDraft.customer.phone} onChangeText={value => updateOrderCustomer('phone', value)} keyboardType="phone-pad" placeholder="Enter phone number" />
+                  <InputField label="Email address" value={orderDraft.customer.email} onChangeText={value => updateOrderCustomer('email', value)} keyboardType="email-address" placeholder="Optional" />
+                  <InputField label="Address" value={orderDraft.customer.address} onChangeText={value => updateOrderCustomer('address', value)} multiline placeholder="Street address" />
+                  <View className="flex-row gap-2">
+                    <View className="flex-1"><InputField label="City" value={orderDraft.customer.city || ''} onChangeText={value => updateOrderCustomer('city', value)} placeholder="City" /></View>
+                    <View className="flex-1"><InputField label="District" value={orderDraft.customer.district || ''} onChangeText={value => updateOrderCustomer('district', value)} placeholder="District" /></View>
+                  </View>
+                  <View className="flex-row gap-2">
+                    <View className="flex-1"><InputField label="State" value={orderDraft.customer.state || ''} onChangeText={value => updateOrderCustomer('state', value)} placeholder="State" /></View>
+                    <View className="flex-1"><InputField label="PIN code" value={orderDraft.customer.pincode || ''} onChangeText={value => updateOrderCustomer('pincode', value)} keyboardType="number-pad" placeholder="6 digits" /></View>
+                  </View>
+                </View>
+
+                <View testID="take-order-payment-summary" className="mb-4 rounded-2xl bg-[#173F35] p-4">
+                  <Text className="mb-3 text-base font-extrabold text-white">GST, discount & advance</Text>
+                  <View className="mb-2 flex-row justify-between">
+                    <Text className="text-xs text-white/70">Subtotal</Text>
+                    <Text className="text-xs font-bold text-white">{currency(orderTotals.subtotal)}</Text>
+                  </View>
+                  <InputField label="GST rate (%)" value={orderDraft.gstRate} onChangeText={value => setOrderDraft(current => ({ ...current, gstRate: value }))} keyboardType="decimal-pad" placeholder="0" />
+                  <Pressable
+                    testID="take-order-gst-toggle"
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: orderDraft.gstIncluded }}
+                    onPress={() => setOrderDraft(current => ({ ...current, gstIncluded: !current.gstIncluded }))}
+                    className="mb-3 min-h-10 flex-row items-center">
+                    <View className={`mr-2 h-5 w-5 items-center justify-center rounded border ${orderDraft.gstIncluded ? 'border-emerald-300 bg-emerald-600' : 'border-white/50'}`}>
+                      {orderDraft.gstIncluded ? <Check size={13} color="white" /> : null}
+                    </View>
+                    <Text className="text-xs font-semibold text-white/80">Apply GST to this order</Text>
+                  </Pressable>
+                  <View className="flex-row gap-2">
+                    <View className="flex-1">
+                      <CustomDropdown
+                        label="Discount type"
+                        value={orderDraft.discountType}
+                        options={[
+                          { value: 'Percent', label: 'Percent' },
+                          { value: 'Fixed', label: 'Fixed amount' },
+                        ]}
+                        onSelect={value => setOrderDraft(current => ({ ...current, discountType: value as OrderDraft['discountType'] }))}
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <InputField label="Discount" value={orderDraft.discountValue} onChangeText={value => setOrderDraft(current => ({ ...current, discountValue: value }))} keyboardType="decimal-pad" placeholder="0" />
+                    </View>
+                  </View>
+                  <InputField label="Advance amount (₹)" value={orderDraft.advanceAmount} onChangeText={value => setOrderDraft(current => ({ ...current, advanceAmount: value }))} keyboardType="decimal-pad" placeholder="0" />
+                  <View className="flex-row justify-between border-t border-white/15 py-2">
+                    <Text className="text-xs text-white/70">GST amount</Text>
+                    <Text testID="take-order-gst-amount" className="text-xs font-bold text-white">{currency(orderTotals.gstAmount)}</Text>
+                  </View>
+                  <View className="flex-row justify-between py-1">
+                    <Text className="text-xs text-white/70">Discount applied</Text>
+                    <Text testID="take-order-discount-amount" className="text-xs font-bold text-white">−{currency(orderTotals.discount)}</Text>
+                  </View>
+                  <View className="flex-row justify-between border-t border-white/15 pt-3">
+                    <Text className="text-sm font-extrabold text-white">Total</Text>
+                    <Text testID="take-order-total" className="text-lg font-black text-amber-200">{currency(orderTotals.total)}</Text>
+                  </View>
+                  <View className="mt-1 flex-row justify-between">
+                    <Text className="text-xs text-white/70">Balance due</Text>
+                    <Text testID="take-order-balance-due" className="text-xs font-bold text-white">
+                      {currency(Math.max(0, orderTotals.total - (Number(orderDraft.advanceAmount) || 0)))}
+                    </Text>
+                  </View>
+                </View>
+              </>
+            )}
+          </View>
+        </ScrollView>
       </View>
-    </ScrollView>
+
+      <View
+        style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+        className="border-t border-[#E6E9E3] bg-[#F8F7F2] px-4 pt-3">
+        {orderFormStep === 'products' ? (
+          <Pressable
+            testID="take-order-next-button"
+            accessibilityRole="button"
+            disabled={orderDraft.items.length === 0}
+            onPress={() => setOrderFormStep('details')}
+            className={`min-h-12 flex-row items-center justify-center rounded-xl ${orderDraft.items.length === 0 ? 'bg-[#9AA6A1]' : 'bg-[#07564B]'}`}>
+            <Text className="text-sm font-extrabold text-white">Next Details</Text>
+            <Text className="ml-2 text-lg font-bold text-white">›</Text>
+          </Pressable>
+        ) : (
+          <View className="flex-row gap-3">
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setOrderFormStep('products')}
+              className="min-h-12 flex-1 items-center justify-center rounded-xl border border-[#07564B] bg-white">
+              <Text className="text-sm font-extrabold text-[#07564B]">Back to products</Text>
+            </Pressable>
+            <Pressable
+              testID="tack-order-save-button"
+              accessibilityRole="button"
+              disabled={orderSaving}
+              onPress={() => void createTackOrder()}
+              className={`min-h-12 flex-1 flex-row items-center justify-center rounded-xl ${orderSaving ? 'bg-[#8DA69B]' : 'bg-[#07564B]'}`}>
+              {orderSaving ? <ActivityIndicator color="white" /> : <Check size={18} color="white" />}
+              <Text className="ml-2 text-sm font-extrabold text-white">{orderSaving ? 'Creating…' : 'Create order'}</Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+    </KeyboardAvoidingView>
   );
 
   return (

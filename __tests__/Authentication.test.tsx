@@ -235,12 +235,48 @@ test('persists the token after a successful login', async () => {
 });
 
 test('routes shop admins to the admin dashboard and its API', async () => {
-  mockPost.mockResolvedValue({
-    data: {
-      token: 'admin-token',
-      user: { role: 'admin', name: 'Shop Admin', email: 'admin@example.com' },
-    },
-  });
+  mockPost.mockImplementation((path: unknown) =>
+    Promise.resolve(
+      path === '/auth/login'
+        ? {
+            data: {
+              token: 'admin-token',
+              user: { role: 'admin', name: 'Shop Admin', email: 'admin@example.com' },
+            },
+          }
+        : {
+            data: {
+              id: 21,
+              order_no: 'TO-21',
+              order_status: 'Order Placed',
+              payment_status: 'Pending',
+              customer: {
+                name: 'Test Customer',
+                phone: '9876543210',
+                email: '',
+                address: '',
+              },
+              items: [{
+                product_id: 14,
+                product_name: 'Necklace',
+                quantity: 1,
+                price: 10000,
+                net_gold_weight: 25.5,
+              }],
+              sub_total: 10000,
+              gst_included: true,
+              gst_rate: 10,
+              gst_amount: 900,
+              discount_type: 'Percent',
+              discount_value: 10,
+              discount_amount: 1000,
+              total_amount: 9900,
+              advance_amount: 2000,
+              balance_due: 7900,
+            },
+          },
+    ),
+  );
   mockGet.mockImplementation((path: unknown) =>
     Promise.resolve(
       path === '/dashboard'
@@ -320,7 +356,22 @@ test('routes shop admins to the admin dashboard and its API', async () => {
             : path === '/billings' || path === '/tack-orders'
               ? { data: [] }
               : path === '/products/mine'
-                ? { data: { products: [], pagination: { totalPages: 1 } } }
+                  ? {
+                      data: {
+                        products: [{
+                          id: 14,
+                          name: 'Necklace',
+                          product_code: 'GO-14',
+                          category: 'Necklace',
+                          metal_type: 'Gold',
+                          purity: '22K',
+                          final_selling_price: '10000',
+                          net_weight: '20',
+                          status: 'Active',
+                        }],
+                        pagination: { totalPages: 1 },
+                      },
+                    }
             : { data: { user: { role: 'admin' } } },
     ),
   );
@@ -460,6 +511,57 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   expect(
     renderer.root.findByProps({ accessibilityLabel: 'Back to Take Orders' }),
   ).toBeDefined();
+  expect(renderer.root.findByProps({ testID: 'take-order-product-14' })).toBeDefined();
+  await act(async () => {
+    renderer.root
+      .findByProps({ accessibilityLabel: 'Add Necklace to take order' })
+      .props.onPress();
+  });
+  const weightInput = renderer.root.findByProps({
+    accessibilityLabel: 'Net weight for Necklace',
+  });
+  expect(weightInput.props.value).toBe('20');
+  await act(async () => {
+    weightInput.props.onChangeText('25.5');
+  });
+  expect(
+    renderer.root.findByProps({ accessibilityLabel: 'Net weight for Necklace' })
+      .props.value,
+  ).toBe('25.5');
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'take-order-next-button' }).props.onPress();
+  });
+  expect(renderer.root.findByProps({ testID: 'take-order-customer-details' })).toBeDefined();
+  expect(renderer.root.findByProps({ testID: 'take-order-payment-summary' })).toBeDefined();
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'GST rate (%)' }).props.onChangeText('10');
+    renderer.root.findByProps({ testID: 'take-order-gst-toggle' }).props.onPress();
+    renderer.root.findByProps({ accessibilityLabel: 'Discount' }).props.onChangeText('10');
+    renderer.root.findByProps({ accessibilityLabel: 'Advance amount (₹)' }).props.onChangeText('2000');
+  });
+  expect(renderer.root.findByProps({ testID: 'take-order-gst-amount' }).props.children).toBe('₹900.00');
+  expect(renderer.root.findByProps({ testID: 'take-order-discount-amount' }).props.children).toEqual(['−', '₹1,000.00']);
+  expect(renderer.root.findByProps({ testID: 'take-order-total' }).props.children).toBe('₹9,900.00');
+  expect(renderer.root.findByProps({ testID: 'take-order-balance-due' }).props.children).toBe('₹7,900.00');
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Customer name *' }).props.onChangeText('Test Customer');
+    renderer.root.findByProps({ accessibilityLabel: 'Phone number *' }).props.onChangeText('9876543210');
+  });
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'tack-order-save-button' }).props.onPress();
+    await new Promise<void>(resolve => setImmediate(resolve));
+  });
+  expect(mockPost).toHaveBeenCalledWith(
+    '/tack-orders',
+    expect.objectContaining({
+      items: [expect.objectContaining({ product_id: 14, net_gold_weight: 25.5 })],
+      gst_included: true,
+      gst_rate: 10,
+      discount_type: 'Percent',
+      discount_value: 10,
+      advance_amount: 2000,
+    }),
+  );
 });
 
 test('removes the saved token only when Logout is pressed', async () => {
