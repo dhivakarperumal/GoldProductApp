@@ -226,7 +226,7 @@ export default function Login({
                     <UserRound
                       size={17}
                       color={
-                        focusedField === 'identifier' ? '#B8860B' : '#6B7280'
+                        focusedField === 'identifier' ? '#F5C451' : '#E9DFC0'
                       }
                     />
                   </View>
@@ -252,7 +252,8 @@ export default function Login({
                     }}
                     onSubmitEditing={() => passwordInputRef.current?.focus()}
                     placeholder="Enter email or mobile number"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="rgba(220, 236, 228, 0.65)"
+                    selectionColor="#F5C451"
                     ref={identifierInputRef}
                     returnKeyType="next"
                     value={identifier}
@@ -284,7 +285,7 @@ export default function Login({
                     <LockKeyhole
                       size={17}
                       color={
-                        focusedField === 'password' ? '#B8860B' : '#6B7280'
+                        focusedField === 'password' ? '#F5C451' : '#E9DFC0'
                       }
                     />
                   </View>
@@ -308,7 +309,8 @@ export default function Login({
                     }}
                     onSubmitEditing={handleSubmit}
                     placeholder="Enter your password"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="rgba(220, 236, 228, 0.65)"
+                    selectionColor="#F5C451"
                     ref={passwordInputRef}
                     returnKeyType="done"
                     secureTextEntry={!showPassword}
@@ -324,9 +326,9 @@ export default function Login({
                     onPress={() => setShowPassword(visible => !visible)}
                     className="h-10 w-10 items-center justify-center rounded-xl active:opacity-70">
                     {showPassword ? (
-                      <EyeOff size={18} color="#A77B15" />
+                      <EyeOff size={18} color="#F5C451" />
                     ) : (
-                      <Eye size={18} color="#A77B15" />
+                      <Eye size={18} color="#F5C451" />
                     )}
                   </Pressable>
                 </View>
@@ -562,21 +564,22 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   inputRowIdle: {
-    backgroundColor: 'rgba(255, 253, 249, 0.94)',
-    borderColor: 'rgba(245, 224, 158, 0.55)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(245, 224, 158, 0.35)',
+    borderTopColor: 'rgba(255, 255, 255, 0.32)',
   },
   inputRowFocused: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.20)',
     borderColor: '#F5C451',
   },
   iconBadgeIdle: {
-    backgroundColor: '#EFE9D9',
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
   },
   iconBadgeFocused: {
-    backgroundColor: '#FBF2D8',
+    backgroundColor: 'rgba(245, 196, 81, 0.22)',
   },
   inputText: {
-    color: '#111827',
+    color: '#FFFFFF',
   },
   checkboxChecked: {
     backgroundColor: '#C48F0E',
