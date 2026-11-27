@@ -2,23 +2,23 @@ import type { LucideIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 import DashboardMetricCard, {
   dashboardMetricPalettes,
-} from '../Components/DashboardMetricCard';
+} from './DashboardMetricCard';
 
-type InventoryMetric = {
+type DashboardMetric = {
   id: string;
   label: string;
   value: string | number;
   icon: LucideIcon;
   palette: keyof typeof dashboardMetricPalettes;
-  trend: string;
+  trend?: string;
   trendUp?: boolean;
 };
 
 type Props = {
-  metrics: InventoryMetric[];
+  metrics: DashboardMetric[];
 };
 
-export default function InventoryMetricGrid({ metrics }: Props) {
+export default function DashboardMetricGrid({ metrics }: Props) {
   return (
     <View className="mb-4 flex-row flex-wrap gap-3">
       {metrics.map(metric => (

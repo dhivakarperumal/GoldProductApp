@@ -9,6 +9,7 @@ import {
   Share,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import {
@@ -16,6 +17,7 @@ import {
   ArrowDownLeft,
   Coins,
   Plus,
+  Search,
   Store,
   Wallet,
   X,
@@ -24,6 +26,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
+import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import { CustomDropdown, DatePicker, Field } from '../Loans/FormControls';
 import { currency, inventoryError } from '../Products/inventory';
 
@@ -434,11 +437,11 @@ export default function DealerPurchases({ onBack }: Props) {
   };
 
   const summaryCards = [
-    { label: 'Active dealers', value: summary?.dealers?.active ?? '—', note: 'Currently active', icon: Store },
-    { label: 'Supplier payables', value: summary ? currency(summary.payables) : '—', note: 'Outstanding balance', icon: Wallet },
-    { label: 'Dealer receivables', value: summary ? currency(summary.receivables) : '—', note: 'Amount to receive', icon: ArrowDownLeft },
-    { label: 'Purchases this month', value: summary ? currency(summary.purchases_this_month) : '—', note: 'Monthly total', icon: Coins },
-    { label: 'Overdue invoices', value: summary ? `${summary.overdue?.count || 0} · ${currency(summary.overdue?.amount)}` : '—', note: 'Invoices past due', icon: AlertTriangle },
+    { id: 'purchase-dealers', label: 'Active dealers', value: summary?.dealers?.active ?? '—', note: 'Currently active', icon: Store, palette: 'total_customers' as const },
+    { id: 'purchase-payables', label: 'Supplier payables', value: summary ? currency(summary.payables) : '—', note: 'Outstanding balance', icon: Wallet, palette: 'active_gold_loans' as const },
+    { id: 'purchase-receivables', label: 'Dealer receivables', value: summary ? currency(summary.receivables) : '—', note: 'Amount to receive', icon: ArrowDownLeft, palette: 'gold_stock_value' as const },
+    { id: 'purchase-monthly', label: 'Purchases this month', value: summary ? currency(summary.purchases_this_month) : '—', note: 'Monthly total', icon: Coins, palette: 'total_products' as const },
+    { id: 'purchase-overdue', label: 'Overdue invoices', value: summary ? `${summary.overdue?.count || 0} · ${currency(summary.overdue?.amount)}` : '—', note: 'Invoices past due', icon: AlertTriangle, palette: 'low_stock_products' as const, trendUp: false },
   ];
 
   return (
@@ -458,62 +461,82 @@ export default function DealerPurchases({ onBack }: Props) {
             tintColor="#07564B"
           />
         }>
-        <View className="mb-4">
-          <Text className="text-xl font-extrabold text-[#173F35]">Purchases & Payables</Text>
-          <Text className="mt-1 text-sm text-[#6B7E76]">Supplier invoices, adjustments, and dealer payments.</Text>
-        </View>
+        <DashboardMetricGrid
+          metrics={summaryCards.map(({ id, label, value, note, icon, palette, trendUp }) => ({
+            id,
+            label,
+            value: String(value),
+            icon,
+            palette,
+            trend: note,
+            trendUp,
+          }))}
+        />
 
-        <View className="mb-4 flex-row flex-wrap gap-2">
-          {summaryCards.map(({ label, value, note, icon: Icon }, index) => (
-            <View
-              key={label}
-              className={`min-w-[45%] flex-1 rounded-2xl p-3 ${
-                ['bg-[#103D34]', 'bg-[#40331B]', 'bg-[#15354B]', 'bg-[#4A2A22]', 'bg-[#422333]'][index]
-              }`}>
-              <Icon size={20} color="#EAD78A" />
-              <Text className="mt-3 text-xs font-semibold text-white/80">{label}</Text>
-              <Text className="mt-1 text-base font-extrabold text-white">{String(value)}</Text>
-              <Text className="mt-1 text-[10px] text-white/70">{note}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
-          <Field
-            label="Search purchase documents"
+        <View className="mb-3 flex-row items-center rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm">
+          <Search size={18} color="#A77B15" />
+          <TextInput
+            accessibilityLabel="Search purchase documents"
             value={search}
             onChangeText={value => setSearch(value.slice(0, 100))}
             placeholder="Search document, dealer, or invoice"
+            placeholderTextColor="#9AA6A1"
+            className="min-h-12 flex-1 px-3 text-sm text-[#173F35]"
           />
-          <Text className="mb-2 text-xs font-bold uppercase tracking-wide text-[#52645F]">Document date range</Text>
-          <DatePicker label="From" value={rangeStart} onChange={setRangeStart} maximumDate={null} />
-          <DatePicker label="To" value={rangeEnd} onChange={setRangeEnd} maximumDate={null} />
-          <Pressable onPress={applyDateRange} className="mb-4 min-h-11 items-center justify-center rounded-xl bg-[#EAF3EF]">
-            <Text className="text-sm font-bold text-[#07564B]">{dateRange.startDate || dateRange.endDate ? 'Apply date range' : 'Apply date filter'}</Text>
+          {search ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+              onPress={() => setSearch('')}
+              hitSlop={8}>
+              <X size={18} color="#6B7E76" />
+            </Pressable>
+          ) : null}
+        </View>
+        <Text className="mb-2 text-xs font-bold uppercase tracking-wide text-[#52645F]">Document date range</Text>
+        <View className="flex-row gap-3">
+          <View className="min-w-0 flex-1">
+            <DatePicker label="From" value={rangeStart} onChange={setRangeStart} maximumDate={null} />
+          </View>
+          <View className="min-w-0 flex-1">
+            <DatePicker label="To" value={rangeEnd} onChange={setRangeEnd} maximumDate={null} />
+          </View>
+        </View>
+        <View className="mb-4 flex-row gap-3">
+          <Pressable
+            accessibilityRole="button"
+            onPress={applyDateRange}
+            className="min-h-11 flex-1 items-center justify-center rounded-xl bg-[#07564B]">
+            <Text className="text-sm font-bold text-white">
+              {dateRange.startDate || dateRange.endDate ? 'Apply date range' : 'Apply date filter'}
+            </Text>
           </Pressable>
-          <Pressable onPress={exportCsv} className="mb-4 min-h-11 flex-row items-center justify-center gap-2 rounded-xl border border-[#E6E9E3]">
-            <Text className="text-sm font-bold text-[#52645F]">Export CSV</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={exportCsv}
+            className="min-h-11 flex-1 items-center justify-center rounded-xl border border-[#DDBB57] bg-white">
+            <Text className="text-sm font-bold text-[#173F35]">Export CSV</Text>
           </Pressable>
-          <View className="flex-row items-center justify-between">
-            <Text className="text-sm font-bold text-[#52645F]">View</Text>
-            <View className="flex-row rounded-xl bg-[#F3F4F1] p-1">
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Show purchases as a list"
-                accessibilityState={{ selected: viewMode === 'list' }}
-                onPress={() => setViewMode('list')}
-                className={`h-10 px-4 items-center justify-center rounded-lg ${viewMode === 'list' ? 'bg-[#07564B]' : ''}`}>
-                <Text className={`text-xs font-bold ${viewMode === 'list' ? 'text-white' : 'text-[#6B7E76]'}`}>List</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Show purchases as cards"
-                accessibilityState={{ selected: viewMode === 'grid' }}
-                onPress={() => setViewMode('grid')}
-                className={`h-10 px-4 items-center justify-center rounded-lg ${viewMode === 'grid' ? 'bg-[#07564B]' : ''}`}>
-                <Text className={`text-xs font-bold ${viewMode === 'grid' ? 'text-white' : 'text-[#6B7E76]'}`}>Cards</Text>
-              </Pressable>
-            </View>
+        </View>
+        <View className="mb-4 flex-row items-center justify-between">
+          <Text className="text-sm font-bold text-[#52645F]">View</Text>
+          <View className="flex-row rounded-xl bg-[#F3F4F1] p-1">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Show purchases as a list"
+              accessibilityState={{ selected: viewMode === 'list' }}
+              onPress={() => setViewMode('list')}
+              className={`h-10 px-4 items-center justify-center rounded-lg ${viewMode === 'list' ? 'bg-[#07564B]' : ''}`}>
+              <Text className={`text-xs font-bold ${viewMode === 'list' ? 'text-white' : 'text-[#6B7E76]'}`}>List</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Show purchases as cards"
+              accessibilityState={{ selected: viewMode === 'grid' }}
+              onPress={() => setViewMode('grid')}
+              className={`h-10 px-4 items-center justify-center rounded-lg ${viewMode === 'grid' ? 'bg-[#07564B]' : ''}`}>
+              <Text className={`text-xs font-bold ${viewMode === 'grid' ? 'text-white' : 'text-[#6B7E76]'}`}>Cards</Text>
+            </Pressable>
           </View>
         </View>
 

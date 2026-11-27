@@ -22,7 +22,7 @@ import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
 import { SubmitButton } from '../Loans/FormControls';
-import InventoryMetricGrid from './InventoryMetricGrid';
+import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import {
   inventoryError,
   mediaUrl,
@@ -192,7 +192,7 @@ export default function StockDetails({ onBack }: Props) {
         contentContainerClassName="p-4 pb-9"
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets>
-        <InventoryMetricGrid
+        <DashboardMetricGrid
           metrics={[
             {
               id: 'stock-total-products',

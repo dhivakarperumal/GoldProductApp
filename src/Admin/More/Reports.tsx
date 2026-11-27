@@ -19,6 +19,7 @@ import {
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
+import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import { CustomDropdown, DatePicker } from '../Loans/FormControls';
 
 type Props = { onBack: () => void };
@@ -70,11 +71,11 @@ const RANGE_OPTIONS = [
 ];
 
 const STAT_CARDS = [
-  { id: 'total_customers', icon: UsersRound, accent: '#6EE7B7' },
-  { id: 'active_gold_loans', icon: Wallet, accent: '#FCD36B' },
-  { id: 'total_products', icon: Package, accent: '#80DEEA' },
-  { id: 'gold_stock_value', icon: Gem, accent: '#FDBA9A' },
-];
+  { id: 'total_customers', icon: UsersRound, palette: 'total_customers' },
+  { id: 'active_gold_loans', icon: Wallet, palette: 'active_gold_loans' },
+  { id: 'total_products', icon: Package, palette: 'total_products' },
+  { id: 'gold_stock_value', icon: Gem, palette: 'gold_stock_value' },
+] as const;
 
 const DISPLAYED_STATUSES = ['Active', 'Processing', 'Pending', 'Overdue'];
 
@@ -272,11 +273,7 @@ export default function Reports({ onBack }: Props) {
             tintColor="#07564B"
           />
         }>
-        <Text className="mb-4 text-sm leading-5 text-[#6B7E76]">
-          Sales trends, customers, inventory and gold loan activity.
-        </Text>
-
-        <View className="mb-4 rounded-2xl border border-[#ECE7D8] bg-white p-4">
+        <View className="mb-4">
           <CustomDropdown
             label="Date range"
             value={preset}
@@ -289,25 +286,31 @@ export default function Reports({ onBack }: Props) {
           />
           {preset === 'custom' ? (
             <>
-              <DatePicker
-                label="Start date"
-                value={customRange.startDate}
-                maximumDate={null}
-                initialDate={new Date()}
-                onChange={value => setCustomRange(current => ({ ...current, startDate: value }))}
-              />
-              <DatePicker
-                label="End date"
-                value={customRange.endDate}
-                minimumDate={
-                  customRange.startDate
-                    ? new Date(`${customRange.startDate}T00:00:00`)
-                    : undefined
-                }
-                maximumDate={null}
-                initialDate={new Date()}
-                onChange={value => setCustomRange(current => ({ ...current, endDate: value }))}
-              />
+              <View className="flex-row gap-3">
+                <View className="min-w-0 flex-1">
+                  <DatePicker
+                    label="Start date"
+                    value={customRange.startDate}
+                    maximumDate={null}
+                    initialDate={new Date()}
+                    onChange={value => setCustomRange(current => ({ ...current, startDate: value }))}
+                  />
+                </View>
+                <View className="min-w-0 flex-1">
+                  <DatePicker
+                    label="End date"
+                    value={customRange.endDate}
+                    minimumDate={
+                      customRange.startDate
+                        ? new Date(`${customRange.startDate}T00:00:00`)
+                        : undefined
+                    }
+                    maximumDate={null}
+                    initialDate={new Date()}
+                    onChange={value => setCustomRange(current => ({ ...current, endDate: value }))}
+                  />
+                </View>
+              </View>
               {rangeError ? (
                 <Text accessibilityRole="alert" className="mb-3 text-xs font-semibold text-rose-700">
                   {rangeError}
@@ -332,7 +335,7 @@ export default function Reports({ onBack }: Props) {
               </Pressable>
             </>
           ) : null}
-          <Text className="text-xs font-medium text-[#6B7E76]">Showing: {rangeLabel}</Text>
+          <Text className="mb-2 text-xs font-medium text-[#6B7E76]">Showing: {rangeLabel}</Text>
         </View>
 
         {errorMessage ? (
@@ -356,25 +359,23 @@ export default function Reports({ onBack }: Props) {
 
         {reportsData ? (
           <>
-            <View className="mb-4 flex-row flex-wrap justify-between">
-              {STAT_CARDS.map(({ id, icon: Icon, accent }) => {
+            <DashboardMetricGrid
+              metrics={STAT_CARDS.flatMap(({ id, icon, palette }) => {
                 const metric = statsById.get(id);
-                if (!metric) return null;
-                return (
-                  <View
-                    key={id}
-                    className="mb-3 w-[48%] rounded-2xl border border-[#ECE7D8] bg-white p-4">
-                    <View className="mb-3 h-9 w-9 items-center justify-center rounded-xl bg-[#173F35]">
-                      <Icon size={18} color={accent} />
-                    </View>
-                    <Text className="text-xs font-semibold text-[#6B7E76]">{metric.label}</Text>
-                    <Text className="mt-1 text-lg font-extrabold text-[#173F35]">
-                      {metric.value}
-                    </Text>
-                  </View>
-                );
+                return metric
+                  ? [
+                      {
+                        id: `report-${id}`,
+                        label: metric.label,
+                        value: metric.value,
+                        icon,
+                        palette,
+                        trend: metric.trend || rangeLabel,
+                      },
+                    ]
+                  : [];
               })}
-            </View>
+            />
 
             <View className="mb-4 rounded-2xl border border-[#ECE7D8] bg-white p-4">
               <View className="mb-4 flex-row items-start justify-between">

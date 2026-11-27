@@ -7,6 +7,7 @@ import {
   RefreshControl,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
@@ -18,6 +19,7 @@ import {
   LayoutGrid,
   List,
   Plus,
+  Search,
   Wallet,
   X,
 } from 'lucide-react-native';
@@ -25,6 +27,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
+import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import { CustomDropdown, DatePicker, Field, SubmitButton } from '../Loans/FormControls';
 import { inventoryError } from '../Products/inventory';
 
@@ -246,11 +249,11 @@ export default function FundManagement({ onBack }: Props) {
   const firstItem = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const lastItem = Math.min(page * PAGE_SIZE, total);
   const statCards = [
-    { label: 'Opening Balance', value: summary?.opening_balance, detail: 'Opening ledger balance', icon: Wallet },
-    { label: 'Fund Added', value: summary?.fund_added, detail: 'Funds added to ledger', icon: Plus },
-    { label: 'Total Credits', value: summary?.total_credit, detail: 'Credit transactions', icon: ArrowDownLeft },
-    { label: 'Total Debits', value: summary?.total_debit, detail: 'Debit transactions', icon: ArrowUpRight },
-    { label: 'Available Balance', value: summary?.current_balance, detail: 'Current ledger balance', icon: Wallet },
+    { id: 'fund-opening', label: 'Opening Balance', value: summary?.opening_balance, detail: 'Opening ledger balance', icon: Wallet, palette: 'gold_stock_value' as const },
+    { id: 'fund-added', label: 'Fund Added', value: summary?.fund_added, detail: 'Funds added to ledger', icon: Plus, palette: 'total_customers' as const },
+    { id: 'fund-credits', label: 'Total Credits', value: summary?.total_credit, detail: 'Credit transactions', icon: ArrowDownLeft, palette: 'total_products' as const },
+    { id: 'fund-debits', label: 'Total Debits', value: summary?.total_debit, detail: 'Debit transactions', icon: ArrowUpRight, palette: 'low_stock_products' as const, trendUp: false },
+    { id: 'fund-available', label: 'Available Balance', value: summary?.current_balance, detail: 'Current ledger balance', icon: Wallet, palette: 'active_gold_loans' as const },
   ];
 
   const selectPreset = (value: string) => {
@@ -364,103 +367,121 @@ export default function FundManagement({ onBack }: Props) {
           />
         }
         keyboardShouldPersistTaps="handled">
-        <View className="mb-4 flex-row items-center justify-between">
-          <View>
-            <Text className="text-xl font-extrabold text-[#173F35]">Fund Ledger</Text>
-            <Text className="mt-1 text-sm text-[#6B7E76]">Admin fund summary and transactions.</Text>
-          </View>
-        </View>
+        <DashboardMetricGrid
+          metrics={statCards.map(({ id, label, value, detail, icon, palette, trendUp }) => ({
+            id,
+            label,
+            value: loading && value == null ? '—' : currency(value),
+            icon,
+            palette,
+            trend: detail,
+            trendUp,
+          }))}
+        />
 
-        <View className="mb-4 flex-row flex-wrap gap-2">
-          {statCards.map(({ label, value, detail, icon: Icon }) => (
-            <View key={label} className="min-w-[45%] flex-1 rounded-2xl bg-[#173F35] p-3">
-              <View className="mb-3 h-9 w-9 items-center justify-center rounded-lg bg-white/10">
-                <Icon size={18} color="#EAD78A" />
-              </View>
-              <Text className="text-xs font-semibold text-[#DCE8E4]">{label}</Text>
-              <Text className="mt-1 text-lg font-extrabold text-white">
-                {loading && value == null ? '—' : currency(value)}
-              </Text>
-              <Text className="mt-1 text-[10px] text-[#DCE8E4]">{detail}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
-          <Field
-            label="Search fund entries"
+        <View className="mb-3 flex-row items-center rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm">
+          <Search size={18} color="#A77B15" />
+          <TextInput
+            accessibilityLabel="Search fund entries"
             value={search}
             onChangeText={value => {
               setSearch(value);
               setPage(1);
             }}
             placeholder="Search description, payment method, or admin"
+            placeholderTextColor="#9AA6A1"
+            className="min-h-12 flex-1 px-3 text-sm text-[#173F35]"
           />
-          <CustomDropdown
-            label="Date range"
-            value={preset}
-            options={[
-              { value: 'all', label: 'All time' },
-              { value: 'today', label: 'Today' },
-              { value: 'last7', label: 'Last 7 days' },
-              { value: 'last30', label: 'Last 30 days' },
-              { value: 'last90', label: 'Last 90 days' },
-              { value: 'custom', label: 'Custom range' },
-            ]}
-            onSelect={selectPreset}
-          />
-          {preset === 'custom' ? (
-            <>
-              <DatePicker
-                label="Start date"
-                value={customRange.startDate}
-                onChange={value => setCustomRange(current => ({ ...current, startDate: value }))}
-                maximumDate={null}
-              />
-              <DatePicker
-                label="End date"
-                value={customRange.endDate}
-                onChange={value => setCustomRange(current => ({ ...current, endDate: value }))}
-                minimumDate={customRange.startDate ? new Date(`${customRange.startDate}T00:00:00`) : undefined}
-                maximumDate={null}
-              />
-              <Pressable onPress={applyCustomRange} className="mb-4 min-h-11 items-center justify-center rounded-xl bg-[#07564B]">
-                <Text className="font-bold text-white">Apply date filter</Text>
-              </Pressable>
-            </>
+          {search ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+              onPress={() => {
+                setSearch('');
+                setPage(1);
+              }}
+              hitSlop={8}>
+              <X size={18} color="#6B7E76" />
+            </Pressable>
           ) : null}
-          <CustomDropdown
-            label="Transaction type"
-            value={transactionType}
-            options={[
-              { value: 'ALL', label: 'All transaction types' },
-              ...TRANSACTION_TYPES,
-            ]}
-            onSelect={value => {
-              setTransactionType(value);
-              setPage(1);
-            }}
-          />
-          <View className="flex-row items-center justify-between">
-            <Text className="text-sm font-bold text-[#52645F]">View</Text>
-            <View className="flex-row rounded-xl bg-[#F3F4F1] p-1">
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Show transactions as a list"
-                accessibilityState={{ selected: viewMode === 'list' }}
-                onPress={() => setViewMode('list')}
-                className={`h-10 w-11 items-center justify-center rounded-lg ${viewMode === 'list' ? 'bg-[#07564B]' : ''}`}>
-                <List size={18} color={viewMode === 'list' ? 'white' : '#6B7E76'} />
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Show transactions as cards"
-                accessibilityState={{ selected: viewMode === 'grid' }}
-                onPress={() => setViewMode('grid')}
-                className={`h-10 w-11 items-center justify-center rounded-lg ${viewMode === 'grid' ? 'bg-[#07564B]' : ''}`}>
-                <LayoutGrid size={18} color={viewMode === 'grid' ? 'white' : '#6B7E76'} />
-              </Pressable>
+        </View>
+
+        <View className="flex-row gap-3">
+          <View className="min-w-0 flex-1">
+            <CustomDropdown
+              label="Date range"
+              value={preset}
+              options={[
+                { value: 'all', label: 'All time' },
+                { value: 'today', label: 'Today' },
+                { value: 'last7', label: 'Last 7 days' },
+                { value: 'last30', label: 'Last 30 days' },
+                { value: 'last90', label: 'Last 90 days' },
+                { value: 'custom', label: 'Custom range' },
+              ]}
+              onSelect={selectPreset}
+            />
+          </View>
+          <View className="min-w-0 flex-1">
+            <CustomDropdown
+              label="Transaction type"
+              value={transactionType}
+              options={[
+                { value: 'ALL', label: 'All transaction types' },
+                ...TRANSACTION_TYPES,
+              ]}
+              onSelect={value => {
+                setTransactionType(value);
+                setPage(1);
+              }}
+            />
+          </View>
+        </View>
+        {preset === 'custom' ? (
+          <>
+            <View className="flex-row gap-3">
+              <View className="min-w-0 flex-1">
+                <DatePicker
+                  label="Start date"
+                  value={customRange.startDate}
+                  onChange={value => setCustomRange(current => ({ ...current, startDate: value }))}
+                  maximumDate={null}
+                />
+              </View>
+              <View className="min-w-0 flex-1">
+                <DatePicker
+                  label="End date"
+                  value={customRange.endDate}
+                  onChange={value => setCustomRange(current => ({ ...current, endDate: value }))}
+                  minimumDate={customRange.startDate ? new Date(`${customRange.startDate}T00:00:00`) : undefined}
+                  maximumDate={null}
+                />
+              </View>
             </View>
+            <Pressable onPress={applyCustomRange} className="mb-4 min-h-11 items-center justify-center rounded-xl bg-[#07564B]">
+              <Text className="font-bold text-white">Apply date filter</Text>
+            </Pressable>
+          </>
+        ) : null}
+        <View className="mb-4 flex-row items-center justify-between">
+          <Text className="text-sm font-bold text-[#52645F]">View</Text>
+          <View className="flex-row rounded-xl bg-[#F3F4F1] p-1">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Show transactions as a list"
+              accessibilityState={{ selected: viewMode === 'list' }}
+              onPress={() => setViewMode('list')}
+              className={`h-10 w-11 items-center justify-center rounded-lg ${viewMode === 'list' ? 'bg-[#07564B]' : ''}`}>
+              <List size={18} color={viewMode === 'list' ? 'white' : '#6B7E76'} />
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Show transactions as cards"
+              accessibilityState={{ selected: viewMode === 'grid' }}
+              onPress={() => setViewMode('grid')}
+              className={`h-10 w-11 items-center justify-center rounded-lg ${viewMode === 'grid' ? 'bg-[#07564B]' : ''}`}>
+              <LayoutGrid size={18} color={viewMode === 'grid' ? 'white' : '#6B7E76'} />
+            </Pressable>
           </View>
         </View>
 

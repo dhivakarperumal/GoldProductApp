@@ -25,7 +25,7 @@ import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
 import { CustomDropdown } from '../Loans/FormControls';
 import CategoryForm from './CategoryForm';
-import InventoryMetricGrid from './InventoryMetricGrid';
+import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import { inventoryError, mediaUrl, parseArray, type Category } from './inventory';
 
 type Props = { onBack: () => void };
@@ -110,7 +110,7 @@ export default function Categories({ onBack }: Props) {
           contentContainerClassName="p-4 pb-24"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor="#07564B" />}
           keyboardShouldPersistTaps="handled">
-          <InventoryMetricGrid
+          <DashboardMetricGrid
             metrics={[
               {
                 id: 'categories-total',

@@ -25,7 +25,7 @@ import {
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import { CustomDropdown } from '../Loans/FormControls';
-import InventoryMetricGrid from './InventoryMetricGrid';
+import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import {
   currency,
   inventoryError,
@@ -208,7 +208,7 @@ export default function AllProducts({ onNavigate }: Props) {
           />
         }
         keyboardShouldPersistTaps="handled">
-        <InventoryMetricGrid
+        <DashboardMetricGrid
           metrics={[
             {
               id: 'products-total',
