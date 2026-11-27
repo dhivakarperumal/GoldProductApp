@@ -109,9 +109,10 @@ export default function Login({
     <SafeAreaView className="flex-1 bg-[#F8F7F2]" edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
           contentContainerClassName="flex-grow justify-center px-6 py-10"
+          automaticallyAdjustKeyboardInsets
           keyboardShouldPersistTaps="handled">
           <View className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#F3E8C1]" />
           <View className="absolute -bottom-16 -left-20 h-56 w-56 rounded-full bg-[#E3EEE8]" />

@@ -709,7 +709,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
     <SafeAreaView className="flex-1 bg-[#F8F7F2]" edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View className="flex-1 px-6 py-4">
         <View className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#F3E8C1]" />
         <View className="absolute -bottom-16 -left-20 h-56 w-56 rounded-full bg-[#E3EEE8]" />
@@ -760,6 +760,7 @@ export default function Register({ onBack, onSubmitted }: Props) {
             <ScrollView
               className="flex-1"
               contentContainerClassName="flex-grow"
+              automaticallyAdjustKeyboardInsets
               keyboardShouldPersistTaps="handled">
             {plansLoading ? (
               <View className="mb-4 flex-row items-center rounded-xl bg-[#F0F8F5] p-3">
