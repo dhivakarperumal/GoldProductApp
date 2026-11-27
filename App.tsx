@@ -810,7 +810,7 @@ function AppContent() {
               sectionLabel="More"
               onBack={() => navigateAdminMore('home')}
             />
-            <AdminProfile />
+            <AdminProfile onLogout={handleLogout} />
           </>
         </CachedScreen>
 
