@@ -55,7 +55,6 @@ export default function LoanListFilters({
       <View className="mb-3 flex-row items-start gap-3">
         <LoanDateRangeFilter
           compact
-          filterStyle
           onApply={onDateRangeChange}
         />
         <View className="min-w-0 flex-1">
@@ -64,7 +63,7 @@ export default function LoanListFilters({
             value={statusValue}
             options={statusOptions}
             onSelect={onStatusChange}
-            variant="loanFilter"
+            variant="filter"
           />
         </View>
       </View>

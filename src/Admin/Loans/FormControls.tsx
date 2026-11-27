@@ -23,6 +23,7 @@ export function CustomDropdown({
   placeholder = 'Select an option',
   required = false,
   searchable = false,
+  variant = 'default',
 }: {
   label: string;
   value: string;
@@ -31,6 +32,7 @@ export function CustomDropdown({
   placeholder?: string;
   required?: boolean;
   searchable?: boolean;
+  variant?: 'default' | 'filter';
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -52,7 +54,11 @@ export function CustomDropdown({
           setSearch('');
           setOpen(true);
         }}
-        className="min-h-12 flex-row items-center justify-between rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3">
+        className={`min-h-12 flex-row items-center justify-between py-3 ${
+          variant === 'filter'
+            ? 'rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm'
+            : 'rounded-xl border border-[#E6E9E3] bg-white px-3.5'
+        }`}>
         <Text className={`text-sm ${selectedLabel ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`}>
           {selectedLabel || placeholder}
         </Text>

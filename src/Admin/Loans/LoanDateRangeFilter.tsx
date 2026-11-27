@@ -117,6 +117,7 @@ export default function LoanDateRangeFilter({
         value={preset}
         options={PRESETS}
         onSelect={selectPreset}
+        variant={compact ? 'filter' : 'default'}
       />
       {preset === 'custom' ? (
         <>
