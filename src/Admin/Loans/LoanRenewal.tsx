@@ -263,7 +263,7 @@ export default function LoanRenewal() {
           filteredLoans.map(loan => (
             <View
               key={String(loan.id)}
-              className="mb-3 rounded-2xl border border-[#ECE7D8] bg-white p-4"
+              className="mb-3 rounded-2xl border border-[#DDBB57] bg-white p-4 shadow-sm"
             >
               <View className="flex-row items-start justify-between">
                 <View className="flex-1 pr-3">

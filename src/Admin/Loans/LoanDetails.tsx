@@ -58,7 +58,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <View className="mb-4 rounded-2xl border border-[#ECE7D8] bg-white p-4">
+    <View className="mb-4 rounded-2xl border border-[#DDBB57] bg-white p-4 shadow-sm">
       <Text className="mb-3 text-base font-extrabold text-[#173F35]">{title}</Text>
       <View className="flex-row flex-wrap gap-2">{children}</View>
     </View>
