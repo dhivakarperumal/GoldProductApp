@@ -479,42 +479,8 @@ export default function Home({ onNavigate }: HomeProps) {
       <ImageBackground
         source={require('../../Assert/Images/admindashboard.png')}
         resizeMode="cover"
-        className="mb-5 h-[150px] overflow-hidden rounded-3xl">
-        <View
-          className="absolute inset-0"
-          style={{ backgroundColor: 'rgba(255, 248, 224, 0.28)' }}
-        />
-        <View
-          className="absolute bottom-0 left-0 top-0"
-          style={{
-            width: '68%',
-            backgroundColor: 'rgba(255, 248, 224, 0.82)',
-          }}
-        />
-        <View className="flex-1 justify-center p-5">
-          <Text className="text-xs font-bold text-[#18352F]">
-            Welcome to
-          </Text>
-          <Text className="mt-1 text-[24px] font-extrabold text-[#173F35]">
-            Admin Dashboard
-          </Text>
-          <Text className="mt-2 max-w-[210px] text-xs leading-5 text-[#4F625D]">
-            Your shop overview, inventory, and gold loan activity.
-          </Text>
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Refresh dashboard"
-          onPress={onRefresh}
-          disabled={refreshing}
-          className="absolute right-3 top-3 h-9 w-9 items-center justify-center rounded-full border border-white/50 bg-[#173F35]/65">
-          {refreshing ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <RefreshCw size={16} color="#FFFFFF" />
-          )}
-        </Pressable>
-      </ImageBackground>
+        className="mb-5 h-[150px] overflow-hidden rounded-3xl"
+      />
 
       {errorMessage ? (
         <View className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-3">
