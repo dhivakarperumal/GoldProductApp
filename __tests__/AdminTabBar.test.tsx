@@ -57,11 +57,22 @@ test('switches side tabs directly and opens bottom sheet on plus tap for Billing
   });
 
   const expectOnlyActive = (activeLabel: string) => {
-    for (const { label } of tabLabels) {
+    for (const { tab, label } of tabLabels) {
       const button = renderer.root.findByProps({ accessibilityLabel: label });
       expect(button.props.accessibilityState?.selected).toBe(
         label === activeLabel,
       );
+      expect(
+        renderer.root.findByProps({
+          testID: `admin-tab-background-${tab}`,
+        }).props.style,
+      ).toMatchObject({
+        borderRadius: 12,
+        backgroundColor:
+          label === activeLabel
+            ? 'rgba(244, 201, 93, 0.2)'
+            : 'transparent',
+      });
     }
   };
 
@@ -94,4 +105,10 @@ test('switches side tabs directly and opens bottom sheet on plus tap for Billing
       .props.onPress();
   });
   expect(onOrdersOptionSelect).toHaveBeenCalledWith('orders');
+  expectOnlyActive('Orders');
+
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Home' }).props.onPress();
+  });
+  expectOnlyActive('Home');
 });
