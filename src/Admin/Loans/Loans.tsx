@@ -13,6 +13,7 @@ import {
   Check,
   Eye,
   HandCoins,
+  IndianRupee,
   Pencil,
   Printer,
   Trash2,
@@ -199,6 +200,12 @@ export default function Loans({
       loan.release_status === 'Released' ||
       String(loan.loan_status || '').toLowerCase() === 'completed',
   ).length;
+  const outstandingTotal = loans.reduce((total, loan) => {
+    const amount = Number(
+      loan.outstanding_principal ?? loan.principal_amount,
+    );
+    return Number.isFinite(amount) ? total + amount : total;
+  }, 0);
 
   const deleteLoan = async (loan: Loan) => {
     setActionLoanId(loan.id);
@@ -314,6 +321,11 @@ export default function Loans({
                   value: completedCount,
                   icon: CalendarDays,
                 },
+                {
+                  label: 'Outstanding Balance',
+                  value: formatCurrency(outstandingTotal),
+                  icon: IndianRupee,
+                },
               ].map(({ label, value, icon: Icon }, index) => (
                 <LoanStatCard
                   key={label}
@@ -326,10 +338,11 @@ export default function Loans({
                       ? 'Current portfolio'
                       : label === 'Active'
                       ? 'Active accounts'
-                      : 'Paid loans'
+                      : label === 'Completed'
+                      ? 'Paid loans'
+                      : 'Current balance'
                   }
                   paletteIndex={index}
-                  columns={3}
                 />
               ))}
             </View>

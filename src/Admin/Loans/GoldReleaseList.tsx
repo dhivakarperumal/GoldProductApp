@@ -8,7 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { CheckCircle2, Clock3, Users } from 'lucide-react-native';
+import { CheckCircle2, Clock3, IndianRupee, Users } from 'lucide-react-native';
 import api from '../../api';
 import { CustomDropdown, errorMessage } from './FormControls';
 import GoldReleaseFlow from './GoldReleaseFlow';
@@ -128,6 +128,10 @@ export default function GoldReleaseList({
   const customerCount = new Set(
     loans.map(loan => loan.customer_id).filter(Boolean),
   ).size;
+  const principalValue = loans.reduce((total, loan) => {
+    const amount = Number(loan.principal_amount);
+    return Number.isFinite(amount) ? total + amount : total;
+  }, 0);
 
   return (
     <View className="flex-1 bg-[#F8F7F2]">
@@ -156,6 +160,11 @@ export default function GoldReleaseList({
             },
             { label: 'Awaiting Handover', value: awaitingCount, icon: Clock3 },
             { label: 'Customers', value: customerCount, icon: Users },
+            {
+              label: 'Principal Value',
+              value: currency(principalValue),
+              icon: IndianRupee,
+            },
           ].map(({ label, value, icon: Icon }, index) => (
             <LoanStatCard
               key={label}
@@ -168,12 +177,13 @@ export default function GoldReleaseList({
                   ? 'Physical handover'
                   : label === 'Customers'
                   ? 'Eligible customers'
+                  : label === 'Principal Value'
+                  ? 'Loan amount'
                   : completionPage
                   ? 'Released or completed'
                   : 'Ready for release'
               }
               paletteIndex={index}
-              columns={3}
             />
           ))}
         </View>
