@@ -26,6 +26,7 @@ import {
   UserRound,
   X,
 } from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import DashboardMetricCard, {
@@ -510,7 +511,7 @@ function SummaryCard({
   id: string;
   label: string;
   value: string;
-  icon: React.ComponentType<{ size?: number; color?: string }>;
+  icon: LucideIcon;
   palette: keyof typeof dashboardMetricPalettes;
 }) {
   return (
@@ -1849,7 +1850,7 @@ export default function OrdersManagement({
                   <Text className="ml-2 text-xs text-[#6B7E76]">Updating order…</Text>
                 </View>
               ) : null}
-            </>
+            </View>
           );
         })}
       </View>
