@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   Package,
   Search,
+  X,
   XCircle,
 } from 'lucide-react-native';
 import api from '../../api';
@@ -229,8 +230,8 @@ export default function StockDetails({ onBack }: Props) {
             },
           ]}
         />
-        <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-white px-3">
-          <Search size={18} color="#6B7E76" />
+        <View className="mb-3 flex-row items-center rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm">
+          <Search size={18} color="#A77B15" />
           <TextInput
             accessibilityLabel="Search products to add stock"
             value={query}
@@ -240,8 +241,20 @@ export default function StockDetails({ onBack }: Props) {
             }}
             placeholder="Search by name or SKU..."
             placeholderTextColor="#9AA6A1"
-            className="min-h-12 flex-1 px-2 text-sm text-[#173F35]"
+            className="min-h-12 flex-1 px-3 text-sm text-[#173F35]"
           />
+          {query ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+              onPress={() => {
+                setQuery('');
+                setSelected(null);
+              }}
+              hitSlop={8}>
+              <X size={18} color="#6B7E76" />
+            </Pressable>
+          ) : null}
         </View>
         {loading || loadingProduct ? (
           <View className="py-5"><ActivityIndicator color="#07564B" /></View>

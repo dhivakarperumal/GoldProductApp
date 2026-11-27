@@ -19,6 +19,7 @@ import {
   Pencil,
   Search,
   Trash2,
+  X,
   XCircle,
 } from 'lucide-react-native';
 import api from '../../api';
@@ -246,8 +247,8 @@ export default function AllProducts({ onNavigate }: Props) {
           ]}
         />
 
-        <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-white px-3">
-          <Search size={18} color="#6B7E76" />
+        <View className="mb-3 flex-row items-center rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm">
+          <Search size={18} color="#A77B15" />
           <TextInput
             accessibilityLabel="Search products"
             value={query}
@@ -257,19 +258,49 @@ export default function AllProducts({ onNavigate }: Props) {
             }}
             placeholder="Search name or product code"
             placeholderTextColor="#9AA6A1"
-            className="min-h-12 flex-1 px-2 text-sm text-[#173F35]"
+            className="min-h-12 flex-1 px-3 text-sm text-[#173F35]"
           />
+          {query ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+              onPress={() => {
+                setQuery('');
+                setPage(1);
+              }}
+              hitSlop={8}>
+              <X size={18} color="#6B7E76" />
+            </Pressable>
+          ) : null}
         </View>
-        <CustomDropdown
-          label="Category"
-          value={category}
-          options={categoryOptions}
-          onSelect={value => {
-            setCategory(value);
-            setPage(1);
-          }}
-          searchable
-        />
+        <View className="mb-3 flex-row items-start gap-3">
+          <View className="min-w-0 flex-1">
+            <CustomDropdown
+              label="Category"
+              value={category}
+              options={categoryOptions}
+              onSelect={value => {
+                setCategory(value);
+                setPage(1);
+              }}
+              searchable
+            />
+          </View>
+          <View className="min-w-0 flex-1">
+            <CustomDropdown
+              label="Sort order"
+              value={sortOrder}
+              options={[
+                { value: 'desc', label: 'Newest / highest first' },
+                { value: 'asc', label: 'Oldest / lowest first' },
+              ]}
+              onSelect={value => {
+                setSortOrder(value);
+                setPage(1);
+              }}
+            />
+          </View>
+        </View>
         <View className="flex-row gap-3">
           <View className="flex-1">
             <CustomDropdown
@@ -332,19 +363,6 @@ export default function AllProducts({ onNavigate }: Props) {
             />
           </View>
         </View>
-        <CustomDropdown
-          label="Sort order"
-          value={sortOrder}
-          options={[
-            { value: 'desc', label: 'Newest / highest first' },
-            { value: 'asc', label: 'Oldest / lowest first' },
-          ]}
-          onSelect={value => {
-            setSortOrder(value);
-            setPage(1);
-          }}
-        />
-
         {error || categoryError ? (
           <View className="mb-3 rounded-xl bg-[#FFF1F0] p-3">
             <Text className="text-sm text-[#B42332]">{error || categoryError}</Text>
