@@ -121,70 +121,61 @@ type MetricPalette = {
 const metricPalettes: Record<string, MetricPalette> = {
   total_customers: {
     start: '#003D15',
-    middle: '#07832E',
+    middle: '#006B29',
     end: '#002E12',
     glow: '#98FF4F',
     border: '#F6D25D',
   },
   active_gold_loans: {
-    start: '#713600',
-    middle: '#C77A00',
-    end: '#5A2700',
+    start: '#542700',
+    middle: '#925500',
+    end: '#3D1A00',
     glow: '#FFD33F',
     border: '#FFE071',
   },
   today_collection: {
-    start: '#7C0755',
-    middle: '#D10A91',
-    end: '#4E0C70',
+    start: '#650447',
+    middle: '#A0006C',
+    end: '#3D0759',
     glow: '#FF79D4',
     border: '#FFD66E',
   },
   gold_stock_value: {
-    start: '#004B58',
-    middle: '#008D99',
-    end: '#00364F',
+    start: '#003C47',
+    middle: '#006B78',
+    end: '#002A41',
     glow: '#53F2E0',
     border: '#FFD66E',
   },
   total_products: {
-    start: '#9B4100',
-    middle: '#E98200',
-    end: '#823000',
+    start: '#793100',
+    middle: '#B95700',
+    end: '#5A2200',
     glow: '#FFD34D',
     border: '#FFE071',
   },
   total_categories: {
-    start: '#5E0B82',
-    middle: '#A51EB5',
-    end: '#460B77',
+    start: '#470862',
+    middle: '#79118D',
+    end: '#35074F',
     glow: '#FF75DC',
     border: '#FFD66E',
   },
   completed_loans: {
-    start: '#064F78',
-    middle: '#1683A8',
-    end: '#063E67',
+    start: '#043955',
+    middle: '#0A5B80',
+    end: '#032843',
     glow: '#64DCFF',
     border: '#FFD66E',
   },
   low_stock_products: {
-    start: '#7F1938',
-    middle: '#B83550',
-    end: '#50142E',
+    start: '#60142A',
+    middle: '#8B243C',
+    end: '#3E0D24',
     glow: '#FF8AA3',
     border: '#FFD66E',
   },
 };
-
-const overviewMetricOrder = [
-  'total_customers',
-  'active_gold_loans',
-  'today_collection',
-  'gold_stock_value',
-  'total_products',
-  'total_categories',
-];
 
 const styles = StyleSheet.create({
   metricCard: {
@@ -343,7 +334,10 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
     <View
       testID={`dashboard-metric-${metric.id}`}
       className="min-h-[82px] flex-1 basis-[45%] overflow-hidden rounded-[20px] border p-2"
-      style={[styles.metricCard, { borderColor: palette.border }]}>
+      style={[
+        styles.metricCard,
+        { backgroundColor: palette.start, borderColor: palette.border },
+      ]}>
       <MetricCardArtwork id={metric.id} palette={palette} />
       <View className="flex-row items-start">
         <View
@@ -467,10 +461,6 @@ export default function Home({ onNavigate }: HomeProps) {
     loans.length > 0 ? loans : dashboard?.recentLoans || []
   ).slice(0, 5);
   const products = dashboard?.topProducts || [];
-  const overviewMetrics = overviewMetricOrder
-    .map(id => dashboard?.stats.find(metric => metric.id === id))
-    .filter((metric): metric is DashboardMetric => metric !== undefined);
-
   return (
     <ScrollView
       testID="admin-home"
@@ -532,7 +522,7 @@ export default function Home({ onNavigate }: HomeProps) {
         Track your key numbers
       </Text>
       <View className="mb-5 flex-row flex-wrap gap-3">
-        {overviewMetrics.map(metric => (
+        {(dashboard?.stats || []).map(metric => (
           <MetricCard key={metric.id} metric={metric} />
         ))}
       </View>

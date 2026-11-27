@@ -351,11 +351,11 @@ test('routes shop admins to the admin dashboard and its API', async () => {
     renderer.root.findByProps({ testID: 'dashboard-metric-total_customers' }),
   ).toBeDefined();
   expect(
-    renderer.root.findAllByProps({ testID: 'dashboard-metric-completed_loans' }),
-  ).toHaveLength(0);
+    renderer.root.findByProps({ testID: 'dashboard-metric-completed_loans' }),
+  ).toBeDefined();
   expect(
-    renderer.root.findAllByProps({ testID: 'dashboard-metric-low_stock_products' }),
-  ).toHaveLength(0);
+    renderer.root.findByProps({ testID: 'dashboard-metric-low_stock_products' }),
+  ).toBeDefined();
   expect(
     renderer.root.findAllByProps({
       children: 'Gold rates API returned an invalid response.',
