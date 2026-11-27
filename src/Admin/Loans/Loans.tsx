@@ -16,6 +16,7 @@ import {
   IndianRupee,
   Pencil,
   Printer,
+  Search,
   Trash2,
   Users,
 } from 'lucide-react-native';
@@ -387,15 +388,15 @@ export default function Loans({
               ))}
             </View>
 
-            <View className="mb-4 flex-row items-center rounded-xl border border-[#E6E9E3] bg-white px-3">
-              <Text className="text-lg text-[#8A9690]">⌕</Text>
+            <View className="mb-3 flex-row items-center rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm">
+              <Search size={18} color="#A77B15" />
               <TextInput
                 accessibilityLabel="Search loans"
                 value={query}
                 onChangeText={setQuery}
                 placeholder="Search loan or customer"
                 placeholderTextColor="#9AA6A1"
-                className="min-h-12 flex-1 px-2 text-sm text-[#173F35]"
+                className="min-h-12 flex-1 px-3 text-sm text-[#173F35]"
               />
               {query ? (
                 <Pressable
@@ -408,13 +409,17 @@ export default function Loans({
               ) : null}
             </View>
 
-            <LoanDateRangeFilter onApply={setDateRange} />
-            <CustomDropdown
-              label="Loan Status"
-              value={statusFilter}
-              options={statusOptions}
-              onSelect={setStatusFilter}
-            />
+            <View className="mb-3 flex-row items-start gap-3">
+              <LoanDateRangeFilter compact onApply={setDateRange} />
+              <View className="min-w-0 flex-1">
+                <CustomDropdown
+                  label="Loan Status"
+                  value={statusFilter}
+                  options={statusOptions}
+                  onSelect={setStatusFilter}
+                />
+              </View>
+            </View>
 
             {loadError ? (
               <View className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-3">
@@ -442,13 +447,15 @@ export default function Loans({
               visibleLoans.map(loan => (
                 <View
                   key={String(loan.id)}
-                  className="mb-3 rounded-2xl border border-[#ECE7D8] bg-white p-4"
+                  className="mb-3 rounded-2xl border border-[#E8D596] bg-[#FFFDF7] p-4 shadow-sm"
                 >
                   <View className="flex-row items-start justify-between">
                     <View className="flex-1 pr-3">
-                      <Text className="text-xs font-bold uppercase tracking-wide text-[#A77B15]">
-                        {loan.loan_number || `Loan ${loan.id}`}
-                      </Text>
+                      <View className="self-start rounded-full border border-[#F2D98B] bg-[#FFF3C4] px-3 py-1">
+                        <Text className="text-[11px] font-bold uppercase tracking-wide text-[#8A5A00]">
+                          {loan.loan_number || `Loan ${loan.id}`}
+                        </Text>
+                      </View>
                       <Text className="mt-1 text-base font-extrabold text-[#173F35]">
                         {loan.customer_name || 'Customer'}
                       </Text>
@@ -499,12 +506,12 @@ export default function Loans({
                         .join(' · ')}
                     </Text>
                   ) : null}
-                  <View className="mt-4 flex-row gap-2 border-t border-[#F1F2EE] pt-3">
+                  <View className="mt-3 flex-row justify-end gap-2 border-t border-[#E9E2CC] pt-3">
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel={`View loan ${loan.loan_number || loan.id}`}
                       onPress={() => onViewLoan(loan.id)}
-                      className="min-h-12 flex-1 items-center justify-center rounded-xl bg-[#EAF3EF]">
+                      className="h-10 w-10 items-center justify-center rounded-xl border border-[#D6E8DE] bg-[#EAF3EF]">
                       <Eye size={20} color="#07564B" />
                     </Pressable>
                     {Number(loan.outstanding_principal ?? loan.principal_amount) > 0 &&
@@ -514,7 +521,7 @@ export default function Loans({
                         accessibilityRole="button"
                         accessibilityLabel={`Edit loan ${loan.loan_number || loan.id}`}
                         onPress={() => onEditLoan(loan.id)}
-                        className="min-h-12 flex-1 items-center justify-center rounded-xl bg-[#EFF6FF]">
+                        className="h-10 w-10 items-center justify-center rounded-xl border border-[#CFE0F5] bg-[#EFF6FF]">
                         <Pencil size={20} color="#1D4ED8" />
                       </Pressable>
                     ) : null}
@@ -523,7 +530,7 @@ export default function Loans({
                       accessibilityLabel={`Print loan agreement PDF ${loan.loan_number || loan.id}`}
                       disabled={actionLoanId !== null}
                       onPress={() => handlePrintLoan(loan)}
-                      className="min-h-12 flex-1 items-center justify-center rounded-xl bg-[#FFF8E7] disabled:opacity-50">
+                      className="h-10 w-10 items-center justify-center rounded-xl border border-[#F2D98B] bg-[#FFF8E7] disabled:opacity-50">
                       {actionLoanId === loan.id ? (
                         <ActivityIndicator size="small" color="#8A5A00" />
                       ) : (
@@ -535,7 +542,7 @@ export default function Loans({
                       accessibilityLabel={`Delete loan ${loan.loan_number || loan.id}`}
                       disabled={actionLoanId !== null}
                       onPress={() => confirmDeleteLoan(loan)}
-                      className="min-h-12 flex-1 items-center justify-center rounded-xl bg-[#FEF2F2] disabled:opacity-50">
+                      className="h-10 w-10 items-center justify-center rounded-xl border border-[#FECACA] bg-[#FEF2F2] disabled:opacity-50">
                       <Trash2 size={20} color="#B42332" />
                     </Pressable>
                   </View>

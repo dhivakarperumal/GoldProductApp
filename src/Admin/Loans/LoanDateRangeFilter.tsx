@@ -68,8 +68,10 @@ function resolvePreset(preset: string): DateRange {
 
 export default function LoanDateRangeFilter({
   onApply,
+  compact = false,
 }: {
   onApply: (range: DateRange) => void;
+  compact?: boolean;
 }) {
   const [preset, setPreset] = useState('all');
   const [startDate, setStartDate] = useState('');
@@ -104,7 +106,12 @@ export default function LoanDateRangeFilter({
   };
 
   return (
-    <View className="mb-3 rounded-xl border border-[#E6E9E3] bg-white p-3">
+    <View
+      className={
+        compact
+          ? 'min-w-0 flex-1'
+          : 'mb-3 rounded-xl border border-[#E6E9E3] bg-white p-3'
+      }>
       <CustomDropdown
         label="Date Range"
         value={preset}
