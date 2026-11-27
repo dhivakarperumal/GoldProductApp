@@ -64,14 +64,22 @@ test('switches side tabs directly and opens bottom sheet on plus tap for Billing
       );
     }
   };
+  const expectActiveIndicatorRounded = (label: string) => {
+    const indicator = renderer.root.findByProps({
+      testID: `admin-tab-indicator-${tabLabels.find(tab => tab.label === label)?.tab}`,
+    });
+    expect(indicator.props.style).toMatchObject({ borderRadius: 16 });
+  };
 
   expectOnlyActive('Home');
+  expectActiveIndicatorRounded('Home');
 
   for (const label of ['Loans', 'Products', 'More']) {
     await act(async () => {
       renderer.root.findByProps({ accessibilityLabel: label }).props.onPress();
     });
     expectOnlyActive(label);
+    expectActiveIndicatorRounded(label);
   }
 
   await act(async () => {

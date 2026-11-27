@@ -103,6 +103,15 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 5 },
   },
+  tabIndicator: {
+    borderRadius: 16,
+  },
+  activeTabIndicator: {
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(244, 201, 93, 0.45)',
+    backgroundColor: 'rgba(244, 201, 93, 0.2)',
+  },
   sheetBackdrop: {
     backgroundColor: 'rgba(13, 44, 36, 0.36)',
   },
@@ -136,11 +145,9 @@ function SideTabButton({
       style={({ pressed }) => ({ opacity: pressed ? 0.76 : 1 })}
     >
       <View
-        className={`h-8 w-12 items-center justify-center rounded-full ${
-          isActive
-            ? 'border border-[#F4C95D]/45 bg-[#F4C95D]/20'
-            : 'bg-transparent'
-        }`}
+        testID={`admin-tab-indicator-${item.tab}`}
+        style={isActive ? styles.activeTabIndicator : styles.tabIndicator}
+        className="h-8 w-12 items-center justify-center rounded-full"
       >
         <Icon
           size={19}
