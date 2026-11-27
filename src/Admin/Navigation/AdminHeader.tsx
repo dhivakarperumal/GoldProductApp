@@ -18,6 +18,7 @@ import {
   ChevronRight,
   CircleDollarSign,
   ClipboardList,
+  Clock3,
   Gem,
   HandCoins,
   Home,
@@ -56,6 +57,16 @@ type LowStockProduct = {
   category?: string;
   total_stock?: number | string;
   sku_barcode?: string;
+};
+
+type TackOrderNotification = {
+  id: number | string;
+  order_no?: string;
+  order_status?: string;
+  total_amount?: number | string;
+  customer?: { name?: string; phone?: string };
+  items?: unknown[];
+  created_at?: string;
 };
 
 type DrawerItem = {
@@ -275,6 +286,36 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function dateKey(date: Date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function isCreatedToday(value?: string) {
+  if (!value) return false;
+  const createdAt = new Date(value);
+  return (
+    !Number.isNaN(createdAt.getTime()) &&
+    dateKey(createdAt) === dateKey(new Date())
+  );
+}
+
+function formatOrderTime(value?: string) {
+  if (!value) return 'Time unavailable';
+  const createdAt = new Date(value);
+  if (Number.isNaN(createdAt.getTime())) return 'Time unavailable';
+  return createdAt.toLocaleTimeString('en-IN', {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function formatCurrency(value: number | string | undefined) {
+  const amount = Number(value);
+  return Number.isFinite(amount)
+    ? `₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+    : '—';
+}
+
 export default function AdminHeader({
   adminName,
   adminEmail,
@@ -296,6 +337,11 @@ export default function AdminHeader({
   const [lowStockTotal, setLowStockTotal] = useState<number | null>(null);
   const [loadingLowStock, setLoadingLowStock] = useState(false);
   const [lowStockError, setLowStockError] = useState('');
+  const [todayTackOrders, setTodayTackOrders] = useState<
+    TackOrderNotification[]
+  >([]);
+  const [loadingTackOrders, setLoadingTackOrders] = useState(false);
+  const [tackOrdersError, setTackOrdersError] = useState('');
   const initial = adminName.trim().charAt(0).toUpperCase() || 'A';
 
   const windowDimensions = Dimensions.get('window');
@@ -332,11 +378,36 @@ export default function AdminHeader({
     }
   }, []);
 
+  const loadTodayTackOrders = useCallback(async () => {
+    setLoadingTackOrders(true);
+    setTackOrdersError('');
+    try {
+      const response = await api.get('/tack-orders');
+      if (!Array.isArray(response.data)) {
+        throw new TypeError('The server returned an invalid tack-orders list.');
+      }
+      setTodayTackOrders(
+        response.data.filter(
+          (order: TackOrderNotification) =>
+            order && isCreatedToday(order.created_at),
+        ),
+      );
+    } catch (error) {
+      setTackOrdersError(
+        getErrorMessage(error, "Unable to load today's tack orders."),
+      );
+    } finally {
+      setLoadingTackOrders(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadLowStockProducts();
-  }, [loadLowStockProducts]);
+    loadTodayTackOrders();
+  }, [loadLowStockProducts, loadTodayTackOrders]);
 
   const lowStockCount = lowStockTotal ?? lowStockProducts.length;
+  const todayTackOrdersCount = todayTackOrders.length;
 
   const openDrawer = () => {
     setIsAccountMenuOpen(false);
@@ -369,8 +440,10 @@ export default function AdminHeader({
       return;
     }
     setActiveDropdown(dropdown);
-    if (dropdown === 'low-stock' || lowStockTotal === null) {
+    if (dropdown === 'low-stock') {
       loadLowStockProducts();
+    } else if (dropdown === 'notifications') {
+      loadTodayTackOrders();
     }
   };
 
@@ -487,8 +560,12 @@ export default function AdminHeader({
               color={activeDropdown === 'notifications' ? '#F4C95D' : '#FFF8E7'}
               strokeWidth={2.1}
             />
-            {lowStockCount > 0 ? (
-              <View className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border border-[#153B35] bg-[#EF4444]" />
+            {todayTackOrdersCount > 0 ? (
+              <View className="absolute -right-0.5 -top-0.5 min-h-[16px] min-w-[16px] items-center justify-center rounded-full border-[1.5px] border-[#153B35] bg-[#DC2626] px-1">
+                <Text className="text-[8.5px] font-extrabold leading-[11px] text-white">
+                  {todayTackOrdersCount > 99 ? '99+' : todayTackOrdersCount}
+                </Text>
+              </View>
             ) : null}
           </Pressable>
 
@@ -791,39 +868,61 @@ export default function AdminHeader({
                     <Text className="text-[10px] font-bold uppercase tracking-[1.2px] text-[#9A7620]">
                       {activeDropdown === 'low-stock'
                         ? 'Inventory Alert'
-                        : 'Shop Activity'}
+                        : "Today's Activity"}
                     </Text>
                     <Text className="mt-0.5 text-[15px] font-extrabold text-[#173F35]">
                       {activeDropdown === 'low-stock'
                         ? 'Low Stock Products'
-                        : 'Notifications'}
+                        : "Today's Tack Orders"}
                     </Text>
                   </View>
-                  {activeDropdown === 'low-stock' ? (
-                    <View
-                      className={`mr-2 min-w-[28px] items-center rounded-full px-2 py-1 ${
-                        lowStockCount > 0 ? 'bg-[#FEE2E2]' : 'bg-[#E7F3EF]'
+                  <View
+                    className={`mr-2 min-w-[28px] items-center rounded-full px-2 py-1 ${
+                      (activeDropdown === 'low-stock'
+                        ? lowStockCount
+                        : todayTackOrdersCount) > 0
+                        ? activeDropdown === 'low-stock'
+                          ? 'bg-[#FEE2E2]'
+                          : 'bg-[#F7EDCC]'
+                        : 'bg-[#E7F3EF]'
+                    }`}
+                  >
+                    <Text
+                      className={`text-xs font-extrabold ${
+                        (activeDropdown === 'low-stock'
+                          ? lowStockCount
+                          : todayTackOrdersCount) > 0
+                          ? activeDropdown === 'low-stock'
+                            ? 'text-[#B42332]'
+                            : 'text-[#97700D]'
+                          : 'text-[#08745D]'
                       }`}
                     >
-                      <Text
-                        className={`text-xs font-extrabold ${
-                          lowStockCount > 0
-                            ? 'text-[#B42332]'
-                            : 'text-[#08745D]'
-                        }`}
-                      >
-                        {lowStockCount}
-                      </Text>
-                    </View>
-                  ) : null}
+                      {activeDropdown === 'low-stock'
+                        ? lowStockCount
+                        : todayTackOrdersCount}
+                    </Text>
+                  </View>
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Refresh alerts"
-                    disabled={loadingLowStock}
-                    onPress={loadLowStockProducts}
+                    disabled={
+                      activeDropdown === 'low-stock'
+                        ? loadingLowStock
+                        : loadingTackOrders
+                    }
+                    onPress={
+                      activeDropdown === 'low-stock'
+                        ? loadLowStockProducts
+                        : loadTodayTackOrders
+                    }
                     className="h-8 w-8 items-center justify-center rounded-full border border-[#EAE6DA] bg-white"
                   >
-                    {loadingLowStock ? (
+                    {(
+                      activeDropdown === 'low-stock'
+                        ? loadingLowStock
+                        : loadingTackOrders
+                    ) ? (
                       <ActivityIndicator size="small" color="#08745D" />
                     ) : (
                       <RefreshCw size={14} color="#08745D" />
@@ -939,42 +1038,108 @@ export default function AdminHeader({
                     })}
                   </ScrollView>
                 )
-              ) : lowStockCount > 0 ? (
-                <View className="p-3">
+              ) : loadingTackOrders && todayTackOrders.length === 0 ? (
+                <View className="items-center py-9">
+                  <ActivityIndicator size="large" color="#B8860B" />
+                  <Text className="mt-3 text-xs font-medium text-[#6B7280]">
+                    Loading today&apos;s tack orders…
+                  </Text>
+                </View>
+              ) : tackOrdersError ? (
+                <View className="items-center px-5 py-8">
+                  <Text className="text-center text-xs font-semibold text-[#B42332]">
+                    {tackOrdersError}
+                  </Text>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel="View low stock products"
-                    onPress={() => setActiveDropdown('low-stock')}
-                    className="flex-row items-center rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-3 active:opacity-80"
+                    onPress={loadTodayTackOrders}
+                    className="mt-3 flex-row items-center rounded-xl bg-[#E7F3EF] px-4 py-2"
                   >
-                    <View className="h-9 w-9 items-center justify-center rounded-xl bg-[#FEF3C7]">
-                      <Package size={17} color="#B45309" />
-                    </View>
-                    <View className="ml-3 flex-1">
-                      <Text className="text-[13px] font-bold text-[#173F35]">
-                        Low stock alert
-                      </Text>
-                      <Text className="mt-0.5 text-[11px] text-[#6B7280]">
-                        {lowStockCount}{' '}
-                        {lowStockCount === 1 ? 'product is' : 'products are'}{' '}
-                        running low on stock.
-                      </Text>
-                    </View>
-                    <ChevronRight size={16} color="#9A7620" />
+                    <RefreshCw size={13} color="#07564B" />
+                    <Text className="ml-2 text-xs font-bold text-[#07564B]">
+                      Try again
+                    </Text>
                   </Pressable>
                 </View>
-              ) : (
+              ) : todayTackOrders.length === 0 ? (
                 <View className="items-center px-5 py-9">
                   <View className="h-12 w-12 items-center justify-center rounded-full bg-[#F7EDCC]">
-                    <Bell size={20} color="#A77B12" />
+                    <ShoppingBag size={20} color="#A77B12" />
                   </View>
                   <Text className="mt-3 text-sm font-bold text-[#173F35]">
-                    All caught up
+                    No tack orders today
                   </Text>
                   <Text className="mt-1 text-center text-xs text-[#6B7280]">
-                    No new notifications right now.
+                    New tack orders created today will appear here.
                   </Text>
                 </View>
+              ) : (
+                <ScrollView style={{ maxHeight: maxListHeight }}>
+                  {todayTackOrders.map((order, index) => {
+                    const itemCount = Array.isArray(order.items)
+                      ? order.items.length
+                      : 0;
+
+                    return (
+                      <Pressable
+                        key={order.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Open tack order ${order.order_no || order.id}`}
+                        onPress={() => {
+                          closeAllMenus();
+                          onNavigate?.({ kind: 'tab', tab: 'Orders' });
+                        }}
+                        className={`px-4 py-3 active:bg-[#FAF7EE] ${
+                          index < todayTackOrders.length - 1
+                            ? 'border-b border-[#F2EFE7]'
+                            : ''
+                        }`}
+                      >
+                        <View className="flex-row items-start">
+                          <View className="mr-3 mt-0.5 h-9 w-9 items-center justify-center rounded-xl bg-[#F7EDCC]">
+                            <ShoppingBag size={16} color="#97700D" />
+                          </View>
+                          <View className="flex-1">
+                            <View className="flex-row items-center justify-between">
+                              <Text
+                                numberOfLines={1}
+                                className="mr-2 flex-1 text-[13px] font-bold text-[#173F35]"
+                              >
+                                {order.order_no || `Order #${order.id}`}
+                              </Text>
+                              <View className="flex-row items-center rounded-full bg-[#F5F4F0] px-2 py-0.5">
+                                <Clock3 size={11} color="#8A8F8B" />
+                                <Text className="ml-1 text-[10px] font-semibold text-[#6D746F]">
+                                  {formatOrderTime(order.created_at)}
+                                </Text>
+                              </View>
+                            </View>
+                            <Text
+                              numberOfLines={1}
+                              className="mt-1 text-[11px] font-medium text-[#58635D]"
+                            >
+                              {order.customer?.name || 'Customer'}
+                              {order.customer?.phone
+                                ? ` · ${order.customer.phone}`
+                                : ''}
+                            </Text>
+                            <View className="mt-1.5 flex-row items-center justify-between">
+                              <Text className="text-[10px] font-semibold text-[#7B817D]">
+                                {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                                {order.order_status
+                                  ? ` · ${order.order_status}`
+                                  : ''}
+                              </Text>
+                              <Text className="text-xs font-extrabold text-[#173F35]">
+                                {formatCurrency(order.total_amount)}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
               )}
             </View>
           ) : null}

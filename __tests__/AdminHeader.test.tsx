@@ -27,18 +27,48 @@ const mockedGet = api.get as jest.Mock;
 
 describe('AdminHeader', () => {
   beforeEach(() => {
-    mockedGet.mockResolvedValue({
-      data: {
-        products: [
-          {
-            id: 1,
-            name: '22K Gold Ring',
-            category: 'Rings',
-            total_stock: 2,
-          },
-        ],
-        stats: { lowStock: 1 },
-      },
+    const todayIso = new Date().toISOString();
+    const yesterdayIso = new Date(Date.now() - 86_400_000).toISOString();
+
+    mockedGet.mockImplementation((url: string) => {
+      if (url === '/tack-orders') {
+        return Promise.resolve({
+          data: [
+            {
+              id: 101,
+              order_no: 'TO-TODAY-01',
+              order_status: 'PENDING',
+              total_amount: 45000,
+              customer: { name: 'Karthik', phone: '9876543210' },
+              items: [{ id: 1 }],
+              created_at: todayIso,
+            },
+            {
+              id: 102,
+              order_no: 'TO-OLD-02',
+              order_status: 'COMPLETED',
+              total_amount: 20000,
+              customer: { name: 'Old Customer' },
+              items: [{ id: 2 }],
+              created_at: yesterdayIso,
+            },
+          ],
+        });
+      }
+
+      return Promise.resolve({
+        data: {
+          products: [
+            {
+              id: 1,
+              name: '22K Gold Ring',
+              category: 'Rings',
+              total_stock: 2,
+            },
+          ],
+          stats: { lowStock: 1 },
+        },
+      });
     });
   });
 
@@ -92,9 +122,15 @@ describe('AdminHeader', () => {
         .findByProps({ testID: 'admin-notification-toggle' })
         .props.onPress();
     });
-    expect(
-      renderer.root.findByProps({ testID: 'admin-notifications-dropdown' }),
-    ).toBeTruthy();
+    const notificationsDropdown = renderer.root.findByProps({
+      testID: 'admin-notifications-dropdown',
+    });
+    expect(notificationsDropdown).toBeTruthy();
+    const notificationTexts = notificationsDropdown
+      .findAllByType(require('react-native').Text)
+      .map(node => node.props.children);
+    expect(notificationTexts).toContain('TO-TODAY-01');
+    expect(notificationTexts).not.toContain('TO-OLD-02');
 
     await act(async () => {
       profileBtn.props.onPress();
@@ -115,9 +151,15 @@ describe('AdminHeader', () => {
         .findByProps({ testID: 'admin-drawer-toggle' })
         .props.onPress();
     });
-    expect(
-      renderer.root.findByProps({ testID: 'admin-navigation-drawer' }),
-    ).toBeTruthy();
+    const drawer = renderer.root.findByProps({
+      testID: 'admin-navigation-drawer',
+    });
+    expect(drawer).toBeTruthy();
+    const drawerTexts = drawer
+      .findAllByType(require('react-native').Text)
+      .map(node => node.props.children);
+    expect(drawerTexts).not.toContain('Raja Gold');
+    expect(drawerTexts).not.toContain('raja@srigolds.com');
 
     await act(async () => {
       renderer.root
