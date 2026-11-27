@@ -148,6 +148,7 @@ function AppContent() {
     useState<InventoryScreen>('all');
   const [adminProductId, setAdminProductId] = useState<number | string | null>(null);
   const [adminMoreScreen, setAdminMoreScreen] = useState<MoreScreen>('home');
+  const [isOrdersFormOpen, setIsOrdersFormOpen] = useState(false);
   const [ordersSectionRequest, setOrdersSectionRequest] = useState<{
     section: OrdersQuickOption;
     key: number;
@@ -643,11 +644,15 @@ function AppContent() {
     const isInnerAdminScreen =
       (adminTab === 'Loans' && adminLoanScreen !== 'list') ||
       (adminTab === 'Products' && adminProductScreen !== 'all') ||
-      (adminTab === 'More' && adminMoreScreen !== 'home');
+      (adminTab === 'More' && adminMoreScreen !== 'home') ||
+      (adminTab === 'Orders' && isOrdersFormOpen);
 
     return (
       <View className="flex-1 bg-white">
-        <View style={isInnerAdminScreen ? screenStyles.hidden : undefined}>
+        <View
+          testID="admin-header-container"
+          style={isInnerAdminScreen ? screenStyles.hidden : undefined}
+        >
           <AdminHeader
             adminName={adminName}
             adminEmail={adminEmail}
@@ -674,6 +679,7 @@ function AppContent() {
           <OrdersManagement
             requestedSection={ordersSectionRequest.section}
             sectionRequestKey={ordersSectionRequest.key}
+            onFormVisibilityChange={setIsOrdersFormOpen}
           />
         </CachedScreen>
         <CachedScreen
@@ -852,7 +858,10 @@ function AppContent() {
           </>
         </CachedScreen>
 
-        <View style={isInnerAdminScreen ? screenStyles.hidden : undefined}>
+        <View
+          testID="admin-tab-bar-container"
+          style={isInnerAdminScreen ? screenStyles.hidden : undefined}
+        >
           <AdminTabBar
             activeTab={adminTab}
             onTabPress={navigateAdminTab}

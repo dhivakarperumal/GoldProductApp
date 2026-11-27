@@ -529,11 +529,13 @@ function SummaryCard({
 type OrdersManagementProps = {
   requestedSection?: Section;
   sectionRequestKey?: number;
+  onFormVisibilityChange?: (visible: boolean) => void;
 };
 
 export default function OrdersManagement({
   requestedSection,
   sectionRequestKey = 0,
+  onFormVisibilityChange,
 }: OrdersManagementProps) {
   const { showAlert } = useCustomAlert();
   const [section, setSection] = useState<Section>(requestedSection ?? 'billing');
@@ -576,6 +578,13 @@ export default function OrdersManagement({
   const [editingBillId, setEditingBillId] = useState<number | string | null>(null);
   const [viewingBill, setViewingBill] = useState<Bill | null>(null);
   const [paymentDraft, setPaymentDraft] = useState<BillPaymentDraft | null>(null);
+
+  useEffect(() => {
+    onFormVisibilityChange?.(
+      (section === 'orders' && ordersPage === 'create') ||
+        (section === 'billing' && billPage === 'form'),
+    );
+  }, [billPage, onFormVisibilityChange, ordersPage, section]);
 
   const loadBills = useCallback(async () => {
     setBillsLoading(true);

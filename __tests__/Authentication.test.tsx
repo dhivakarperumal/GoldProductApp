@@ -388,6 +388,12 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   });
   expect(renderer.root.findByProps({ testID: 'create-bill-screen' })).toBeDefined();
   expect(
+    renderer.root.findByProps({ testID: 'admin-header-container' }).props.style,
+  ).toEqual({ display: 'none' });
+  expect(
+    renderer.root.findByProps({ testID: 'admin-tab-bar-container' }).props.style,
+  ).toEqual({ display: 'none' });
+  expect(
     renderer.root.findByProps({ accessibilityLabel: 'Back to bills' }),
   ).toBeDefined();
   expect(renderer.root.findAllByProps({ testID: 'orders-mode-bar' })).toHaveLength(0);
@@ -397,6 +403,12 @@ test('routes shop admins to the admin dashboard and its API', async () => {
       .findByProps({ accessibilityLabel: 'Back to bills' })
       .props.onPress();
   });
+  expect(
+    renderer.root.findByProps({ testID: 'admin-header-container' }).props.style,
+  ).toBeUndefined();
+  expect(
+    renderer.root.findByProps({ testID: 'admin-tab-bar-container' }).props.style,
+  ).toBeUndefined();
   await act(async () => {
     renderer.root.findByType(AdminTabBar).props.onOrdersOptionSelect('orders');
   });
@@ -406,6 +418,12 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   expect(
     renderer.root.findByProps({ testID: 'create-tack-order-screen' }),
   ).toBeDefined();
+  expect(
+    renderer.root.findByProps({ testID: 'admin-header-container' }).props.style,
+  ).toEqual({ display: 'none' });
+  expect(
+    renderer.root.findByProps({ testID: 'admin-tab-bar-container' }).props.style,
+  ).toEqual({ display: 'none' });
   expect(
     renderer.root.findByProps({ accessibilityLabel: 'Back to tack orders' }),
   ).toBeDefined();
