@@ -31,8 +31,9 @@ import {
   X,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCustomAlert } from '../../Components/CustomAlert';
 import api from '../../api';
-import type { ProfileDestination } from '../Profile/Profile';
+import type { ProfileDestination } from '../More/Profile';
 import type { SuperAdminTab } from './Bottombar';
 
 export type SuperAdminDrawerTarget =
@@ -99,8 +100,8 @@ const DRAWER_SECTIONS: DrawerSection[] = [
         id: 'profileHub',
         label: 'Profile & Hub',
         icon: LayoutGrid,
-        target: { kind: 'tab', tab: 'Profile' },
-        matchScreens: ['Profile'],
+        target: { kind: 'tab', tab: 'More' },
+        matchScreens: ['More'],
       },
     ],
   },
@@ -243,6 +244,7 @@ export default function TopHeader({
     null,
   );
   const insets = useSafeAreaInsets();
+  const { showAlert } = useCustomAlert();
   const windowDimensions = useWindowDimensions();
   const initial = adminName.trim().charAt(0).toUpperCase() || 'A';
   const visibleNotificationCount = Math.max(
@@ -352,7 +354,7 @@ export default function TopHeader({
       return;
     }
     if (
-      (target.kind === 'tab' && target.tab === 'Profile') ||
+      (target.kind === 'tab' && target.tab === 'More') ||
       (target.kind === 'profile' && target.screen === 'my-profile')
     ) {
       onProfilePress?.();
@@ -361,7 +363,17 @@ export default function TopHeader({
 
   const handleLogout = () => {
     closeDropdowns();
-    onLogout?.();
+    showAlert('Log out?', 'Are you sure you want to log out?', {
+      variant: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Log out',
+          style: 'destructive',
+          onPress: () => onLogout?.(),
+        },
+      ],
+    });
   };
 
   return (

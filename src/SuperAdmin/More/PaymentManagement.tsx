@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -36,6 +35,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { useCustomAlert } from '../../Components/CustomAlert';
 import api from '../../api';
 
 type PaymentStatus =
@@ -283,6 +283,7 @@ function FilterSelect({
 
 export default function PaymentManagement({ onBack }: PaymentManagementProps) {
   const insets = useSafeAreaInsets();
+  const { showAlert } = useCustomAlert();
   const [overview, setOverview] = useState<PaymentOverviewData>(EMPTY_OVERVIEW);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [plans, setPlans] = useState<PaymentPlan[]>([]);
@@ -434,17 +435,19 @@ export default function PaymentManagement({ onBack }: PaymentManagementProps) {
         `/super-admin/payments/${approveTarget.id}/approve`,
         approveForm,
       );
-      Alert.alert(
+      setApproveTarget(null);
+      refreshAfterAction();
+      showAlert(
         'Payment approved',
         response.data?.message ||
           'Payment approved and subscription activated.',
+        { variant: 'success' },
       );
-      setApproveTarget(null);
-      refreshAfterAction();
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Approval failed',
         getErrorMessage(error, 'Failed to approve payment.'),
+        { variant: 'error' },
       );
     } finally {
       setApproving(false);
@@ -454,9 +457,10 @@ export default function PaymentManagement({ onBack }: PaymentManagementProps) {
   const submitReject = async () => {
     if (!rejectTarget) return;
     if (!rejectionReason.trim()) {
-      Alert.alert(
+      showAlert(
         'Reason required',
         'Enter a reason for rejecting this payment.',
+        { variant: 'warning' },
       );
       return;
     }
@@ -466,16 +470,18 @@ export default function PaymentManagement({ onBack }: PaymentManagementProps) {
         `/super-admin/payments/${rejectTarget.id}/reject`,
         { rejectionReason: rejectionReason.trim() },
       );
-      Alert.alert(
-        'Payment rejected',
-        response.data?.message || 'Payment has been rejected.',
-      );
       setRejectTarget(null);
       refreshAfterAction();
+      showAlert(
+        'Payment rejected',
+        response.data?.message || 'Payment has been rejected.',
+        { variant: 'success' },
+      );
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Rejection failed',
         getErrorMessage(error, 'Failed to reject payment.'),
+        { variant: 'error' },
       );
     } finally {
       setRejecting(false);
@@ -488,18 +494,20 @@ export default function PaymentManagement({ onBack }: PaymentManagementProps) {
     const maximum =
       Number(refundTarget.amount || 0) - Number(refundTarget.refundAmount || 0);
     if (!Number.isFinite(amount) || amount <= 0 || amount > maximum) {
-      Alert.alert(
+      showAlert(
         'Invalid refund amount',
         `Enter an amount greater than zero and no more than ${formatCurrency(
           maximum,
         )}.`,
+        { variant: 'warning' },
       );
       return;
     }
     if (!refundReason.trim()) {
-      Alert.alert(
+      showAlert(
         'Reason required',
         'Provide a reason for issuing this refund.',
+        { variant: 'warning' },
       );
       return;
     }
@@ -509,16 +517,18 @@ export default function PaymentManagement({ onBack }: PaymentManagementProps) {
         `/super-admin/payments/${refundTarget.id}/refund`,
         { refundAmount: amount, reason: refundReason.trim() },
       );
-      Alert.alert(
-        'Refund processed',
-        response.data?.message || 'Refund processed successfully.',
-      );
       setRefundTarget(null);
       refreshAfterAction();
+      showAlert(
+        'Refund processed',
+        response.data?.message || 'Refund processed successfully.',
+        { variant: 'success' },
+      );
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Refund failed',
         getErrorMessage(error, 'Failed to process refund.'),
+        { variant: 'error' },
       );
     } finally {
       setRefunding(false);

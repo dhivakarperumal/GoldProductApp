@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Pressable,
   RefreshControl,
@@ -27,6 +26,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { useCustomAlert } from '../../Components/CustomAlert';
 import api from '../../api';
 
 type DetailTab = 'overview' | 'subscription' | 'payments' | 'documents' | 'activity';
@@ -245,6 +245,7 @@ export default function GoldShopDetails({
   onBack,
 }: GoldShopDetailsProps) {
   const insets = useSafeAreaInsets();
+  const { showAlert } = useCustomAlert();
   const [shop, setShop] = useState<GoldShop | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -308,9 +309,10 @@ export default function GoldShopDetails({
   const confirmPayment = async () => {
     if (!paymentToConfirm || paymentSubmitting) return;
     if (!paymentForm.transactionId.trim()) {
-      Alert.alert(
+      showAlert(
         'Reference required',
         'Enter the payment transaction or reference ID.',
+        { variant: 'warning' },
       );
       return;
     }
@@ -326,11 +328,14 @@ export default function GoldShopDetails({
       );
       setPaymentToConfirm(null);
       await loadShop();
-      Alert.alert('Payment confirmed', 'The subscription payment was confirmed.');
+      showAlert('Payment confirmed', 'The subscription payment was confirmed.', {
+        variant: 'success',
+      });
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to confirm payment',
         getErrorMessage(error, 'Could not confirm this subscription payment.'),
+        { variant: 'error' },
       );
     } finally {
       setPaymentSubmitting(false);

@@ -19,6 +19,7 @@ import {
   Clock3,
   CreditCard,
   RefreshCw,
+  LayoutGrid,
   ShieldCheck,
   Store,
   Users,
@@ -620,7 +621,7 @@ export default function Home({
               tab: 'Revenue' as const,
               icon: ChartNoAxesColumn,
             },
-            { label: 'Profile', tab: 'Profile' as const, icon: Users },
+            { label: 'More', tab: 'More' as const, icon: LayoutGrid },
           ].map(item => {
             const Icon = item.icon;
             return (

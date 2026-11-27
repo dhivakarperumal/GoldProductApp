@@ -1,12 +1,19 @@
 import React from 'react';
-import { Animated, ImageBackground, Pressable, Text, View } from 'react-native';
+import {
+  Animated,
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   ChartNoAxesColumn,
   CreditCard,
   Home,
+  LayoutGrid,
   Store,
-  UserRound,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,7 +22,7 @@ export type SuperAdminTab =
   | 'G Shops'
   | 'Plans'
   | 'Revenue'
-  | 'Profile';
+  | 'More';
 
 type BottomBarProps = {
   activeTab: SuperAdminTab;
@@ -27,7 +34,7 @@ const tabs: Array<{ label: SuperAdminTab; icon: typeof Home }> = [
   { label: 'G Shops', icon: Store },
   { label: 'Plans', icon: CreditCard },
   { label: 'Revenue', icon: ChartNoAxesColumn },
-  { label: 'Profile', icon: UserRound },
+  { label: 'More', icon: LayoutGrid },
 ];
 
 export default function BottomBar({ activeTab, onTabPress }: BottomBarProps) {
@@ -55,10 +62,17 @@ export default function BottomBar({ activeTab, onTabPress }: BottomBarProps) {
 
   return (
     <ImageBackground
+      testID="bottom-tab-background"
       source={require('../../Assert/Images/bottom.png')}
       resizeMode="stretch"
+      blurRadius={2}
       style={{ paddingBottom: insets.bottom }}
     >
+      <View
+        pointerEvents="none"
+        style={StyleSheet.absoluteFill}
+        className="bg-[#153B35]/25"
+      />
       <View
         testID="bottom-tab-bar"
         onLayout={({ nativeEvent }) => setBarWidth(nativeEvent.layout.width)}

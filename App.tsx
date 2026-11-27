@@ -59,7 +59,7 @@ import TopHeader, {
   SuperAdminDrawerTarget,
 } from './src/SuperAdmin/Navigation/TopHeader';
 import SuperAdminHome from './src/SuperAdmin/Home/Home';
-import Profile, { ProfileDestination } from './src/SuperAdmin/Profile/Profile';
+import Profile, { ProfileDestination } from './src/SuperAdmin/More/Profile';
 import Revenue from './src/SuperAdmin/Reports/Revenue';
 import Subscriptions from './src/SuperAdmin/Subscription/Subscriptions';
 import AllGoldShop from './src/SuperAdmin/Shops/AllGoldShop';
@@ -343,7 +343,7 @@ function AppContent() {
     if (tab !== 'Plans') {
       setIsPlanFormVisible(false);
     }
-    if (tab === 'Profile') {
+    if (tab === 'More') {
       setProfileDestinationRequest(prev => ({
         destination: 'cards',
         key: prev.key + 1,
@@ -361,8 +361,8 @@ function AppContent() {
       handleTabChange(target.tab);
       return;
     }
-    setSuperAdminTab('Profile');
-    setVisitedSuperAdminScreens(current => new Set(current).add('Profile'));
+    setSuperAdminTab('More');
+    setVisitedSuperAdminScreens(current => new Set(current).add('More'));
     setIsShopPageFullscreenVisible(false);
     setIsPlanFormVisible(false);
     setProfileDestinationRequest(prev => ({
@@ -894,13 +894,13 @@ function AppContent() {
   const isSuperAdminFullscreen =
     (superAdminTab === 'Plans' && isPlanFormVisible) ||
     (superAdminTab === 'G Shops' && isShopPageFullscreenVisible) ||
-    (superAdminTab === 'Profile' &&
+    (superAdminTab === 'More' &&
       (isMyProfileVisible ||
         isUsersManagementVisible ||
         isPaymentManagementVisible));
 
   const activeSuperAdminScreen =
-    superAdminTab === 'Profile'
+    superAdminTab === 'More'
       ? isMyProfileVisible
         ? 'Profile:my-profile'
         : isUsersManagementVisible
@@ -920,7 +920,7 @@ function AppContent() {
           onNavigate={handleSuperAdminDrawerNavigate}
           onTodayRegistrationsChange={setTodayRegistrationCount}
           onLogout={handleLogout}
-          onProfilePress={() => handleTabChange('Profile')}
+          onProfilePress={() => handleTabChange('More')}
         />
       </View>
 
@@ -958,9 +958,9 @@ function AppContent() {
         <Revenue />
       </CachedScreen>
       <CachedScreen
-        cacheKey="superadmin-Profile"
-        visited={visitedSuperAdminScreens.has('Profile')}
-        active={superAdminTab === 'Profile'}
+        cacheKey="superadmin-More"
+        visited={visitedSuperAdminScreens.has('More')}
+        active={superAdminTab === 'More'}
       >
         <Profile
           requestedDestination={profileDestinationRequest.destination}

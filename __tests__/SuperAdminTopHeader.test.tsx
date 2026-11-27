@@ -2,6 +2,7 @@ import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import TopHeader from '../src/SuperAdmin/Navigation/TopHeader';
+import { CustomAlertProvider } from '../src/Components/CustomAlert';
 import api from '../src/api';
 
 jest.mock('react-native-safe-area-context', () => {
@@ -66,15 +67,17 @@ describe('SuperAdmin TopHeader', () => {
     await act(async () => {
       renderer = ReactTestRenderer.create(
         <SafeAreaProvider>
-          <TopHeader
-            adminName="Vikram Super"
-            adminEmail="vikram@srigolds.com"
-            activeScreen="Home"
-            onNavigate={onNavigate}
-            onTodayRegistrationsChange={onTodayRegistrationsChange}
-            onProfilePress={onProfilePress}
-            onLogout={onLogout}
-          />
+          <CustomAlertProvider>
+            <TopHeader
+              adminName="Vikram Super"
+              adminEmail="vikram@srigolds.com"
+              activeScreen="Home"
+              onNavigate={onNavigate}
+              onTodayRegistrationsChange={onTodayRegistrationsChange}
+              onProfilePress={onProfilePress}
+              onLogout={onLogout}
+            />
+          </CustomAlertProvider>
         </SafeAreaProvider>,
       );
     });
@@ -171,6 +174,18 @@ describe('SuperAdmin TopHeader', () => {
       renderer.root
         .findByProps({ testID: 'superadmin-drawer-item-logout' })
         .props.onPress();
+    });
+    expect(onLogout).not.toHaveBeenCalled();
+    expect(
+      renderer.root.findByProps({ children: 'Log out?' }),
+    ).toBeTruthy();
+    let confirmLogoutBtn = renderer.root.findByProps({ children: 'Log out' }).parent;
+    while (confirmLogoutBtn && typeof confirmLogoutBtn.props?.onPress !== 'function') {
+      confirmLogoutBtn = confirmLogoutBtn.parent;
+    }
+    expect(confirmLogoutBtn).toBeTruthy();
+    await act(async () => {
+      confirmLogoutBtn?.props.onPress();
     });
     expect(onLogout).toHaveBeenCalledTimes(1);
   });

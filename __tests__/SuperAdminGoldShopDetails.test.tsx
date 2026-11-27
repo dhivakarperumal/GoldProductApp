@@ -2,6 +2,7 @@ import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import { ScrollView } from 'react-native';
 import GoldShopDetails from '../src/SuperAdmin/Shops/GoldshopDetails';
+import { CustomAlertProvider } from '../src/Components/CustomAlert';
 
 const mockApiGet = jest.fn();
 
@@ -39,7 +40,9 @@ test('pulling to refresh reloads shop details without leaving the detail view', 
 
   await act(async () => {
     renderer = ReactTestRenderer.create(
-      <GoldShopDetails shopId={42} onBack={jest.fn()} />,
+      <CustomAlertProvider>
+        <GoldShopDetails shopId={42} onBack={jest.fn()} />
+      </CustomAlertProvider>,
     );
     await new Promise<void>(resolve => setImmediate(resolve));
   });

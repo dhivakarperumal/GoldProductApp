@@ -32,6 +32,7 @@ import {
   UserRound,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCustomAlert } from '../../Components/CustomAlert';
 import api, { API_BASE_URL } from '../../api';
 
 type ProfileData = {
@@ -113,6 +114,7 @@ function getProfileImageUri(path: string | undefined) {
 }
 
 export default function Profile({ onLogout }: { onLogout: () => void }) {
+  const { showAlert } = useCustomAlert();
   const [profile, setProfile] = useState<ProfileData>({
     notification_preferences: { email: true, orders: true },
   });
@@ -417,10 +419,13 @@ export default function Profile({ onLogout }: { onLogout: () => void }) {
   };
 
   const confirmLogout = () => {
-    Alert.alert('Log out?', 'End your current session on this device?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: onLogout },
-    ]);
+    showAlert('Log out?', 'End your current session on this device?', {
+      variant: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log out', style: 'destructive', onPress: onLogout },
+      ],
+    });
   };
 
   const closeDeactivationModal = () => {

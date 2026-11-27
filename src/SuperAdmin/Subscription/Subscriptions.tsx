@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Pressable,
   RefreshControl,
@@ -25,6 +24,7 @@ import {
   XCircle,
   X,
 } from 'lucide-react-native';
+import { useCustomAlert } from '../../Components/CustomAlert';
 import api from '../../api';
 import AddSubscriptionPlan, {
   SubscriptionPlan,
@@ -202,6 +202,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 export default function Subscriptions({
   onPlanFormVisibilityChange,
 }: SubscriptionsProps) {
+  const { showAlert } = useCustomAlert();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [summary, setSummary] = useState<Summary>({});
   const [pagination, setPagination] = useState<Pagination>({
@@ -242,9 +243,10 @@ export default function Subscriptions({
       });
     } catch (error) {
       if (currentRequest === requestId.current) {
-        Alert.alert(
+        showAlert(
           'Unable to load plans',
           getErrorMessage(error, 'Could not load subscription plans.'),
+          { variant: 'error' },
         );
       }
     } finally {
@@ -253,7 +255,7 @@ export default function Subscriptions({
         setRefreshing(false);
       }
     }
-  }, [page, search, status]);
+  }, [page, search, showAlert, status]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -284,17 +286,19 @@ export default function Subscriptions({
               payload,
             )
           : await api.post('/super-admin/subscription-plans', payload);
-      Alert.alert(
-        'Saved',
-        response.data?.message || 'Subscription plan saved successfully.',
-      );
       setModal(null);
       onPlanFormVisibilityChange(false);
       await loadPlans();
+      showAlert(
+        'Saved',
+        response.data?.message || 'Subscription plan saved successfully.',
+        { variant: 'success' },
+      );
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to save plan',
         getErrorMessage(error, 'Could not save subscription plan.'),
+        { variant: 'error' },
       );
     } finally {
       setSubmitting(false);
@@ -307,92 +311,107 @@ export default function Subscriptions({
         `/super-admin/subscription-plans/${plan.id}`,
       );
       if (!data?.plan) {
-        Alert.alert('Plan unavailable', 'Plan details were not returned.');
+        showAlert('Plan unavailable', 'Plan details were not returned.', {
+          variant: 'warning',
+        });
         return;
       }
       setSelected(data.plan);
       setModal('view');
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to load plan',
         getErrorMessage(error, 'Could not load plan details.'),
+        { variant: 'error' },
       );
     }
   };
 
   const toggleStatus = (plan: SubscriptionPlan) => {
     const next = plan.status === 'active' ? 'inactive' : 'active';
-    Alert.alert(
+    showAlert(
       `${next === 'active' ? 'Activate' : 'Deactivate'} plan?`,
       `${plan.plan_name} will be ${next}.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: next === 'active' ? 'Activate' : 'Deactivate',
-          style: next === 'inactive' ? 'destructive' : 'default',
-          onPress: async () => {
-            try {
-              await api.patch(
-                `/super-admin/subscription-plans/${plan.id}/status`,
-                { status: next },
-              );
-              await loadPlans();
-            } catch (error) {
-              Alert.alert(
-                'Unable to update plan',
-                getErrorMessage(error, 'Could not update plan status.'),
-              );
-            }
+      {
+        variant: 'warning',
+        buttons: [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: next === 'active' ? 'Activate' : 'Deactivate',
+            style: next === 'inactive' ? 'destructive' : 'default',
+            onPress: async () => {
+              try {
+                await api.patch(
+                  `/super-admin/subscription-plans/${plan.id}/status`,
+                  { status: next },
+                );
+                await loadPlans();
+              } catch (error) {
+                showAlert(
+                  'Unable to update plan',
+                  getErrorMessage(error, 'Could not update plan status.'),
+                  { variant: 'error' },
+                );
+              }
+            },
           },
-        },
-      ],
+        ],
+      },
     );
   };
 
   const duplicatePlan = (plan: SubscriptionPlan) => {
-    Alert.alert('Duplicate plan?', `Create a copy of ${plan.plan_name}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Duplicate',
-        onPress: async () => {
-          try {
-            await api.post(
-              `/super-admin/subscription-plans/${plan.id}/duplicate`,
-            );
-            await loadPlans();
-          } catch (error) {
-            Alert.alert(
-              'Unable to duplicate plan',
-              getErrorMessage(error, 'Could not duplicate subscription plan.'),
-            );
-          }
-        },
-      },
-    ]);
-  };
-
-  const deletePlan = (plan: SubscriptionPlan) => {
-    Alert.alert(
-      'Delete plan?',
-      `Delete ${plan.plan_name}? This cannot be undone.`,
-      [
+    showAlert('Duplicate plan?', `Create a copy of ${plan.plan_name}?`, {
+      variant: 'warning',
+      buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: 'Duplicate',
           onPress: async () => {
             try {
-              await api.delete(`/super-admin/subscription-plans/${plan.id}`);
+              await api.post(
+                `/super-admin/subscription-plans/${plan.id}/duplicate`,
+              );
               await loadPlans();
             } catch (error) {
-              Alert.alert(
-                'Unable to delete plan',
-                getErrorMessage(error, 'Could not delete subscription plan.'),
+              showAlert(
+                'Unable to duplicate plan',
+                getErrorMessage(error, 'Could not duplicate subscription plan.'),
+                { variant: 'error' },
               );
             }
           },
         },
       ],
+    });
+  };
+
+  const deletePlan = (plan: SubscriptionPlan) => {
+    showAlert(
+      'Delete plan?',
+      `Delete ${plan.plan_name}? This cannot be undone.`,
+      {
+        variant: 'warning',
+        buttons: [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await api.delete(`/super-admin/subscription-plans/${plan.id}`);
+                await loadPlans();
+              } catch (error) {
+                showAlert(
+                  'Unable to delete plan',
+                  getErrorMessage(error, 'Could not delete subscription plan.'),
+                  { variant: 'error' },
+                );
+              }
+            },
+          },
+        ],
+      },
     );
   };
 
