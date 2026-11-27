@@ -10,11 +10,18 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Search } from 'lucide-react-native';
+import {
+  Activity,
+  CheckCircle2,
+  Package,
+  Search,
+  XCircle,
+} from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
 import { SubmitButton } from '../Loans/FormControls';
+import InventoryMetricGrid from './InventoryMetricGrid';
 import {
   inventoryError,
   mediaUrl,
@@ -25,7 +32,11 @@ import {
 type Props = { onBack: () => void };
 type Variant = { images?: unknown; sizesStock?: Record<string, string | number>; [key: string]: unknown };
 type ProductWithVariants = Product & { variants: Variant[] };
-type ProductListResponse = { products?: Product[] };
+type ProductListResponse = {
+  products?: Product[];
+  stats?: { total?: number; lowStock?: number; outOfStock?: number };
+  pagination?: { total?: number };
+};
 
 function toVariants(value: unknown): Variant[] {
   if (Array.isArray(value)) return value as Variant[];
@@ -49,6 +60,12 @@ export default function StockDetails({ onBack }: Props) {
   const { showAlert } = useCustomAlert();
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
+  const [stats, setStats] = useState({
+    totalProducts: 0,
+    inStock: 0,
+    lowStock: 0,
+    outOfStock: 0,
+  });
   const [selected, setSelected] = useState<ProductWithVariants | null>(null);
   const [additions, setAdditions] = useState<Record<string, string>>({});
   const [manualAddition, setManualAddition] = useState('');
@@ -67,6 +84,20 @@ export default function StockDetails({ onBack }: Props) {
         throw new Error('The server returned an invalid product list.');
       }
       setProducts(response.data.products);
+      const totalProducts =
+        Number(
+          response.data.stats?.total ??
+            response.data.pagination?.total ??
+            response.data.products.length,
+        ) || 0;
+      const lowStock = Number(response.data.stats?.lowStock) || 0;
+      const outOfStock = Number(response.data.stats?.outOfStock) || 0;
+      setStats({
+        totalProducts,
+        inStock: Math.max(0, totalProducts - lowStock - outOfStock),
+        lowStock,
+        outOfStock,
+      });
     } catch (requestError) {
       setError(inventoryError(requestError));
       if (__DEV__) console.warn('[StockDetails] Could not load products:', requestError);
@@ -160,8 +191,44 @@ export default function StockDetails({ onBack }: Props) {
         contentContainerClassName="p-4 pb-9"
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets>
-        <Text className="mb-1 text-xl font-extrabold text-[#173F35]">Add New Stock</Text>
-        <Text className="mb-4 text-sm text-[#6B7E76]">Select a product and top up your inventory.</Text>
+        <InventoryMetricGrid
+          metrics={[
+            {
+              id: 'stock-total-products',
+              label: 'Total Products',
+              value: stats.totalProducts,
+              icon: Package,
+              palette: 'total_products',
+              trend: 'In your inventory',
+            },
+            {
+              id: 'stock-in-stock',
+              label: 'In Stock',
+              value: stats.inStock,
+              icon: CheckCircle2,
+              palette: 'total_customers',
+              trend: 'Available items',
+            },
+            {
+              id: 'stock-low-stock',
+              label: 'Low Stock',
+              value: stats.lowStock,
+              icon: Activity,
+              palette: 'low_stock_products',
+              trend: 'Below 10 units',
+              trendUp: false,
+            },
+            {
+              id: 'stock-out-of-stock',
+              label: 'Out of Stock',
+              value: stats.outOfStock,
+              icon: XCircle,
+              palette: 'today_collection',
+              trend: 'No units available',
+              trendUp: false,
+            },
+          ]}
+        />
         <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-white px-3">
           <Search size={18} color="#6B7E76" />
           <TextInput

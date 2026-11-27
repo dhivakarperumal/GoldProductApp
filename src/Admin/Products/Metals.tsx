@@ -9,12 +9,22 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react-native';
+import {
+  CheckCircle2,
+  Gem,
+  Pencil,
+  Plus,
+  Search,
+  Shapes,
+  Trash2,
+  XCircle,
+} from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
 import { CustomDropdown } from '../Loans/FormControls';
 import MetalForm from './MetalForm';
+import InventoryMetricGrid from './InventoryMetricGrid';
 import { inventoryError, mediaUrl, type Metal } from './inventory';
 
 type Props = { onBack: () => void };
@@ -54,6 +64,17 @@ export default function Metals({ onBack }: Props) {
     const matchesStatus = status === 'all' || metal.status === status;
     return matchesText && matchesStatus;
   });
+  const activeMetals = metals.filter(
+    metal => (metal.status || 'Active').toLowerCase() === 'active',
+  ).length;
+  const inactiveMetals = metals.filter(
+    metal => (metal.status || 'Active').toLowerCase() === 'inactive',
+  ).length;
+  const purityGrades = new Set(
+    metals
+      .map(metal => metal.purity?.trim())
+      .filter((purity): purity is string => Boolean(purity)),
+  ).size;
 
   const confirmDelete = (metal: Metal) => {
     showAlert('Delete metal?', `Delete ${metal.name}? Products using it may be affected.`, {
@@ -87,12 +108,43 @@ export default function Metals({ onBack }: Props) {
           contentContainerClassName="p-4 pb-24"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor="#07564B" />}
           keyboardShouldPersistTaps="handled">
-          <View className="mb-4 flex-row items-center justify-between">
-            <View>
-              <Text className="text-xl font-extrabold text-[#173F35]">Manage Metals</Text>
-              <Text className="mt-1 text-sm text-[#6B7E76]">{metals.length} metals</Text>
-            </View>
-          </View>
+          <InventoryMetricGrid
+            metrics={[
+              {
+                id: 'metals-total',
+                label: 'Total Metals',
+                value: metals.length,
+                icon: Gem,
+                palette: 'total_products',
+                trend: 'Metal types',
+              },
+              {
+                id: 'metals-active',
+                label: 'Active',
+                value: activeMetals,
+                icon: CheckCircle2,
+                palette: 'total_customers',
+                trend: 'Available metals',
+              },
+              {
+                id: 'metals-inactive',
+                label: 'Inactive',
+                value: inactiveMetals,
+                icon: XCircle,
+                palette: 'low_stock_products',
+                trend: 'Unavailable metals',
+                trendUp: false,
+              },
+              {
+                id: 'metals-purities',
+                label: 'Purity Grades',
+                value: purityGrades,
+                icon: Shapes,
+                palette: 'gold_stock_value',
+                trend: 'Unique purity values',
+              },
+            ]}
+          />
           <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-white px-3">
             <Search size={17} color="#6B7E76" />
             <TextInput value={search} onChangeText={setSearch} placeholder="Search metals or purity" placeholderTextColor="#9AA6A1" className="min-h-12 flex-1 px-2 text-sm text-[#173F35]" />

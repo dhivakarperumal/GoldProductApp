@@ -9,12 +9,22 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react-native';
+import {
+  CheckCircle2,
+  Package,
+  Pencil,
+  Plus,
+  Search,
+  Shapes,
+  Trash2,
+  XCircle,
+} from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
 import { CustomDropdown } from '../Loans/FormControls';
 import CategoryForm from './CategoryForm';
+import InventoryMetricGrid from './InventoryMetricGrid';
 import { inventoryError, mediaUrl, parseArray, type Category } from './inventory';
 
 type Props = { onBack: () => void };
@@ -56,6 +66,16 @@ export default function Categories({ onBack }: Props) {
     const matchesStatus = status === 'all' || category.status === status;
     return matchesText && matchesStatus;
   });
+  const activeCategories = categories.filter(
+    category => (category.status || 'Active').toLowerCase() === 'active',
+  ).length;
+  const inactiveCategories = categories.filter(
+    category => (category.status || 'Active').toLowerCase() === 'inactive',
+  ).length;
+  const subcategoryCount = categories.reduce(
+    (total, category) => total + parseArray(category.subcategory).length,
+    0,
+  );
 
   const confirmDelete = (category: Category) => {
     showAlert('Delete category?', `Delete ${category.name}? Products assigned to this category may be affected.`, {
@@ -89,12 +109,43 @@ export default function Categories({ onBack }: Props) {
           contentContainerClassName="p-4 pb-24"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor="#07564B" />}
           keyboardShouldPersistTaps="handled">
-          <View className="mb-4 flex-row items-center justify-between">
-            <View>
-              <Text className="text-xl font-extrabold text-[#173F35]">Manage Categories</Text>
-              <Text className="mt-1 text-sm text-[#6B7E76]">{categories.length} categories</Text>
-            </View>
-          </View>
+          <InventoryMetricGrid
+            metrics={[
+              {
+                id: 'categories-total',
+                label: 'Total Categories',
+                value: categories.length,
+                icon: Shapes,
+                palette: 'total_categories',
+                trend: 'Product groups',
+              },
+              {
+                id: 'categories-active',
+                label: 'Active',
+                value: activeCategories,
+                icon: CheckCircle2,
+                palette: 'total_customers',
+                trend: 'Available categories',
+              },
+              {
+                id: 'categories-inactive',
+                label: 'Inactive',
+                value: inactiveCategories,
+                icon: XCircle,
+                palette: 'low_stock_products',
+                trend: 'Unavailable categories',
+                trendUp: false,
+              },
+              {
+                id: 'categories-subcategories',
+                label: 'Subcategories',
+                value: subcategoryCount,
+                icon: Package,
+                palette: 'gold_stock_value',
+                trend: 'Across all categories',
+              },
+            ]}
+          />
           <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-white px-3">
             <Search size={17} color="#6B7E76" />
             <TextInput value={search} onChangeText={setSearch} placeholder="Search categories" placeholderTextColor="#9AA6A1" className="min-h-12 flex-1 px-2 text-sm text-[#173F35]" />

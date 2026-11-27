@@ -9,10 +9,22 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { ChevronLeft, ChevronRight, Eye, Pencil, Search, Trash2 } from 'lucide-react-native';
+import {
+  Activity,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Package,
+  Pencil,
+  Search,
+  Trash2,
+  XCircle,
+} from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import { CustomDropdown } from '../Loans/FormControls';
+import InventoryMetricGrid from './InventoryMetricGrid';
 import {
   currency,
   inventoryError,
@@ -195,24 +207,44 @@ export default function AllProducts({ onNavigate }: Props) {
           />
         }
         keyboardShouldPersistTaps="handled">
-        <View className="mb-4">
-          <Text className="text-xl font-extrabold text-[#173F35]">All Products</Text>
-          <Text className="mt-1 text-sm text-[#6B7E76]">{total} products in your inventory</Text>
-        </View>
-
-        <View className="mb-4 flex-row flex-wrap gap-2">
-          {[
-            ['Total Products', stats.totalProducts ?? total],
-            ['In Stock', stats.inStock ?? 0],
-            ['Low Stock', stats.lowStock ?? 0],
-            ['Out of Stock', stats.outOfStock ?? 0],
-          ].map(([label, value]) => (
-            <View key={String(label)} className="min-w-[45%] flex-1 rounded-2xl bg-white p-3 shadow-sm">
-              <Text className="text-xs font-semibold text-[#6B7E76]">{label}</Text>
-              <Text className="mt-1 text-xl font-extrabold text-[#173F35]">{value}</Text>
-            </View>
-          ))}
-        </View>
+        <InventoryMetricGrid
+          metrics={[
+            {
+              id: 'products-total',
+              label: 'Total Products',
+              value: stats.totalProducts ?? total,
+              icon: Package,
+              palette: 'total_products',
+              trend: 'Inventory items',
+            },
+            {
+              id: 'products-in-stock',
+              label: 'In Stock',
+              value: stats.inStock ?? 0,
+              icon: CheckCircle2,
+              palette: 'total_customers',
+              trend: 'Available items',
+            },
+            {
+              id: 'products-low-stock',
+              label: 'Low Stock',
+              value: stats.lowStock ?? 0,
+              icon: Activity,
+              palette: 'low_stock_products',
+              trend: 'Below 10 units',
+              trendUp: false,
+            },
+            {
+              id: 'products-out-of-stock',
+              label: 'Out of Stock',
+              value: stats.outOfStock ?? 0,
+              icon: XCircle,
+              palette: 'today_collection',
+              trend: 'No units available',
+              trendUp: false,
+            },
+          ]}
+        />
 
         <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-white px-3">
           <Search size={18} color="#6B7E76" />
