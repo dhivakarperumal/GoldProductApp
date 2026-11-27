@@ -262,35 +262,44 @@ export default function Loans({
 
   return (
     <View className="flex-1 bg-[#F8F7F2]">
-      <View className="border-b border-[#E6E9E3] bg-white">
+      <View className="mx-4 my-2 rounded-full border border-[#F1D577] bg-[#FFF8E6] p-1 shadow-sm">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerClassName="px-3"
+          contentContainerClassName="items-center"
         >
-          {LOAN_SECTIONS.map(section => {
+          {LOAN_SECTIONS.map((section, index) => {
             const selected = activeSection === section.value;
             return (
-              <Pressable
+              <View
                 key={section.value}
-                accessibilityRole="tab"
-                accessibilityState={{ selected }}
-                onPress={() => {
-                  setActiveSection(section.value);
-                  setShowCreateOptions(false);
-                }}
-                className={`mr-1 min-h-12 justify-center border-b-[3px] px-3 ${
-                  selected ? 'border-[#07564B]' : 'border-transparent'
-                }`}
+                className="flex-row items-center"
               >
-                <Text
-                  className={`text-xs font-bold ${
-                    selected ? 'text-[#07564B]' : 'text-[#718078]'
+                <Pressable
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected }}
+                  onPress={() => {
+                    setActiveSection(section.value);
+                    setShowCreateOptions(false);
+                  }}
+                  className={`mx-1 min-h-10 justify-center px-3.5 ${
+                    selected
+                      ? 'rounded-full bg-[#07564B]'
+                      : ''
                   }`}
                 >
-                  {section.label}
-                </Text>
-              </Pressable>
+                  <Text
+                    className={`text-xs font-bold ${
+                      selected ? 'text-white' : 'text-[#52645F]'
+                    }`}
+                  >
+                    {section.label}
+                  </Text>
+                </Pressable>
+                {index < LOAN_SECTIONS.length - 1 ? (
+                  <View className="mx-1 h-5 w-px bg-[#E8CD81]" />
+                ) : null}
+              </View>
             );
           })}
         </ScrollView>
