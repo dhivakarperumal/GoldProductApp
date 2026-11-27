@@ -425,7 +425,7 @@ export default function Loans({
               visibleLoans.map(loan => (
                 <View
                   key={String(loan.id)}
-                  className="mb-3 rounded-2xl border border-[#E8D596] bg-[#FFFDF7] p-4 shadow-sm"
+                  className="mb-3 rounded-2xl border border-[#DDBB57] bg-white p-4 shadow-sm"
                 >
                   <View className="flex-row items-start">
                     <View className="mr-3 mt-1 h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#E2B94F] bg-[#07564B] shadow-sm">
