@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -19,9 +19,11 @@ import MyProfile from './MyProfile';
 import PaymentManagement from './PaymentManagement';
 import UsersManegement from './UsersManegement';
 
-type ProfileDestination = 'cards' | 'my-profile' | 'users' | 'payments';
+export type ProfileDestination = 'cards' | 'my-profile' | 'users' | 'payments';
 
 type ProfileProps = {
+  requestedDestination?: ProfileDestination;
+  destinationRequestKey?: number;
   onMyProfileVisibilityChange: (visible: boolean) => void;
   onUsersManagementVisibilityChange: (visible: boolean) => void;
   onPaymentManagementVisibilityChange: (visible: boolean) => void;
@@ -55,6 +57,8 @@ const cards = [
 ] as const;
 
 export default function Profile({
+  requestedDestination,
+  destinationRequestKey = 0,
   onMyProfileVisibilityChange,
   onUsersManagementVisibilityChange,
   onPaymentManagementVisibilityChange,
@@ -65,13 +69,27 @@ export default function Profile({
     Set<ProfileDestination>
   >(() => new Set(['cards']));
 
-  const navigateTo = (next: ProfileDestination) => {
-    setDestination(next);
-    setVisitedDestinations(current => new Set(current).add(next));
-    onMyProfileVisibilityChange(next === 'my-profile');
-    onUsersManagementVisibilityChange(next === 'users');
-    onPaymentManagementVisibilityChange(next === 'payments');
-  };
+  const navigateTo = useCallback(
+    (next: ProfileDestination) => {
+      setDestination(next);
+      setVisitedDestinations(current => new Set(current).add(next));
+      onMyProfileVisibilityChange(next === 'my-profile');
+      onUsersManagementVisibilityChange(next === 'users');
+      onPaymentManagementVisibilityChange(next === 'payments');
+    },
+    [
+      onMyProfileVisibilityChange,
+      onPaymentManagementVisibilityChange,
+      onUsersManagementVisibilityChange,
+    ],
+  );
+
+  useEffect(() => {
+    if (!destinationRequestKey || !requestedDestination) {
+      return;
+    }
+    navigateTo(requestedDestination);
+  }, [destinationRequestKey, navigateTo, requestedDestination]);
 
   return (
     <View className="flex-1">

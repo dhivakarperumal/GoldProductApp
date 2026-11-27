@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StatusBar,
@@ -11,6 +10,7 @@ import {
 } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCustomAlert } from '../../Components/CustomAlert';
 
 const FEATURE_OPTIONS = [
   ['goldInventory', 'Gold Inventory'],
@@ -213,6 +213,7 @@ export default function AddSubscriptionPlan({
   onCancel,
   onSubmit,
 }: PlanFormProps) {
+  const { showAlert } = useCustomAlert();
   const [form, setForm] = useState(() => toFormValues(initialPlan));
 
   const payload = useMemo<SubscriptionPlanPayload>(
@@ -252,9 +253,10 @@ export default function AddSubscriptionPlan({
 
   const handleSubmit = () => {
     if (!form.planName.trim()) {
-      Alert.alert(
+      showAlert(
         'Plan name required',
         'Enter a name for this subscription plan.',
+        { variant: 'warning' },
       );
       return;
     }

@@ -33,7 +33,7 @@ export function CustomDropdown({
   placeholder?: string;
   required?: boolean;
   searchable?: boolean;
-  variant?: 'default' | 'filter' | 'glass';
+  variant?: 'default' | 'filter' | 'glass' | 'glass';
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -61,31 +61,67 @@ export function CustomDropdown({
         accessibilityRole="button"
         accessibilityLabel={label}
         accessibilityState={{ expanded: open }}
+        style={isGlass ? glassStyles.trigger : undefined}
         onPress={() => {
           setSearch('');
           setOpen(true);
         }}
-        style={isGlass ? glassStyles.trigger : undefined}
-        className={
+        className={`min-h-12 flex-row items-center justify-between py-3 ${
           isGlass
-            ? 'min-h-12 flex-row items-center justify-between rounded-2xl px-4 py-3'
-            : 'min-h-12 flex-row items-center justify-between rounded-2xl border border-[#E8D596] bg-white px-4 py-3 shadow-sm'
-        }>
-        <Text className={`text-sm ${selectedLabel ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`}>
+            ? 'rounded-2xl px-4'
+            : variant === 'filter'
+              ? 'rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm'
+              : 'rounded-xl border border-[#E6E9E3] bg-white px-3.5'
+        }`}>
+        <Text
+          style={
+            isGlass
+              ? selectedLabel
+                ? glassStyles.valueText
+                : glassStyles.placeholderText
+              : undefined
+          }
+          className={
+            isGlass
+              ? 'text-sm'
+              : `text-sm ${selectedLabel ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`
+          }>
           {selectedLabel || placeholder}
         </Text>
         <ChevronDown size={18} color={isGlass ? '#F5C451' : '#6B7E76'} />
       </Pressable>
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <View className="flex-1 justify-end bg-black/40">
+        <View
+          style={isGlass ? glassStyles.modalBackdrop : undefined}
+          className={isGlass ? 'flex-1 justify-end' : 'flex-1 justify-end bg-black/40'}>
           <Pressable accessibilityLabel="Close options" onPress={() => setOpen(false)} className="flex-1" />
           <View
-            style={{ paddingBottom: Math.max(insets.bottom, 32) }}
-            className="max-h-[70%] rounded-t-3xl bg-white">
-            <View className="flex-row items-center justify-between rounded-t-3xl bg-[#173F35] px-5 py-4">
+            style={[
+              isGlass ? glassStyles.modalSheet : undefined,
+              { paddingBottom: Math.max(insets.bottom, 32) },
+            ]}
+            className={isGlass ? 'max-h-[70%]' : 'max-h-[70%] rounded-t-3xl bg-white'}>
+            {isGlass ? (
+              <>
+                <View pointerEvents="none" style={glassStyles.modalSheen} />
+                <View pointerEvents="none" style={glassStyles.modalGlowGold} />
+              </>
+            ) : null}
+            <View
+              style={isGlass ? glassStyles.modalHeader : undefined}
+              className={
+                isGlass
+                  ? 'flex-row items-center justify-between px-5 py-4'
+                  : 'flex-row items-center justify-between rounded-t-3xl bg-[#173F35] px-5 py-4'
+              }>
               <Text className="text-base font-extrabold text-white">Select {label}</Text>
-              <Pressable accessibilityRole="button" accessibilityLabel="Close dropdown" onPress={() => setOpen(false)}>
-                <X size={20} color="#EAD78A" />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Close dropdown"
+                onPress={() => setOpen(false)}
+                style={isGlass ? glassStyles.closeButton : undefined}
+                className={isGlass ? 'h-9 w-9 items-center justify-center rounded-full' : undefined}>
+                <X size={isGlass ? 18 : 20} color={isGlass ? '#F5C451' : '#EAD78A'} />
               </Pressable>
             </View>
             {searchable ? (
@@ -94,29 +130,68 @@ export function CustomDropdown({
                 value={search}
                 onChangeText={setSearch}
                 placeholder={`Search ${label.toLowerCase()}`}
-                placeholderTextColor="#9AA6A1"
-                className="mx-4 my-3 min-h-11 rounded-2xl border border-[#E8D596] bg-white px-4 text-sm text-[#173F35]"
+                placeholderTextColor={isGlass ? 'rgba(220, 236, 228, 0.65)' : '#9AA6A1'}
+                selectionColor={isGlass ? '#F5C451' : undefined}
+                style={isGlass ? glassStyles.searchInput : undefined}
+                className={
+                  isGlass
+                    ? 'mx-4 my-3 min-h-11 rounded-2xl px-4 text-sm font-medium'
+                    : 'mx-4 my-3 min-h-11 rounded-2xl border border-[#E8D596] bg-white px-4 text-sm text-[#173F35]'
+                }
               />
             ) : null}
             <ScrollView keyboardShouldPersistTaps="handled">
-              {filteredOptions.map(option => (
-                <Pressable
-                  key={option.value}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: option.value === value }}
-                  onPress={() => {
-                    onSelect(option.value);
-                    setOpen(false);
-                    setSearch('');
-                  }}
-                  className={`border-b border-[#F1E7C8] px-5 py-4 ${option.value === value ? 'bg-[#FFF8E7]' : 'bg-white'}`}>
-                  <Text className={`text-sm ${option.value === value ? 'font-bold text-[#8A5A00]' : 'text-[#173F35]'}`}>
-                    {option.label}
-                  </Text>
-                </Pressable>
-              ))}
+              {filteredOptions.map(option => {
+                const isSelected = option.value === value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                    onPress={() => {
+                      onSelect(option.value);
+                      setOpen(false);
+                      setSearch('');
+                    }}
+                    style={
+                      isGlass
+                        ? isSelected
+                          ? glassStyles.optionSelected
+                          : glassStyles.optionIdle
+                        : undefined
+                    }
+                    className={
+                      isGlass
+                        ? 'flex-row items-center justify-between px-5 py-4'
+                        : `border-b border-[#F1E7C8] px-5 py-4 ${isSelected ? 'bg-[#FFF8E7]' : 'bg-white'}`
+                    }>
+                    <Text
+                      style={
+                        isGlass
+                          ? isSelected
+                            ? glassStyles.optionTextSelected
+                            : glassStyles.optionTextIdle
+                          : undefined
+                      }
+                      className={
+                        isGlass
+                          ? isSelected
+                            ? 'text-sm font-bold'
+                            : 'text-sm font-medium'
+                          : `text-sm ${isSelected ? 'font-bold text-[#8A5A00]' : 'text-[#173F35]'}`
+                      }>
+                      {option.label}
+                    </Text>
+                    {isGlass && isSelected ? <View style={glassStyles.selectedDot} /> : null}
+                  </Pressable>
+                );
+              })}
               {filteredOptions.length === 0 ? (
-                <Text className="px-5 py-4 text-sm text-[#6B7E76]">No matching options.</Text>
+                <Text
+                  style={isGlass ? glassStyles.emptyText : undefined}
+                  className={isGlass ? 'px-5 py-4 text-sm' : 'px-5 py-4 text-sm text-[#6B7E76]'}>
+                  No matching options.
+                </Text>
               ) : null}
             </ScrollView>
           </View>
@@ -222,15 +297,30 @@ export function DatePicker({
       </Pressable>
       {Platform.OS === 'ios' ? (
         <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-          <View className="flex-1 items-center justify-center bg-black/40 px-5">
-            <View className="w-full rounded-3xl border border-[#E8D596] bg-white p-5">
-              <Text className="mb-4 text-lg font-extrabold text-[#173F35]">
+          <View
+            style={isGlass ? glassStyles.modalBackdrop : undefined}
+            className={
+              isGlass
+                ? 'flex-1 items-center justify-center px-5'
+                : 'flex-1 items-center justify-center bg-black/40 px-5'
+            }>
+            <View
+              style={isGlass ? glassStyles.dateModalCard : undefined}
+              className={isGlass ? 'w-full p-5' : 'w-full rounded-3xl border border-[#E8D596] bg-white p-5'}>
+              <Text
+                style={isGlass ? glassStyles.valueText : undefined}
+                className={
+                  isGlass
+                    ? 'mb-4 text-lg font-extrabold'
+                    : 'mb-4 text-lg font-extrabold text-[#173F35]'
+                }>
                 Select {label.toLowerCase()}
               </Text>
               <DateTimePicker
                 value={draftDate}
                 mode="date"
                 display="spinner"
+                themeVariant={isGlass ? 'dark' : undefined}
                 minimumDate={minimumDate}
                 maximumDate={maximumDate || undefined}
                 onChange={(_event, date) => {
@@ -238,15 +328,23 @@ export function DatePicker({
                 }}
               />
               <View className="mt-5 flex-row justify-end gap-2">
-                <Pressable onPress={() => setOpen(false)} className="rounded-xl border border-[#E8D596] bg-[#FFF8E7] px-4 py-3">
-                  <Text className="font-bold text-[#52645F]">Cancel</Text>
+                <Pressable
+                  onPress={() => setOpen(false)}
+                  style={isGlass ? glassStyles.dateCancelButton : undefined}
+                  className={isGlass ? 'rounded-xl px-4 py-3' : 'rounded-xl border border-[#E8D596] bg-[#FFF8E7] px-4 py-3'}>
+                  <Text
+                    style={isGlass ? glassStyles.dateCancelText : undefined}
+                    className={isGlass ? 'font-bold' : 'font-bold text-[#52645F]'}>
+                    Cancel
+                  </Text>
                 </Pressable>
                 <Pressable
                   onPress={() => {
                     onChange(formatDate(draftDate));
                     setOpen(false);
                   }}
-                  className="rounded-xl bg-[#07564B] px-4 py-3">
+                  style={isGlass ? glassStyles.dateConfirmButton : undefined}
+                  className={isGlass ? 'rounded-xl px-4 py-3' : 'rounded-xl bg-[#07564B] px-4 py-3'}>
                   <Text className="font-bold text-white">Confirm</Text>
                 </Pressable>
               </View>
@@ -412,5 +510,98 @@ const glassStyles = StyleSheet.create({
   },
   placeholderText: {
     color: 'rgba(220, 236, 228, 0.65)',
+  },
+  modalBackdrop: {
+    backgroundColor: 'rgba(2, 18, 14, 0.72)',
+  },
+  modalSheet: {
+    backgroundColor: 'rgba(6, 46, 35, 0.94)',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 215, 130, 0.38)',
+    borderTopWidth: 1.5,
+    borderTopColor: 'rgba(255, 255, 255, 0.38)',
+    borderBottomWidth: 0,
+    overflow: 'hidden',
+  },
+  modalSheen: {
+    position: 'absolute',
+    top: -40,
+    left: -20,
+    right: 60,
+    height: 95,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  modalGlowGold: {
+    position: 'absolute',
+    top: -45,
+    right: -35,
+    width: 150,
+    height: 150,
+    borderRadius: 999,
+    backgroundColor: 'rgba(245, 196, 81, 0.12)',
+  },
+  modalHeader: {
+    backgroundColor: 'rgba(255, 255, 255, 0.07)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(245, 230, 168, 0.2)',
+  },
+  closeButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 215, 130, 0.35)',
+  },
+  searchInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(245, 224, 158, 0.35)',
+    borderTopColor: 'rgba(255, 255, 255, 0.32)',
+    color: '#FFFFFF',
+  },
+  optionIdle: {
+    backgroundColor: 'transparent',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(245, 230, 168, 0.14)',
+  },
+  optionSelected: {
+    backgroundColor: 'rgba(245, 196, 81, 0.18)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(245, 196, 81, 0.35)',
+  },
+  optionTextIdle: {
+    color: '#E7F2EC',
+  },
+  optionTextSelected: {
+    color: '#F5C451',
+  },
+  selectedDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: '#F5C451',
+  },
+  emptyText: {
+    color: '#CBE0D7',
+  },
+  dateModalCard: {
+    backgroundColor: 'rgba(6, 46, 35, 0.95)',
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 215, 130, 0.4)',
+    borderTopWidth: 1.5,
+    borderTopColor: 'rgba(255, 255, 255, 0.38)',
+  },
+  dateCancelButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 224, 158, 0.35)',
+  },
+  dateCancelText: {
+    color: '#F5E6B8',
+  },
+  dateConfirmButton: {
+    backgroundColor: '#C48F0E',
   },
 });

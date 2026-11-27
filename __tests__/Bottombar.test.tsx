@@ -21,7 +21,7 @@ const tabLabels: SuperAdminTab[] = [
   'G Shops',
   'Plans',
   'Revenue',
-  'Profile',
+  'More',
 ];
 
 function BottomBarHarness() {
@@ -40,6 +40,11 @@ test('starts on Home and moves the gold active tab background across tabs', asyn
   await act(async () => {
     renderer = ReactTestRenderer.create(<BottomBarHarness />);
   });
+
+  expect(
+    renderer.root.findByProps({ testID: 'bottom-tab-background' }).props
+      .blurRadius,
+  ).toBe(2);
 
   const bar = renderer.root.findByProps({ testID: 'bottom-tab-bar' });
   await act(async () => {

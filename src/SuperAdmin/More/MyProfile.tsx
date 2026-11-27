@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -25,6 +24,7 @@ import {
   Trash2,
   UserRound,
 } from 'lucide-react-native';
+import { useCustomAlert } from '../../Components/CustomAlert';
 import api from '../../api';
 
 type ProfileData = {
@@ -68,6 +68,7 @@ function dateLabel(value: string | undefined) {
 }
 
 export default function MyProfile({ onLogout }: { onLogout: () => void }) {
+  const { showAlert } = useCustomAlert();
   const [profile, setProfile] = useState<ProfileData>({
     notification_preferences: { email: true, orders: true },
   });
@@ -138,7 +139,9 @@ export default function MyProfile({ onLogout }: { onLogout: () => void }) {
       !(profile.username || '').trim() ||
       !(profile.email || '').trim()
     ) {
-      Alert.alert('Missing details', 'Name, username, and email are required.');
+      showAlert('Missing details', 'Name, username, and email are required.', {
+        variant: 'warning',
+      });
       return;
     }
     setSaving(true);
@@ -153,11 +156,12 @@ export default function MyProfile({ onLogout }: { onLogout: () => void }) {
       if (response.data?.user) {
         setProfile(current => ({ ...current, ...response.data.user }));
       }
-      Alert.alert('Saved', 'Profile saved successfully.');
+      showAlert('Saved', 'Profile saved successfully.', { variant: 'success' });
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to save',
         getErrorMessage(error, 'Unable to save your profile.'),
+        { variant: 'error' },
       );
     } finally {
       setSaving(false);
@@ -166,18 +170,23 @@ export default function MyProfile({ onLogout }: { onLogout: () => void }) {
 
   const changePassword = async () => {
     if (!passwords.current) {
-      Alert.alert('Password required', 'Enter your current password.');
+      showAlert('Password required', 'Enter your current password.', {
+        variant: 'warning',
+      });
       return;
     }
     if (passwords.next.length < 8) {
-      Alert.alert(
+      showAlert(
         'Password too short',
         'New password must be at least 8 characters.',
+        { variant: 'warning' },
       );
       return;
     }
     if (passwords.next !== passwords.confirm) {
-      Alert.alert('Passwords do not match', 'Re-enter the new password.');
+      showAlert('Passwords do not match', 'Re-enter the new password.', {
+        variant: 'warning',
+      });
       return;
     }
     setChangingPassword(true);
@@ -187,11 +196,14 @@ export default function MyProfile({ onLogout }: { onLogout: () => void }) {
         newPassword: passwords.next,
       });
       setPasswords({ current: '', next: '', confirm: '' });
-      Alert.alert('Updated', 'Password updated successfully.');
+      showAlert('Updated', 'Password updated successfully.', {
+        variant: 'success',
+      });
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to update',
         getErrorMessage(error, 'Unable to update your password.'),
+        { variant: 'error' },
       );
     } finally {
       setChangingPassword(false);
@@ -199,10 +211,9 @@ export default function MyProfile({ onLogout }: { onLogout: () => void }) {
   };
 
   const removeProfilePhoto = () => {
-    Alert.alert(
-      'Remove profile photo?',
-      'Your profile photo will be removed.',
-      [
+    showAlert('Remove profile photo?', 'Your profile photo will be removed.', {
+      variant: 'warning',
+      buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Remove',
@@ -219,11 +230,14 @@ export default function MyProfile({ onLogout }: { onLogout: () => void }) {
                   profile_image: undefined,
                 }));
               }
-              Alert.alert('Removed', 'Profile photo removed.');
+              showAlert('Removed', 'Profile photo removed.', {
+                variant: 'success',
+              });
             } catch (error) {
-              Alert.alert(
+              showAlert(
                 'Unable to remove',
                 getErrorMessage(error, 'Unable to remove profile photo.'),
+                { variant: 'error' },
               );
             } finally {
               setRemovingPhoto(false);
@@ -231,7 +245,7 @@ export default function MyProfile({ onLogout }: { onLogout: () => void }) {
           },
         },
       ],
-    );
+    });
   };
 
   const changePreference = async (key: 'email' | 'orders', value: boolean) => {
@@ -257,13 +271,24 @@ export default function MyProfile({ onLogout }: { onLogout: () => void }) {
         ...current,
         notification_preferences: previous,
       }));
-      Alert.alert(
+      showAlert(
         'Unable to save',
         getErrorMessage(error, 'Unable to save notification preference.'),
+        { variant: 'error' },
       );
     } finally {
       setSavingPreference(false);
     }
+  };
+
+  const confirmLogout = () => {
+    showAlert('Log out?', 'Are you sure you want to log out?', {
+      variant: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log out', style: 'destructive', onPress: onLogout },
+      ],
+    });
   };
 
   if (loading) {
@@ -651,7 +676,7 @@ export default function MyProfile({ onLogout }: { onLogout: () => void }) {
       <View className="mt-5 items-center">
         <Pressable
           accessibilityRole="button"
-          onPress={onLogout}
+          onPress={confirmLogout}
           className="min-w-[180px] flex-row items-center justify-center rounded-xl bg-[#FEF2F2] px-6 py-3.5"
         >
           <LogOut size={18} color="#B91C1C" />

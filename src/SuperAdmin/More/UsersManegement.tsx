@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Pressable,
@@ -36,6 +35,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { useCustomAlert } from '../../Components/CustomAlert';
 import api from '../../api';
 
 const PAGE_SIZE = 8;
@@ -237,6 +237,7 @@ function StatCard({
 
 export default function UsersManegement({ onBack }: UsersManagementProps) {
   const insets = useSafeAreaInsets();
+  const { showAlert } = useCustomAlert();
   const floatingButtonPosition = useMemo(
     () => ({ bottom: insets.bottom + 16 }),
     [insets.bottom],
@@ -433,9 +434,10 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
       !formData.email.trim() ||
       (!isEditing && !formData.password)
     ) {
-      Alert.alert(
+      showAlert(
         'Required information',
         'Enter a username, email, and password for a new account.',
+        { variant: 'warning' },
       );
       return;
     }
@@ -451,20 +453,23 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
     try {
       if (isEditing && editUserId != null) {
         await api.put(`/auth/users/${editUserId}`, accountDetails);
-        Alert.alert('Saved', 'User account updated.');
+        setIsModalOpen(false);
+        await fetchUsers();
+        showAlert('Saved', 'User account updated.', { variant: 'success' });
       } else {
         await api.post('/auth/users', {
           ...accountDetails,
           password: formData.password,
         });
-        Alert.alert('Added', 'User account created.');
+        setIsModalOpen(false);
+        await fetchUsers();
+        showAlert('Added', 'User account created.', { variant: 'success' });
       }
-      setIsModalOpen(false);
-      await fetchUsers();
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to save user',
         getErrorMessage(error, 'Could not save this user account.'),
+        { variant: 'error' },
       );
     } finally {
       setSubmitLoading(false);
@@ -472,25 +477,31 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
   };
 
   const deleteUser = (user: UserRecord) => {
-    Alert.alert('Delete user?', `Delete ${user.name}? This cannot be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await api.delete(`/auth/users/${user.id}`);
-            Alert.alert('Deleted', 'User account deleted.');
-            await fetchUsers();
-          } catch (error) {
-            Alert.alert(
-              'Unable to delete user',
-              getErrorMessage(error, 'Could not delete this user.'),
-            );
-          }
+    showAlert('Delete user?', `Delete ${user.name}? This cannot be undone.`, {
+      variant: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.delete(`/auth/users/${user.id}`);
+              await fetchUsers();
+              showAlert('Deleted', 'User account deleted.', {
+                variant: 'success',
+              });
+            } catch (error) {
+              showAlert(
+                'Unable to delete user',
+                getErrorMessage(error, 'Could not delete this user.'),
+                { variant: 'error' },
+              );
+            }
+          },
         },
-      },
-    ]);
+      ],
+    });
   };
 
   const changeUserStatus = async (user: UserRecord, status: UserStatus) => {
@@ -513,9 +524,10 @@ export default function UsersManegement({ onBack }: UsersManagementProps) {
         ),
       );
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to update status',
         getErrorMessage(error, 'Could not update user status.'),
+        { variant: 'error' },
       );
     } finally {
       setStatusUpdatingUserId(null);

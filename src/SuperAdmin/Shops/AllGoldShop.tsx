@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Pressable,
   RefreshControl,
@@ -26,6 +25,7 @@ import {
   X,
   ShieldCheck,
 } from 'lucide-react-native';
+import { useCustomAlert } from '../../Components/CustomAlert';
 import api from '../../api';
 import AddShops from './AddShops';
 import GoldShopDetails from './GoldshopDetails';
@@ -287,6 +287,7 @@ function SummaryCard({
 export default function AllGoldShop({
   onFullScreenShopPageChange,
 }: AllGoldShopProps) {
+  const { showAlert } = useCustomAlert();
   const [shops, setShops] = useState<Shop[]>([]);
   const [summary, setSummary] = useState<Summary>({});
   const [pagination, setPagination] = useState({
@@ -347,16 +348,17 @@ export default function AllGoldShop({
           total: Number(data?.pagination?.total) || 0,
         });
       } catch (error) {
-        Alert.alert(
+        showAlert(
           'Unable to load gold shops',
           getErrorMessage(error, 'Could not load the gold shop directory.'),
+          { variant: 'error' },
         );
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [page, search, status],
+    [page, search, showAlert, status],
   );
 
   useEffect(() => {
@@ -366,29 +368,33 @@ export default function AllGoldShop({
 
   const changeStatus = (shop: Shop) => {
     const nextStatus = shop.status === 'active' ? 'suspended' : 'active';
-    Alert.alert(
+    showAlert(
       `${nextStatus === 'active' ? 'Activate' : 'Suspend'} shop?`,
       `${shop.shop_name || 'This shop'} will be ${nextStatus}.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: nextStatus === 'active' ? 'Activate' : 'Suspend',
-          style: nextStatus === 'active' ? 'default' : 'destructive',
-          onPress: async () => {
-            try {
-              await api.patch(`/super-admin/gold-shops/${shop.id}/status`, {
-                status: nextStatus,
-              });
-              await loadShops(true);
-            } catch (error) {
-              Alert.alert(
-                'Unable to update shop',
-                getErrorMessage(error, 'Could not update the shop status.'),
-              );
-            }
+      {
+        variant: 'warning',
+        buttons: [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: nextStatus === 'active' ? 'Activate' : 'Suspend',
+            style: nextStatus === 'active' ? 'default' : 'destructive',
+            onPress: async () => {
+              try {
+                await api.patch(`/super-admin/gold-shops/${shop.id}/status`, {
+                  status: nextStatus,
+                });
+                await loadShops(true);
+              } catch (error) {
+                showAlert(
+                  'Unable to update shop',
+                  getErrorMessage(error, 'Could not update the shop status.'),
+                  { variant: 'error' },
+                );
+              }
+            },
           },
-        },
-      ],
+        ],
+      },
     );
   };
 
@@ -401,9 +407,10 @@ export default function AllGoldShop({
       }
       setPendingApproval(data.shop as Shop);
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to load shop',
         getErrorMessage(error, 'Could not load complete shop details.'),
+        { variant: 'error' },
       );
     } finally {
       setApprovalLoading(false);
@@ -432,9 +439,10 @@ export default function AllGoldShop({
       setPendingApproval(null);
       await loadShops(true);
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to approve shop',
         getErrorMessage(error, 'Could not approve this shop.'),
+        { variant: 'error' },
       );
     } finally {
       setApprovalSubmitting(false);
@@ -442,28 +450,36 @@ export default function AllGoldShop({
   };
 
   const rejectShop = (shop: Shop) => {
-    Alert.alert(
+    showAlert(
       'Reject shop?',
       `Reject ${shop.shop_name || 'this shop'}? Its pending login credentials will be removed.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reject',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.post(`/super-admin/gold-shops/${shop.id}/reject`);
-              await loadShops(true);
-              Alert.alert('Shop rejected', 'The shop registration was rejected.');
-            } catch (error) {
-              Alert.alert(
-                'Unable to reject shop',
-                getErrorMessage(error, 'Could not reject this shop.'),
-              );
-            }
+      {
+        variant: 'warning',
+        buttons: [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Reject',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await api.post(`/super-admin/gold-shops/${shop.id}/reject`);
+                await loadShops(true);
+                showAlert(
+                  'Shop rejected',
+                  'The shop registration was rejected.',
+                  { variant: 'success' },
+                );
+              } catch (error) {
+                showAlert(
+                  'Unable to reject shop',
+                  getErrorMessage(error, 'Could not reject this shop.'),
+                  { variant: 'error' },
+                );
+              }
+            },
           },
-        },
-      ],
+        ],
+      },
     );
   };
 
@@ -475,9 +491,10 @@ export default function AllGoldShop({
       const paymentShop = data?.shop;
       const payment = data?.payment;
       if (!paymentShop || !payment) {
-        Alert.alert(
+        showAlert(
           'Payment unavailable',
           'No pending payment was found for this shop.',
+          { variant: 'warning' },
         );
         return;
       }
@@ -489,9 +506,10 @@ export default function AllGoldShop({
           .replace('bank transfer', 'bank_transfer'),
       );
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to load payment',
         getErrorMessage(error, 'Could not load payment details.'),
+        { variant: 'error' },
       );
     }
   };
@@ -499,7 +517,11 @@ export default function AllGoldShop({
   const confirmPayment = async () => {
     if (!pendingPayment?.payment || paymentSubmitting) return;
     if (!transactionId.trim()) {
-      Alert.alert('Reference required', 'Enter the payment reference or transaction ID.');
+      showAlert(
+        'Reference required',
+        'Enter the payment reference or transaction ID.',
+        { variant: 'warning' },
+      );
       return;
     }
     setPaymentSubmitting(true);
@@ -513,11 +535,14 @@ export default function AllGoldShop({
       );
       setPendingPayment(null);
       await loadShops(true);
-      Alert.alert('Payment confirmed', 'The subscription payment was verified.');
+      showAlert('Payment confirmed', 'The subscription payment was verified.', {
+        variant: 'success',
+      });
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to verify payment',
         getErrorMessage(error, 'Could not verify this payment.'),
+        { variant: 'error' },
       );
     } finally {
       setPaymentSubmitting(false);
@@ -525,27 +550,31 @@ export default function AllGoldShop({
   };
 
   const archiveShop = (shop: Shop) => {
-    Alert.alert(
+    showAlert(
       'Archive shop?',
       `${shop.shop_name || 'This shop'} will be archived.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Archive',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete(`/super-admin/gold-shops/${shop.id}`);
-              await loadShops(true);
-            } catch (error) {
-              Alert.alert(
-                'Unable to archive shop',
-                getErrorMessage(error, 'Could not archive the shop.'),
-              );
-            }
+      {
+        variant: 'warning',
+        buttons: [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Archive',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await api.delete(`/super-admin/gold-shops/${shop.id}`);
+                await loadShops(true);
+              } catch (error) {
+                showAlert(
+                  'Unable to archive shop',
+                  getErrorMessage(error, 'Could not archive the shop.'),
+                  { variant: 'error' },
+                );
+              }
+            },
           },
-        },
-      ],
+        ],
+      },
     );
   };
 
@@ -560,9 +589,10 @@ export default function AllGoldShop({
       setShowCreate(true);
       onFullScreenShopPageChange(true);
     } catch (error) {
-      Alert.alert(
+      showAlert(
         'Unable to edit shop',
         getErrorMessage(error, 'Could not load shop details for editing.'),
+        { variant: 'error' },
       );
     } finally {
       setEditLoadingId(null);

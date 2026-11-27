@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -30,6 +29,7 @@ import {
   UserRound,
 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCustomAlert } from '../../Components/CustomAlert';
 import api from '../../api';
 import type { SubscriptionPlan } from '../Subscription/AddSubscriptionPlan';
 
@@ -394,6 +394,7 @@ export default function AddShops({
   onCancel,
   onSuccess,
 }: AddShopsProps = {}) {
+  const { showAlert } = useCustomAlert();
   const isEditing = mode === 'edit' && Boolean(initialShop);
   const formSteps = isEditing ? STEPS.slice(0, 2) : STEPS;
   const [form, setForm] = useState<FormValues>(() => ({
@@ -676,12 +677,13 @@ export default function AddShops({
         });
         data = response.data;
       }
-      Alert.alert(
+      showAlert(
         isEditing ? 'Gold shop updated' : 'Gold shop created',
         data?.message ||
           (isEditing
             ? 'The gold shop was updated successfully.'
             : 'The gold shop was registered successfully.'),
+        { variant: 'success' },
       );
       if (isEditing) {
         onSuccess?.();
@@ -718,7 +720,11 @@ export default function AddShops({
           : 'Could not create the gold shop.',
       );
       setFormError(message);
-      Alert.alert(isEditing ? 'Unable to update shop' : 'Unable to create shop', message);
+      showAlert(
+        isEditing ? 'Unable to update shop' : 'Unable to create shop',
+        message,
+        { variant: 'error' },
+      );
     } finally {
       setSubmitting(false);
     }

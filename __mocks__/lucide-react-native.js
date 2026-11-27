@@ -31,6 +31,7 @@ module.exports = {
   FileText: MockIcon,
   Gem: MockIcon,
   HandCoins: MockIcon,
+  History: MockIcon,
   Home: MockIcon,
   ImagePlus: MockIcon,
   IndianRupee: MockIcon,
@@ -57,6 +58,7 @@ module.exports = {
   Trash2: MockIcon,
   UserRound: MockIcon,
   Users: MockIcon,
+  Wallet: MockIcon,
   X: MockIcon,
   XCircle: MockIcon,
 };

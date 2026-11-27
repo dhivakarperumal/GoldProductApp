@@ -103,6 +103,18 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 5 },
   },
+  tabBackgroundActive: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(244, 201, 93, 0.45)',
+    backgroundColor: 'rgba(244, 201, 93, 0.2)',
+  },
+  tabBackgroundInactive: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    backgroundColor: 'transparent',
+  },
   tabIndicator: {
     borderRadius: 16,
   },
@@ -145,9 +157,13 @@ function SideTabButton({
       style={({ pressed }) => ({ opacity: pressed ? 0.76 : 1 })}
     >
       <View
-        testID={`admin-tab-indicator-${item.tab}`}
-        style={isActive ? styles.activeTabIndicator : styles.tabIndicator}
-        className="h-8 w-12 items-center justify-center rounded-full"
+        testID={`admin-tab-background-${item.tab}`}
+        style={
+          isActive
+            ? styles.tabBackgroundActive
+            : styles.tabBackgroundInactive
+        }
+        className="h-8 w-12 items-center justify-center"
       >
         <Icon
           size={19}
@@ -237,6 +253,12 @@ export default function AdminTabBar({
             <Pressable
               accessible={false}
               onPress={openOrdersSheet}
+              testID="admin-tab-background-Orders"
+              style={
+                isOrdersActive
+                  ? styles.tabBackgroundActive
+                  : styles.tabBackgroundInactive
+              }
               className="h-full w-[76px] items-center justify-end pb-[7px]"
             >
               <Text
