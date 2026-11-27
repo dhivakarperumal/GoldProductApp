@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   ArrowDownLeft,
   Coins,
+  List,
   Plus,
   Search,
   Store,
@@ -442,6 +443,7 @@ export default function DealerPurchases({ onBack }: Props) {
     { id: 'purchase-receivables', label: 'Dealer receivables', value: summary ? currency(summary.receivables) : '—', note: 'Amount to receive', icon: ArrowDownLeft, palette: 'gold_stock_value' as const },
     { id: 'purchase-monthly', label: 'Purchases this month', value: summary ? currency(summary.purchases_this_month) : '—', note: 'Monthly total', icon: Coins, palette: 'total_products' as const },
     { id: 'purchase-overdue', label: 'Overdue invoices', value: summary ? `${summary.overdue?.count || 0} · ${currency(summary.overdue?.amount)}` : '—', note: 'Invoices past due', icon: AlertTriangle, palette: 'low_stock_products' as const, trendUp: false },
+    { id: 'purchase-pending-jobs', label: 'Pending Jobs', value: summary?.pending_jobs ?? '—', note: 'Awaiting completion', icon: List, palette: 'total_categories' as const },
   ];
 
   return (
@@ -462,6 +464,7 @@ export default function DealerPurchases({ onBack }: Props) {
           />
         }>
         <DashboardMetricGrid
+          containerClassName="mb-4"
           metrics={summaryCards.map(({ id, label, value, note, icon, palette, trendUp }) => ({
             id,
             label,
