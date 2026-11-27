@@ -56,8 +56,8 @@ export default function AdminTabBar({
       resizeMode="stretch"
       style={{ paddingBottom: insets.bottom }}
     >
-      <View className="relative h-[100px]">
-        <View className="absolute bottom-0 h-[74px] w-full flex-row items-center px-1">
+      <View className="relative h-[100px] px-5">
+        <View className="absolute bottom-0 left-5 right-5 h-[74px] flex-row items-center rounded-full border border-[#F6AD68] bg-[#202124] px-1 shadow-lg">
           {tabs.slice(0, 2).map(({ label, tab, icon: Icon }) => {
             const isActive = activeTab === tab;
             return (
@@ -134,7 +134,7 @@ export default function AdminTabBar({
           accessibilityLabel="Orders"
           accessibilityState={{ selected: activeTab === 'Orders' }}
           onPress={() => onTabPress('Orders')}
-          className="absolute top-0 h-[76px] w-[76px] items-center justify-center rounded-full border-[5px] border-[#04473E] bg-[#FF9F0A]"
+          className="absolute top-0 h-[76px] w-[76px] items-center justify-center rounded-full border-[5px] border-[#202124] bg-[#FF9F0A]"
           style={styles.centerButton}
         >
           <Plus size={34} color="#FFFFFF" strokeWidth={2.5} />
