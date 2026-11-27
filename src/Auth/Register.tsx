@@ -29,6 +29,7 @@ import Geolocation, {
   PositionError,
   type GeoPosition,
 } from 'react-native-geolocation-service';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api from '../api';
 import { useCustomAlert } from '../Components/CustomAlert';
 import { CustomDropdown, DatePicker } from '../Admin/Loans/FormControls';
@@ -705,15 +706,19 @@ export default function Register({ onBack, onSubmitted }: Props) {
   const StepIcon = STEPS[activeStep].icon;
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-[#F8F7F2]"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View className="flex-1 px-6 py-4">
+    <SafeAreaView className="flex-1 bg-[#F8F7F2]" edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View className="flex-1 px-6 py-4">
         <View className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#F3E8C1]" />
         <View className="absolute -bottom-16 -left-20 h-56 w-56 rounded-full bg-[#E3EEE8]" />
         <View className="w-full max-w-md flex-1 self-center">
           <View className="mb-3 items-center">
-            <View className="mb-3 h-32 w-32 overflow-hidden rounded-full border-4 border-[#F5E6A8] bg-[#06452D] shadow-lg">
+            <Text className="text-center text-3xl font-bold text-[#173F35]">
+              Register your gold shop
+            </Text>
+            <View className="mt-3 h-32 w-32 overflow-hidden rounded-full border-4 border-[#F5E6A8] bg-[#06452D] shadow-lg">
               <Image
                 accessibilityLabel="Sri GoldSuite logo"
                 source={require('../Assert/Images/App icon.png')}
@@ -721,15 +726,6 @@ export default function Register({ onBack, onSubmitted }: Props) {
                 className="h-full w-full"
               />
             </View>
-            <Text className="mb-3 text-center text-xs font-bold uppercase tracking-[3px] text-[#A77B15]">
-              A little more sparkle, every day
-            </Text>
-            <Text className="text-center text-3xl font-bold text-[#173F35]">
-              Register your gold shop
-            </Text>
-            <Text className="mt-2 text-center text-sm leading-5 text-[#6B7280]">
-              Create an account to manage customers, products, and billing with ease.
-            </Text>
           </View>
 
           <View className="mb-4 flex-row rounded-xl bg-[#07564B] p-1">
@@ -1173,7 +1169,8 @@ export default function Register({ onBack, onSubmitted }: Props) {
             </Text>
           </Pressable>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

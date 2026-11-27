@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Check, Eye, EyeOff, LockKeyhole, UserRound } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api, { setTokenCache } from '../api';
 
 export type LoginUser = {
@@ -105,16 +106,17 @@ export default function Login({
   };
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-[#F8F7F2]"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        contentContainerClassName="flex-grow justify-center px-6 py-10"
-        keyboardShouldPersistTaps="handled">
-        <View className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#F3E8C1]" />
-        <View className="absolute -bottom-16 -left-20 h-56 w-56 rounded-full bg-[#E3EEE8]" />
+    <SafeAreaView className="flex-1 bg-[#F8F7F2]" edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          contentContainerClassName="flex-grow justify-center px-6 py-10"
+          keyboardShouldPersistTaps="handled">
+          <View className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#F3E8C1]" />
+          <View className="absolute -bottom-16 -left-20 h-56 w-56 rounded-full bg-[#E3EEE8]" />
 
-        <View className="w-full max-w-md self-center">
+          <View className="w-full max-w-md self-center">
           <View className="mb-6 items-center">
             <View className="mb-3 h-32 w-32 overflow-hidden rounded-full border-4 border-[#F5E6A8] bg-[#06452D] shadow-lg">
               <Image
@@ -124,9 +126,6 @@ export default function Login({
                 className="h-full w-full"
               />
             </View>
-            <Text className="mb-3 text-center text-xs font-bold uppercase tracking-[3px] text-[#A77B15]">
-              A little more sparkle, every day
-            </Text>
             <Text className="text-center text-3xl font-bold text-[#173F35]">
               Admin Sign In
             </Text>
@@ -256,8 +255,9 @@ export default function Login({
               </Pressable>
             ) : null}
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
