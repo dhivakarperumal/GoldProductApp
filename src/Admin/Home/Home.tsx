@@ -565,11 +565,11 @@ export default function Home({ onNavigate }: HomeProps) {
         )}
       </View>
 
-      <View className="mb-5 rounded-2xl border border-[#ECE7D8] bg-white p-4">
+      <View className="mb-5 rounded-2xl border border-[#DDBB57] bg-white p-4 shadow-sm">
         <Text className="text-base font-bold text-[#173F35]">
           Revenue Overview
         </Text>
-        <Text className="mt-1 text-xs text-[#8A8F8B]">
+        <Text className="mt-1 text-xs text-[#6B7280]">
           Shop billing activity
         </Text>
         <View className="mt-5 h-36 flex-row items-end justify-between">
@@ -589,7 +589,7 @@ export default function Home({ onNavigate }: HomeProps) {
                 />
                 <Text
                   numberOfLines={1}
-                  className="mt-2 text-[9px] text-[#8A8F8B]">
+                  className="mt-2 text-[9px] text-[#6B7280]">
                   {item.label}
                 </Text>
               </View>
@@ -602,7 +602,7 @@ export default function Home({ onNavigate }: HomeProps) {
         </View>
       </View>
 
-      <View className="mb-5 rounded-2xl border border-[#ECE7D8] bg-white p-4">
+      <View className="mb-5 rounded-2xl border border-[#DDBB57] bg-white p-4 shadow-sm">
         <Text className="mb-3 text-base font-bold text-[#173F35]">
           Loan Status
         </Text>
@@ -610,7 +610,7 @@ export default function Home({ onNavigate }: HomeProps) {
           loanStatuses.map(([status, count]) => (
             <View
               key={status}
-              className="flex-row justify-between border-b border-[#F3F0E8] py-3 last:border-b-0">
+              className="flex-row justify-between border-b border-[#F1F2EE] py-3 last:border-b-0">
               <Text className="text-sm text-[#6B7280]">{status}</Text>
               <Text className="text-sm font-bold text-[#173F35]">
                 {Number(count).toLocaleString('en-IN')}
@@ -624,7 +624,7 @@ export default function Home({ onNavigate }: HomeProps) {
         )}
       </View>
 
-      <View className="mb-5 rounded-2xl border border-[#ECE7D8] bg-white p-4">
+      <View className="mb-5 rounded-2xl border border-[#DDBB57] bg-white p-4 shadow-sm">
         <View className="mb-3 flex-row items-center justify-between">
           <Text className="text-base font-bold text-[#173F35]">
             Recent Loans
@@ -639,7 +639,7 @@ export default function Home({ onNavigate }: HomeProps) {
           recentLoans.map(loan => (
             <View
               key={loan.id}
-              className="border-b border-[#F3F0E8] py-3 last:border-b-0">
+              className="border-b border-[#F1F2EE] py-3 last:border-b-0">
               <View className="flex-row items-center justify-between">
                 <Text
                   numberOfLines={1}
@@ -675,7 +675,7 @@ export default function Home({ onNavigate }: HomeProps) {
         )}
       </View>
 
-      <View className="mb-5 rounded-2xl border border-[#ECE7D8] bg-white p-4">
+      <View className="mb-5 rounded-2xl border border-[#DDBB57] bg-white p-4 shadow-sm">
         <View className="mb-3 flex-row items-center justify-between">
           <Text className="text-base font-bold text-[#173F35]">
             Latest Products
@@ -686,7 +686,7 @@ export default function Home({ onNavigate }: HomeProps) {
           products.map(product => (
             <View
               key={product.id}
-              className="flex-row items-center justify-between border-b border-[#F3F0E8] py-3 last:border-b-0">
+              className="flex-row items-center justify-between border-b border-[#F1F2EE] py-3 last:border-b-0">
               <View className="flex-1 pr-3">
                 <Text
                   numberOfLines={1}
