@@ -9,8 +9,8 @@ import {
   View,
 } from 'react-native';
 import {
-  ArrowDownRight,
-  ArrowUpRight,
+  ArrowDown,
+  ArrowUp,
   CalendarDays,
   ChartNoAxesColumn,
   ChevronRight,
@@ -177,15 +177,24 @@ const metricPalettes: Record<string, MetricPalette> = {
   },
 };
 
+const overviewMetricOrder = [
+  'total_customers',
+  'active_gold_loans',
+  'today_collection',
+  'gold_stock_value',
+  'total_products',
+  'total_categories',
+];
+
 const styles = StyleSheet.create({
   metricCard: {
     aspectRatio: 1.95,
     borderWidth: 1.5,
-    elevation: 8,
+    elevation: 5,
     shadowColor: '#FFC837',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.9,
-    shadowRadius: 11,
+    shadowOpacity: 0.58,
+    shadowRadius: 6,
   },
   metricIcon: {
     elevation: 4,
@@ -258,75 +267,50 @@ function MetricCardArtwork({
           <Stop offset="100%" stopColor={palette.glow} stopOpacity="0" />
         </RadialGradient>
         <RadialGradient id={goldGlowId} cx="50%" cy="50%" r="50%">
-          <Stop offset="0%" stopColor="#FFF3A6" stopOpacity="0.95" />
-          <Stop offset="42%" stopColor="#FFC629" stopOpacity="0.65" />
+          <Stop offset="0%" stopColor="#FFF3A6" stopOpacity="0.85" />
+          <Stop offset="42%" stopColor="#FFC629" stopOpacity="0.5" />
           <Stop offset="100%" stopColor="#FFC629" stopOpacity="0" />
         </RadialGradient>
         <LinearGradient id={shineId} x1="0%" y1="100%" x2="100%" y2="0%">
-          <Stop offset="0%" stopColor="#FFF4B0" stopOpacity="0" />
-          <Stop offset="42%" stopColor="#FFC928" stopOpacity="0.82" />
-          <Stop offset="54%" stopColor="#FFFBE5" stopOpacity="1" />
-          <Stop offset="64%" stopColor="#FFD44B" stopOpacity="0.88" />
+          <Stop offset="0%" stopColor="#E5970E" stopOpacity="0" />
+          <Stop offset="45%" stopColor="#FFD454" stopOpacity="0.72" />
+          <Stop offset="58%" stopColor="#FFF8D6" stopOpacity="0.98" />
+          <Stop offset="72%" stopColor="#FFCF39" stopOpacity="0.75" />
           <Stop offset="100%" stopColor="#FFF4B0" stopOpacity="0" />
         </LinearGradient>
       </Defs>
       <Rect width="220" height="112" rx="19" fill={`url(#${gradientId})`} />
       <Circle cx="16" cy="104" r="52" fill={`url(#${glowId})`} opacity="0.62" />
       <Circle cx="205" cy="18" r="54" fill={`url(#${glowId})`} opacity="0.46" />
-      <Circle cx="12" cy="15" r="42" fill={`url(#${goldGlowId})`} opacity="0.56" />
-      <Circle cx="211" cy="98" r="48" fill={`url(#${goldGlowId})`} opacity="0.72" />
+      <Circle cx="9" cy="14" r="28" fill={`url(#${goldGlowId})`} opacity="0.42" />
+      <Circle cx="218" cy="106" r="42" fill={`url(#${goldGlowId})`} opacity="0.78" />
       <Path
-        d="M-18 105 C36 79 56 10 101 17 S172 98 239 14"
-        fill="none"
-        stroke="#FFBC21"
-        strokeWidth="29"
-        opacity="0.6"
-      />
-      <Path
-        d="M-18 105 C36 79 56 10 101 17 S172 98 239 14"
-        fill="none"
-        stroke="#FFE06B"
-        strokeWidth="10"
-        opacity="0.6"
-      />
-      <Path
-        d="M-18 105 C36 79 56 10 101 17 S172 98 239 14"
+        d="M126 119 C157 105 177 84 235 62"
         fill="none"
         stroke={`url(#${shineId})`}
-        strokeWidth="17"
-        opacity="0.64"
+        strokeWidth="23"
+        opacity="0.62"
       />
       <Path
-        d="M-18 105 C36 79 56 10 101 17 S172 98 239 14"
+        d="M149 119 C174 103 192 88 235 72"
         fill="none"
-        stroke="#FFF8D6"
-        strokeWidth="1.5"
+        stroke="#FFD54B"
+        strokeWidth="9"
         opacity="0.78"
       />
       <Path
-        d="M126 120 C159 86 178 59 236 44"
+        d="M167 118 C187 104 204 91 235 80"
         fill="none"
         stroke={`url(#${shineId})`}
-        strokeWidth="24"
-        opacity="0.3"
+        strokeWidth="4"
+        opacity="0.92"
       />
-      <Circle cx="22" cy="14" r="2" fill="#FFF8D6" />
-      <Circle
-        cx="22"
-        cy="14"
-        r="8"
+      <Path
+        d="M171 111 C190 98 207 86 220 79"
         fill="none"
-        stroke="#FFF8D6"
-        strokeOpacity="0.48"
-      />
-      <Circle cx="202" cy="95" r="2" fill="#FFF8D6" />
-      <Circle
-        cx="202"
-        cy="95"
-        r="8"
-        fill="none"
-        stroke="#FFF8D6"
-        strokeOpacity="0.42"
+        stroke="#FFF9D7"
+        strokeWidth="1.4"
+        opacity="0.9"
       />
       <Rect
         x="1"
@@ -352,7 +336,7 @@ function MetricCard({ metric }: { metric: DashboardMetric }) {
     glow: '#75F0C1',
     border: '#F6D25D',
   };
-  const TrendIcon = metric.trendUp === false ? ArrowDownRight : ArrowUpRight;
+  const TrendIcon = metric.trendUp === false ? ArrowDown : ArrowUp;
   const trendColor = metric.trendUp === false ? '#E53935' : '#2EAD48';
 
   return (
@@ -483,6 +467,9 @@ export default function Home({ onNavigate }: HomeProps) {
     loans.length > 0 ? loans : dashboard?.recentLoans || []
   ).slice(0, 5);
   const products = dashboard?.topProducts || [];
+  const overviewMetrics = overviewMetricOrder
+    .map(id => dashboard?.stats.find(metric => metric.id === id))
+    .filter((metric): metric is DashboardMetric => metric !== undefined);
 
   return (
     <ScrollView
@@ -545,7 +532,7 @@ export default function Home({ onNavigate }: HomeProps) {
         Track your key numbers
       </Text>
       <View className="mb-5 flex-row flex-wrap gap-3">
-        {(dashboard?.stats || []).map(metric => (
+        {overviewMetrics.map(metric => (
           <MetricCard key={metric.id} metric={metric} />
         ))}
       </View>

@@ -261,6 +261,16 @@ test('routes shop admins to the admin dashboard and its API', async () => {
                   trend: '12% vs last month',
                   trendUp: true,
                 },
+                {
+                  id: 'completed_loans',
+                  label: 'Completed Loans',
+                  value: '5',
+                },
+                {
+                  id: 'low_stock_products',
+                  label: 'Low Stock Products',
+                  value: '2',
+                },
               ],
               revenueTrends: [],
               recentLoans: [],
@@ -340,6 +350,12 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   expect(
     renderer.root.findByProps({ testID: 'dashboard-metric-total_customers' }),
   ).toBeDefined();
+  expect(
+    renderer.root.findAllByProps({ testID: 'dashboard-metric-completed_loans' }),
+  ).toHaveLength(0);
+  expect(
+    renderer.root.findAllByProps({ testID: 'dashboard-metric-low_stock_products' }),
+  ).toHaveLength(0);
   expect(
     renderer.root.findAllByProps({
       children: 'Gold rates API returned an invalid response.',
