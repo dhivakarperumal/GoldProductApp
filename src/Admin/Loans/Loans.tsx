@@ -460,14 +460,13 @@ export default function Loans({
                         .join(' · ')}
                     </Text>
                   ) : null}
-                  <View className="mt-4 flex-row flex-wrap gap-2 border-t border-[#F1F2EE] pt-3">
+                  <View className="mt-4 flex-row gap-2 border-t border-[#F1F2EE] pt-3">
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel={`View loan ${loan.loan_number || loan.id}`}
                       onPress={() => onViewLoan(loan.id)}
-                      className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg bg-[#EAF3EF] px-3">
-                      <Eye size={15} color="#07564B" />
-                      <Text className="ml-1.5 text-xs font-bold text-[#07564B]">View</Text>
+                      className="min-h-12 flex-1 items-center justify-center rounded-xl bg-[#EAF3EF]">
+                      <Eye size={20} color="#07564B" />
                     </Pressable>
                     {Number(loan.outstanding_principal ?? loan.principal_amount) > 0 &&
                     loan.loan_status?.toLowerCase() !== 'completed' &&
@@ -476,9 +475,8 @@ export default function Loans({
                         accessibilityRole="button"
                         accessibilityLabel={`Edit loan ${loan.loan_number || loan.id}`}
                         onPress={() => onEditLoan(loan.id)}
-                        className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg bg-[#EFF6FF] px-3">
-                        <Pencil size={15} color="#1D4ED8" />
-                        <Text className="ml-1.5 text-xs font-bold text-[#1D4ED8]">Edit</Text>
+                        className="min-h-12 flex-1 items-center justify-center rounded-xl bg-[#EFF6FF]">
+                        <Pencil size={20} color="#1D4ED8" />
                       </Pressable>
                     ) : null}
                     <Pressable
@@ -486,22 +484,20 @@ export default function Loans({
                       accessibilityLabel={`Print loan agreement PDF ${loan.loan_number || loan.id}`}
                       disabled={actionLoanId !== null}
                       onPress={() => handlePrintLoan(loan)}
-                      className="min-h-10 flex-1 flex-row items-center justify-center rounded-lg bg-[#FFF8E7] px-3 disabled:opacity-50">
+                      className="min-h-12 flex-1 items-center justify-center rounded-xl bg-[#FFF8E7] disabled:opacity-50">
                       {actionLoanId === loan.id ? (
                         <ActivityIndicator size="small" color="#8A5A00" />
                       ) : (
-                        <Printer size={15} color="#8A5A00" />
+                        <Printer size={20} color="#8A5A00" />
                       )}
-                      <Text className="ml-1.5 text-xs font-bold text-[#8A5A00]">Print PDF</Text>
                     </Pressable>
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel={`Delete loan ${loan.loan_number || loan.id}`}
                       disabled={actionLoanId !== null}
                       onPress={() => confirmDeleteLoan(loan)}
-                      className="min-h-10 flex-row items-center justify-center rounded-lg bg-[#FEF2F2] px-3 disabled:opacity-50">
-                      <Trash2 size={15} color="#B42332" />
-                      <Text className="ml-1.5 text-xs font-bold text-[#B42332]">Delete</Text>
+                      className="min-h-12 flex-1 items-center justify-center rounded-xl bg-[#FEF2F2] disabled:opacity-50">
+                      <Trash2 size={20} color="#B42332" />
                     </Pressable>
                   </View>
                 </View>
