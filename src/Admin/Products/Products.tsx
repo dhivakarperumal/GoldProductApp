@@ -42,8 +42,10 @@ export default function Products({ onNavigate }: Props) {
                 setMenuOpen(false);
                 onNavigate(screen);
               }}
-              className="min-h-12 flex-row items-center gap-3 rounded-full bg-white px-4 shadow-lg">
-              <Text className="text-sm font-bold text-[#173F35]">{label}</Text>
+              className="min-h-12 min-w-[200px] flex-row items-center justify-between gap-3 rounded-full bg-white px-4 shadow-lg">
+              <Text numberOfLines={1} className="shrink-0 text-sm font-bold text-[#173F35]">
+                {label}
+              </Text>
               <View className="h-9 w-9 items-center justify-center rounded-full bg-[#EAF3EF]">
                 <Icon size={18} color="#07564B" />
               </View>
