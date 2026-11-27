@@ -20,7 +20,6 @@ import {
   IndianRupee,
   LayoutDashboard,
   Package,
-  RefreshCw,
   Store,
   Users,
   XCircle,
@@ -480,7 +479,26 @@ export default function Home({ onNavigate }: HomeProps) {
         source={require('../../Assert/Images/admindashboard.png')}
         resizeMode="cover"
         className="mb-5 h-[150px] overflow-hidden rounded-3xl"
-      />
+      >
+        <View className="h-full w-[78%] justify-center pl-3 pr-1">
+          <View className="rounded-2xl border border-white/40 bg-white/40 px-3 py-2">
+            <Text className="text-base font-bold text-[#173F35]">
+              Welcome to
+            </Text>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              className="mt-1 text-[27px] font-extrabold text-[#171717]">
+              Admin Dashboard
+            </Text>
+            <Text
+              numberOfLines={2}
+              className="mt-1 text-[13px] leading-[18px] text-[#202020]">
+              Your shop overview, inventory, and gold loan activity.
+            </Text>
+          </View>
+        </View>
+      </ImageBackground>
 
       {errorMessage ? (
         <View className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-3">
