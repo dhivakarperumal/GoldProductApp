@@ -1,88 +1,144 @@
-import { useState } from 'react';
-import { ImageBackground, Pressable, Text, View } from 'react-native';
 import {
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import {
+  Armchair,
   Ellipsis,
   HandCoins,
-  LayoutDashboard,
-  Package,
-  ShoppingBag,
+  House,
+  Plus,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export type AdminTab =
-  | 'Dashboard'
-  | 'Loans'
-  | 'Orders'
-  | 'Products'
-  | 'More';
+export type AdminTab = 'Dashboard' | 'Loans' | 'Orders' | 'Products' | 'More';
 
 type AdminTabBarProps = {
   activeTab: AdminTab;
   onTabPress: (tab: AdminTab) => void;
 };
 
-const tabs: Array<{ label: AdminTab; icon: typeof LayoutDashboard }> = [
-  { label: 'Dashboard', icon: LayoutDashboard },
-  { label: 'Loans', icon: HandCoins },
-  { label: 'Orders', icon: ShoppingBag },
-  { label: 'Products', icon: Package },
-  { label: 'More', icon: Ellipsis },
+const tabs: Array<{
+  label: string;
+  tab: AdminTab;
+  icon: typeof House;
+}> = [
+  { label: 'Home', tab: 'Dashboard', icon: House },
+  { label: 'Loans', tab: 'Loans', icon: HandCoins },
+  { label: 'Products', tab: 'Products', icon: Armchair },
+  { label: 'More', tab: 'More', icon: Ellipsis },
 ];
+
+const styles = StyleSheet.create({
+  centerButton: {
+    left: '50%',
+    transform: [{ translateX: -38 }],
+    elevation: 12,
+    shadowColor: '#E97912',
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+  },
+});
 
 export default function AdminTabBar({
   activeTab,
   onTabPress,
 }: AdminTabBarProps) {
   const insets = useSafeAreaInsets();
-  const [barWidth, setBarWidth] = useState(0);
-  const tabWidth = barWidth / tabs.length;
-  const activeIndex = tabs.findIndex(tab => tab.label === activeTab);
 
   return (
     <ImageBackground
       source={require('../../Assert/Images/bottom.png')}
       resizeMode="stretch"
-      style={{ paddingBottom: insets.bottom }}>
-      <View
-        onLayout={({ nativeEvent }) => setBarWidth(nativeEvent.layout.width)}
-        className="relative h-[78px] flex-row items-center border-t border-[#EAD9B1]/40">
-        {tabWidth > 0 ? (
-          <View
-            pointerEvents="none"
-            className="absolute bottom-2 top-2 rounded-full bg-[#07564B]"
-            style={{
-              left: activeIndex * tabWidth + 4,
-              width: tabWidth - 8,
-            }}
-          />
-        ) : null}
-        {tabs.map(({ label, icon: Icon }) => {
-          const isActive = label === activeTab;
-          return (
-            <Pressable
-              key={label}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isActive }}
-              accessibilityLabel={label}
-              onPress={() => onTabPress(label)}
-              className="z-10 h-full flex-1 items-center justify-center px-0.5">
-              <View className="mb-1 h-8 w-9 items-center justify-center">
+      style={{ paddingBottom: insets.bottom }}
+    >
+      <View className="relative h-[100px]">
+        <View className="absolute bottom-0 h-[74px] w-full flex-row items-center px-1">
+          {tabs.slice(0, 2).map(({ label, tab, icon: Icon }) => {
+            const isActive = activeTab === tab;
+            return (
+              <Pressable
+                key={tab}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
+                accessibilityLabel={label}
+                onPress={() => onTabPress(tab)}
+                className="h-full flex-1 items-center justify-center px-0.5"
+              >
                 <Icon
-                  size={19}
-                  color={isActive ? '#FFFFFF' : '#FFF8E7'}
-                  strokeWidth={isActive ? 2.5 : 2}
+                  size={25}
+                  color={isActive ? '#FFA900' : '#FFFFFF'}
+                  strokeWidth={isActive ? 2.4 : 2}
                 />
-              </View>
-              <Text
-                numberOfLines={1}
-                className={`max-w-full text-[10px] ${
-                  isActive ? 'font-extrabold' : 'font-bold'
-                } text-white`}>
-                {label}
-              </Text>
-            </Pressable>
-          );
-        })}
+                <Text
+                  numberOfLines={1}
+                  className={`mt-1 text-[12px] ${
+                    isActive
+                      ? 'font-bold text-[#FFA900]'
+                      : 'font-medium text-white'
+                  }`}
+                >
+                  {label}
+                </Text>
+                <View
+                  className={`mt-1 h-1 w-1 rounded-full ${
+                    isActive ? 'bg-[#FFA900]' : 'bg-transparent'
+                  }`}
+                />
+              </Pressable>
+            );
+          })}
+          <View className="flex-1" />
+          {tabs.slice(2).map(({ label, tab, icon: Icon }) => {
+            const isActive = activeTab === tab;
+            return (
+              <Pressable
+                key={tab}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
+                accessibilityLabel={label}
+                onPress={() => onTabPress(tab)}
+                className="h-full flex-1 items-center justify-center px-0.5"
+              >
+                <Icon
+                  size={25}
+                  color={isActive ? '#FFA900' : '#FFFFFF'}
+                  strokeWidth={isActive ? 2.4 : 2}
+                />
+                <Text
+                  numberOfLines={1}
+                  className={`mt-1 text-[12px] ${
+                    isActive
+                      ? 'font-bold text-[#FFA900]'
+                      : 'font-medium text-white'
+                  }`}
+                >
+                  {label}
+                </Text>
+                <View
+                  className={`mt-1 h-1 w-1 rounded-full ${
+                    isActive ? 'bg-[#FFA900]' : 'bg-transparent'
+                  }`}
+                />
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Orders"
+          accessibilityState={{ selected: activeTab === 'Orders' }}
+          onPress={() => onTabPress('Orders')}
+          className="absolute top-0 h-[76px] w-[76px] items-center justify-center rounded-full border-[5px] border-[#04473E] bg-[#FF9F0A]"
+          style={styles.centerButton}
+        >
+          <Plus size={34} color="#FFFFFF" strokeWidth={2.5} />
+        </Pressable>
       </View>
     </ImageBackground>
   );
