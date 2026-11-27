@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { ChevronDown, X } from 'lucide-react-native';
+import { CalendarDays, ChevronDown, X } from 'lucide-react-native';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -33,7 +33,7 @@ export function CustomDropdown({
   placeholder?: string;
   required?: boolean;
   searchable?: boolean;
-  variant?: 'default' | 'filter';
+  variant?: 'default' | 'filter' | 'glass';
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -50,7 +50,7 @@ export function CustomDropdown({
         className={
           isGlass
             ? 'mb-1.5 ml-1 text-xs font-bold uppercase tracking-[0.8px]'
-            : 'mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]'
+            : 'mb-1.5 text-xs font-bold uppercase tracking-wide text-[#173F35]'
         }>
         {label}
         {required ? (
@@ -65,11 +65,12 @@ export function CustomDropdown({
           setSearch('');
           setOpen(true);
         }}
-        className={`min-h-12 flex-row items-center justify-between py-3 ${
-          variant === 'filter'
-            ? 'rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm'
-            : 'rounded-xl border border-[#E6E9E3] bg-white px-3.5'
-        }`}>
+        style={isGlass ? glassStyles.trigger : undefined}
+        className={
+          isGlass
+            ? 'min-h-12 flex-row items-center justify-between rounded-2xl px-4 py-3'
+            : 'min-h-12 flex-row items-center justify-between rounded-2xl border border-[#E8D596] bg-white px-4 py-3 shadow-sm'
+        }>
         <Text className={`text-sm ${selectedLabel ? 'text-[#173F35]' : 'text-[#9AA6A1]'}`}>
           {selectedLabel || placeholder}
         </Text>
@@ -94,7 +95,7 @@ export function CustomDropdown({
                 onChangeText={setSearch}
                 placeholder={`Search ${label.toLowerCase()}`}
                 placeholderTextColor="#9AA6A1"
-                className="mx-4 my-3 min-h-11 rounded-xl border border-[#E6E9E3] bg-white px-3.5 text-sm text-[#173F35]"
+                className="mx-4 my-3 min-h-11 rounded-2xl border border-[#E8D596] bg-white px-4 text-sm text-[#173F35]"
               />
             ) : null}
             <ScrollView keyboardShouldPersistTaps="handled">
@@ -108,8 +109,8 @@ export function CustomDropdown({
                     setOpen(false);
                     setSearch('');
                   }}
-                  className={`border-b border-[#F1F2EE] px-5 py-4 ${option.value === value ? 'bg-[#EFF9F5]' : 'bg-white'}`}>
-                  <Text className={`text-sm ${option.value === value ? 'font-bold text-[#07564B]' : 'text-[#173F35]'}`}>
+                  className={`border-b border-[#F1E7C8] px-5 py-4 ${option.value === value ? 'bg-[#FFF8E7]' : 'bg-white'}`}>
+                  <Text className={`text-sm ${option.value === value ? 'font-bold text-[#8A5A00]' : 'text-[#173F35]'}`}>
                     {option.label}
                   </Text>
                 </Pressable>
@@ -197,7 +198,7 @@ export function DatePicker({
         className={
           isGlass
             ? 'min-h-12 flex-row items-center justify-between rounded-2xl px-4 py-3'
-            : 'min-h-12 flex-row items-center justify-between rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3'
+            : 'min-h-12 flex-row items-center justify-between rounded-2xl border border-[#E8D596] bg-white px-4 py-3 shadow-sm'
         }>
         <Text
           style={
@@ -214,16 +215,15 @@ export function DatePicker({
           }>
           {dateLabel}
         </Text>
-        <Text
-          style={isGlass ? glassStyles.calendarIcon : undefined}
-          className={isGlass ? 'text-sm' : 'text-sm text-[#07564B]'}>
-          ▦
-        </Text>
+        <CalendarDays
+          size={18}
+          color={isGlass ? '#F5C451' : '#A77B15'}
+        />
       </Pressable>
       {Platform.OS === 'ios' ? (
         <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
           <View className="flex-1 items-center justify-center bg-black/40 px-5">
-            <View className="w-full rounded-3xl bg-white p-5">
+            <View className="w-full rounded-3xl border border-[#E8D596] bg-white p-5">
               <Text className="mb-4 text-lg font-extrabold text-[#173F35]">
                 Select {label.toLowerCase()}
               </Text>
@@ -238,7 +238,7 @@ export function DatePicker({
                 }}
               />
               <View className="mt-5 flex-row justify-end gap-2">
-                <Pressable onPress={() => setOpen(false)} className="rounded-xl bg-[#F3F4F1] px-4 py-3">
+                <Pressable onPress={() => setOpen(false)} className="rounded-xl border border-[#E8D596] bg-[#FFF8E7] px-4 py-3">
                   <Text className="font-bold text-[#52645F]">Cancel</Text>
                 </Pressable>
                 <Pressable
@@ -295,7 +295,7 @@ export function Field({
         multiline={multiline}
         editable={!readOnly}
         textAlignVertical={multiline ? 'top' : 'center'}
-        className={`rounded-xl border border-[#E6E9E3] px-3.5 py-3 text-sm text-[#173F35] ${readOnly ? 'bg-[#F3F4F1]' : 'bg-white'} ${multiline ? 'min-h-[88px]' : 'min-h-[48px]'}`}
+        className={`rounded-2xl border border-[#E8D596] px-4 py-3 text-sm text-[#173F35] ${readOnly ? 'bg-[#F7F1DE]' : 'bg-white'} ${multiline ? 'min-h-[88px]' : 'min-h-[48px]'}`}
       />
     </View>
   );
@@ -314,7 +314,7 @@ export function ChoiceChips({
 }) {
   return (
     <View className="mb-4">
-      <Text className="mb-2 text-xs font-bold uppercase tracking-wide text-[#52645F]">
+      <Text className="mb-2 text-xs font-bold uppercase tracking-wide text-[#173F35]">
         {label} *
       </Text>
       <View className="flex-row flex-wrap gap-2">
@@ -326,7 +326,7 @@ export function ChoiceChips({
               accessibilityRole="button"
               accessibilityState={{ selected }}
               onPress={() => onSelect(option.value)}
-              className={`rounded-full border px-3.5 py-2.5 ${selected ? 'border-[#07564B] bg-[#07564B]' : 'border-[#E6E9E3] bg-white'}`}>
+              className={`rounded-full border px-3.5 py-2.5 ${selected ? 'border-[#DDBB57] bg-[#07564B]' : 'border-[#E8D596] bg-white'}`}>
               <Text className={`text-xs font-bold ${selected ? 'text-white' : 'text-[#52645F]'}`}>
                 {option.label}
               </Text>
@@ -352,7 +352,7 @@ export function SubmitButton({
       accessibilityRole="button"
       disabled={loading}
       onPress={onPress}
-      className="mb-6 min-h-12 flex-row items-center justify-center rounded-xl bg-[#07564B] px-4 py-3 disabled:opacity-60">
+      className="mb-6 min-h-12 flex-row items-center justify-center rounded-2xl border border-[#DDBB57] bg-[#07564B] px-4 py-3 disabled:opacity-60">
       {loading ? (
         <ActivityIndicator color="#FFFFFF" />
       ) : (
@@ -406,8 +406,5 @@ const glassStyles = StyleSheet.create({
   },
   placeholderText: {
     color: 'rgba(220, 236, 228, 0.65)',
-  },
-  calendarIcon: {
-    color: '#F5C451',
   },
 });
