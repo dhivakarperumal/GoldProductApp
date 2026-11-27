@@ -187,7 +187,7 @@ export default function Login({
                 <Text
                   style={styles.titleText}
                   className="mt-1 text-center text-[28px] font-extrabold tracking-tight">
-                  Admin Sign In
+                  Sign In
                 </Text>
                 <Text
                   style={styles.subtitleText}
@@ -601,21 +601,13 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: '#C48F0E',
-    borderTopWidth: 1,
-    borderTopColor: '#F8DC81',
-    shadowColor: '#B8860B',
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 12,
+    borderWidth: 0,
   },
   submitButtonActive: {
     opacity: 1,
-    shadowOpacity: 0.35,
-    elevation: 6,
   },
   submitButtonDisabled: {
     opacity: 0.65,
-    shadowOpacity: 0.15,
-    elevation: 3,
   },
   dividerLine: {
     height: 1,
