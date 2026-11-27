@@ -142,7 +142,9 @@ test('persists the token after a successful login', async () => {
   let renderer!: ReactTestRenderer.ReactTestRenderer;
 
   await act(async () => {
-    renderer = ReactTestRenderer.create(<Login onLogin={onLogin} />);
+    renderer = ReactTestRenderer.create(
+      <Login onLogin={onLogin} onWelcomePress={jest.fn()} />,
+    );
   });
 
   await act(async () => {

@@ -557,6 +557,7 @@ function AppContent() {
     return (
       <Login
         onLogin={handleLogin}
+        onWelcomePress={() => setShowWelcomeFromLogin(true)}
         onRegister={() => {
           setRegistrationMessage('');
           setAuthScreen('register');
@@ -631,6 +632,12 @@ function AppContent() {
           active={activeAdminScreen === 'Dashboard'}>
           <AdminHome onNavigate={navigateAdminTab} />
         </CachedScreen>
+          <CachedScreen
+            cacheKey="admin-Orders"
+            visited={visitedAdminScreens.has('Orders')}
+            active={activeAdminScreen === 'Orders'}>
+            <AdminSection section="Orders" />
+          </CachedScreen>
         <CachedScreen
           cacheKey="admin-Loans-list"
           visited={visitedAdminScreens.has('Loans:list')}
