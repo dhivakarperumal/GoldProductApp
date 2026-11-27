@@ -46,7 +46,8 @@ describe('AdminHeader', () => {
     jest.clearAllMocks();
   });
 
-  test('renders brand header, low stock dropdown, notification dropdown, and profile dropdown', async () => {
+  test('renders brand header, left menu drawer navigation, low stock dropdown, notification dropdown, and profile dropdown', async () => {
+    const onNavigate = jest.fn();
     const onProfilePress = jest.fn();
     const onLogout = jest.fn();
     let renderer!: ReactTestRenderer.ReactTestRenderer;
@@ -58,6 +59,8 @@ describe('AdminHeader', () => {
             <AdminHeader
               adminName="Raja Gold"
               adminEmail="raja@srigolds.com"
+              activeScreen="Dashboard"
+              onNavigate={onNavigate}
               onProfilePress={onProfilePress}
               onLogout={onLogout}
             />
@@ -106,5 +109,24 @@ describe('AdminHeader', () => {
         .props.onPress();
     });
     expect(onProfilePress).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      renderer.root
+        .findByProps({ testID: 'admin-drawer-toggle' })
+        .props.onPress();
+    });
+    expect(
+      renderer.root.findByProps({ testID: 'admin-navigation-drawer' }),
+    ).toBeTruthy();
+
+    await act(async () => {
+      renderer.root
+        .findByProps({ testID: 'drawer-item-dailyRates' })
+        .props.onPress();
+    });
+    expect(onNavigate).toHaveBeenCalledWith({
+      kind: 'more',
+      screen: 'dailyRates',
+    });
   });
 });

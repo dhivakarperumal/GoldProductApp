@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Dimensions,
+  Easing,
   Image,
   Modal,
   Pressable,
@@ -12,16 +14,39 @@ import {
 } from 'react-native';
 import {
   Bell,
+  ChartNoAxesColumnIncreasing,
   ChevronRight,
+  CircleDollarSign,
+  ClipboardList,
+  Gem,
+  HandCoins,
+  Home,
+  LayoutGrid,
   LogOut,
+  Menu,
   Package,
+  Plus,
+  ReceiptText,
   RefreshCw,
+  Settings2,
+  Shapes,
+  ShoppingBag,
+  Store,
   UserRound,
+  Users,
   X,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import api from '../../api';
+import type { MoreScreen } from '../More/More';
+import type { AdminTab } from './AdminTabBar';
+
+export type AdminDrawerTarget =
+  | { kind: 'tab'; tab: AdminTab }
+  | { kind: 'loan'; screen: 'createLoan' | 'createCustomer' }
+  | { kind: 'product'; screen: 'addProduct' }
+  | { kind: 'more'; screen: MoreScreen };
 
 type HeaderDropdown = 'notifications' | 'low-stock';
 
@@ -33,9 +58,166 @@ type LowStockProduct = {
   sku_barcode?: string;
 };
 
+type DrawerItem = {
+  id: string;
+  label: string;
+  icon: typeof Home;
+  target: AdminDrawerTarget;
+  matchScreens: string[];
+};
+
+type DrawerSection = {
+  title: string;
+  items: DrawerItem[];
+};
+
+const DRAWER_SECTIONS: DrawerSection[] = [
+  {
+    title: 'Main Menu',
+    items: [
+      {
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: Home,
+        target: { kind: 'tab', tab: 'Dashboard' },
+        matchScreens: ['Dashboard'],
+      },
+      {
+        id: 'orders',
+        label: 'Orders & Billing',
+        icon: ShoppingBag,
+        target: { kind: 'tab', tab: 'Orders' },
+        matchScreens: ['Orders'],
+      },
+      {
+        id: 'loans',
+        label: 'Gold Loans',
+        icon: HandCoins,
+        target: { kind: 'tab', tab: 'Loans' },
+        matchScreens: ['Loans:list'],
+      },
+      {
+        id: 'products',
+        label: 'Products',
+        icon: Gem,
+        target: { kind: 'tab', tab: 'Products' },
+        matchScreens: ['Products:all'],
+      },
+      {
+        id: 'more',
+        label: 'More Hub',
+        icon: LayoutGrid,
+        target: { kind: 'tab', tab: 'More' },
+        matchScreens: ['More:home'],
+      },
+    ],
+  },
+  {
+    title: 'Quick Actions',
+    items: [
+      {
+        id: 'createLoan',
+        label: 'New Gold Loan',
+        icon: Plus,
+        target: { kind: 'loan', screen: 'createLoan' },
+        matchScreens: ['Loans:createLoan'],
+      },
+      {
+        id: 'createCustomer',
+        label: 'New Customer',
+        icon: Users,
+        target: { kind: 'loan', screen: 'createCustomer' },
+        matchScreens: ['Loans:createCustomer'],
+      },
+      {
+        id: 'addProduct',
+        label: 'Add Product',
+        icon: Package,
+        target: { kind: 'product', screen: 'addProduct' },
+        matchScreens: ['Products:addProduct'],
+      },
+    ],
+  },
+  {
+    title: 'Shop & Inventory',
+    items: [
+      {
+        id: 'dailyRates',
+        label: 'Daily Gold Rate',
+        icon: Settings2,
+        target: { kind: 'more', screen: 'dailyRates' },
+        matchScreens: ['More:dailyRates'],
+      },
+      {
+        id: 'stockDetails',
+        label: 'Stock Details',
+        icon: Package,
+        target: { kind: 'more', screen: 'stockDetails' },
+        matchScreens: ['More:stockDetails', 'Products:stock'],
+      },
+      {
+        id: 'categories',
+        label: 'Categories',
+        icon: Shapes,
+        target: { kind: 'more', screen: 'categories' },
+        matchScreens: ['More:categories', 'Products:categories'],
+      },
+      {
+        id: 'metals',
+        label: 'Metals',
+        icon: Gem,
+        target: { kind: 'more', screen: 'metals' },
+        matchScreens: ['More:metals', 'Products:metals'],
+      },
+    ],
+  },
+  {
+    title: 'Accounts & Reports',
+    items: [
+      {
+        id: 'funds',
+        label: 'Fund Management',
+        icon: CircleDollarSign,
+        target: { kind: 'more', screen: 'funds' },
+        matchScreens: ['More:funds'],
+      },
+      {
+        id: 'dealers',
+        label: 'Dealer Management',
+        icon: Store,
+        target: { kind: 'more', screen: 'dealers' },
+        matchScreens: ['More:dealers'],
+      },
+      {
+        id: 'dealerPurchases',
+        label: 'Dealer Purchases',
+        icon: ClipboardList,
+        target: { kind: 'more', screen: 'dealerPurchases' },
+        matchScreens: ['More:dealerPurchases'],
+      },
+      {
+        id: 'reports',
+        label: 'Reports',
+        icon: ChartNoAxesColumnIncreasing,
+        target: { kind: 'more', screen: 'reports' },
+        matchScreens: ['More:reports'],
+      },
+      {
+        id: 'receiptSettings',
+        label: 'Receipt Settings',
+        icon: ReceiptText,
+        target: { kind: 'more', screen: 'receiptSettings' },
+        matchScreens: ['More:receiptSettings'],
+      },
+    ],
+  },
+];
+
 type AdminHeaderProps = {
   adminName: string;
   adminEmail: string;
+  activeScreen?: string;
+  onNavigate?: (target: AdminDrawerTarget) => void;
   onProfilePress: () => void;
   onLogout: () => void;
 };
@@ -62,11 +244,22 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
   },
+  drawerShadow: {
+    elevation: 20,
+    shadowColor: '#091E19',
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    shadowOffset: { width: 6, height: 0 },
+  },
+  drawerContent: {
+    paddingHorizontal: 12,
+    paddingTop: 12,
+  },
   headerScrim: {
     backgroundColor: 'rgba(15, 44, 37, 0.38)',
   },
   backdrop: {
-    backgroundColor: 'rgba(13, 44, 36, 0.18)',
+    backgroundColor: 'rgba(13, 44, 36, 0.24)',
   },
 });
 
@@ -85,12 +278,15 @@ function getErrorMessage(error: unknown, fallback: string) {
 export default function AdminHeader({
   adminName,
   adminEmail,
+  activeScreen = 'Dashboard',
+  onNavigate,
   onProfilePress,
   onLogout,
 }: AdminHeaderProps) {
   const insets = useSafeAreaInsets();
   const { showAlert } = useCustomAlert();
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<HeaderDropdown | null>(
     null,
   );
@@ -103,6 +299,8 @@ export default function AdminHeader({
   const initial = adminName.trim().charAt(0).toUpperCase() || 'A';
 
   const windowDimensions = Dimensions.get('window');
+  const drawerWidth = Math.min(312, Math.round(windowDimensions.width * 0.84));
+  const drawerTranslateX = useRef(new Animated.Value(-320)).current;
   const notificationPanelWidth = Math.min(350, windowDimensions.width - 28);
   const profilePanelWidth = Math.min(284, windowDimensions.width - 28);
   const dropdownTop = insets.top + 64;
@@ -140,13 +338,32 @@ export default function AdminHeader({
 
   const lowStockCount = lowStockTotal ?? lowStockProducts.length;
 
+  const openDrawer = () => {
+    setIsAccountMenuOpen(false);
+    setActiveDropdown(null);
+    drawerTranslateX.setValue(-drawerWidth);
+    setIsDrawerOpen(true);
+    Animated.timing(drawerTranslateX, {
+      toValue: 0,
+      duration: 220,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeDrawer = () => {
+    setIsDrawerOpen(false);
+  };
+
   const closeAllMenus = () => {
     setIsAccountMenuOpen(false);
     setActiveDropdown(null);
+    setIsDrawerOpen(false);
   };
 
   const toggleDropdown = (dropdown: HeaderDropdown) => {
     setIsAccountMenuOpen(false);
+    setIsDrawerOpen(false);
     if (activeDropdown === dropdown) {
       setActiveDropdown(null);
       return;
@@ -159,11 +376,23 @@ export default function AdminHeader({
 
   const toggleAccountMenu = () => {
     setActiveDropdown(null);
+    setIsDrawerOpen(false);
     setIsAccountMenuOpen(open => !open);
   };
 
+  const handleDrawerSelect = (target: AdminDrawerTarget) => {
+    closeDrawer();
+    if (onNavigate) {
+      onNavigate(target);
+      return;
+    }
+    if (target.kind === 'more' && target.screen === 'profile') {
+      onProfilePress();
+    }
+  };
+
   const handleLogoutPress = () => {
-    setIsAccountMenuOpen(false);
+    closeAllMenus();
     showAlert('Log out?', 'Are you sure you want to log out?', {
       variant: 'warning',
       buttons: [
@@ -195,8 +424,20 @@ export default function AdminHeader({
       />
 
       <View className="h-12 flex-row items-center justify-between">
-        <View className="mr-3 flex-1 flex-row items-center">
-          <View className="mr-3 h-11 w-11 overflow-hidden rounded-xl border border-[#F5E6A8]/65 bg-[#0D2C24] p-0.5">
+        <View className="mr-2 flex-1 flex-row items-center">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open navigation menu"
+            testID="admin-drawer-toggle"
+            accessibilityState={{ expanded: isDrawerOpen }}
+            onPress={openDrawer}
+            style={({ pressed }) => ({ opacity: pressed ? 0.78 : 1 })}
+            className="mr-2 h-10 w-10 items-center justify-center rounded-xl border border-[#F4C95D]/40 bg-[#12332B]/85"
+          >
+            <Menu size={20} color="#FFE08A" strokeWidth={2.2} />
+          </Pressable>
+
+          <View className="mr-2 h-10 w-10 overflow-hidden rounded-xl border border-[#F5E6A8]/65 bg-[#0D2C24] p-0.5">
             <Image
               accessibilityLabel="Sri Golds logo"
               source={require('../../Assert/Images/App icon.png')}
@@ -204,18 +445,19 @@ export default function AdminHeader({
               className="h-full w-full rounded-[9px]"
             />
           </View>
+
           <View className="flex-1">
             <Text
               numberOfLines={1}
-              className="text-[16px] font-extrabold leading-5 tracking-[0.2px] text-white"
+              className="text-[15px] font-extrabold leading-5 tracking-[0.2px] text-white"
             >
               Sri GoldSuite
             </Text>
-            <View className="mt-1 flex-row items-center">
+            <View className="mt-0.5 flex-row items-center">
               <View className="rounded-full border border-[#F4C95D]/40 bg-[#F4C95D]/15 px-2 py-0.5">
                 <Text
                   numberOfLines={1}
-                  className="text-[9px] font-extrabold uppercase tracking-[1.4px] text-[#FFE08A]"
+                  className="text-[8.5px] font-extrabold uppercase tracking-[1.2px] text-[#FFE08A]"
                 >
                   Shop Admin
                 </Text>
@@ -224,7 +466,7 @@ export default function AdminHeader({
           </View>
         </View>
 
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row items-center gap-1.5">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Notifications"
@@ -234,14 +476,14 @@ export default function AdminHeader({
             }}
             onPress={() => toggleDropdown('notifications')}
             style={({ pressed }) => ({ opacity: pressed ? 0.78 : 1 })}
-            className={`relative h-10 w-10 items-center justify-center rounded-full border ${
+            className={`relative h-9 w-9 items-center justify-center rounded-full border ${
               activeDropdown === 'notifications'
                 ? 'border-[#F4C95D] bg-[#F4C95D]/20'
                 : 'border-white/20 bg-[#12332B]/85'
             }`}
           >
             <Bell
-              size={18}
+              size={17}
               color={activeDropdown === 'notifications' ? '#F4C95D' : '#FFF8E7'}
               strokeWidth={2.1}
             />
@@ -257,20 +499,20 @@ export default function AdminHeader({
             accessibilityState={{ expanded: activeDropdown === 'low-stock' }}
             onPress={() => toggleDropdown('low-stock')}
             style={({ pressed }) => ({ opacity: pressed ? 0.78 : 1 })}
-            className={`relative h-10 w-10 items-center justify-center rounded-full border ${
+            className={`relative h-9 w-9 items-center justify-center rounded-full border ${
               activeDropdown === 'low-stock'
                 ? 'border-[#F4C95D] bg-[#F4C95D]/20'
                 : 'border-[#F4C95D]/45 bg-[#12332B]/85'
             }`}
           >
             <Package
-              size={18}
+              size={17}
               color={activeDropdown === 'low-stock' ? '#F4C95D' : '#FFE08A'}
               strokeWidth={2.1}
             />
             {lowStockCount > 0 ? (
-              <View className="absolute -right-0.5 -top-0.5 min-h-[17px] min-w-[17px] items-center justify-center rounded-full border-[1.5px] border-[#153B35] bg-[#DC2626] px-1">
-                <Text className="text-[9px] font-extrabold leading-[12px] text-white">
+              <View className="absolute -right-0.5 -top-0.5 min-h-[16px] min-w-[16px] items-center justify-center rounded-full border-[1.5px] border-[#153B35] bg-[#DC2626] px-1">
+                <Text className="text-[8.5px] font-extrabold leading-[11px] text-white">
                   {lowStockCount > 99 ? '99+' : lowStockCount}
                 </Text>
               </View>
@@ -299,6 +541,231 @@ export default function AdminHeader({
           </Pressable>
         </View>
       </View>
+
+      <Modal
+        transparent
+        animationType="fade"
+        visible={isDrawerOpen}
+        statusBarTranslucent
+        onRequestClose={closeDrawer}
+      >
+        <View className="flex-1 flex-row">
+          <Pressable
+            testID="admin-drawer-backdrop"
+            accessibilityRole="button"
+            accessibilityLabel="Close navigation menu"
+            onPress={closeDrawer}
+            style={[StyleSheet.absoluteFill, styles.backdrop]}
+          />
+
+          <Animated.View
+            testID="admin-navigation-drawer"
+            style={[
+              styles.drawerShadow,
+              {
+                width: drawerWidth,
+                transform: [{ translateX: drawerTranslateX }],
+              },
+            ]}
+            className="h-full bg-[#F8F7F2]"
+          >
+            <View
+              style={{ paddingTop: insets.top + 14 }}
+              className="overflow-hidden border-b border-[#EAD78A]/35 bg-[#153B35] px-4 pb-4"
+            >
+              <Image
+                source={require('../../Assert/Images/bottom.png')}
+                resizeMode="cover"
+                style={StyleSheet.absoluteFill}
+                className="h-full w-full"
+              />
+              <View
+                pointerEvents="none"
+                style={[StyleSheet.absoluteFill, styles.headerScrim]}
+              />
+
+              <View className="flex-row items-center justify-between">
+                <View className="flex-1 flex-row items-center pr-2">
+                  <View className="mr-2.5 h-10 w-10 overflow-hidden rounded-xl border border-[#F5E6A8]/65 bg-[#0D2C24] p-0.5">
+                    <Image
+                      source={require('../../Assert/Images/App icon.png')}
+                      resizeMode="cover"
+                      className="h-full w-full rounded-[9px]"
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Text
+                      numberOfLines={1}
+                      className="text-[16px] font-extrabold text-white"
+                    >
+                      Sri GoldSuite
+                    </Text>
+                    <Text className="text-[10px] font-bold uppercase tracking-[1.4px] text-[#FFE08A]">
+                      Admin Navigation
+                    </Text>
+                  </View>
+                </View>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Close drawer"
+                  testID="admin-drawer-close"
+                  onPress={closeDrawer}
+                  className="h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-[#12332B]/85"
+                >
+                  <X size={17} color="#FFF8E7" />
+                </Pressable>
+              </View>
+
+              <View className="mt-3.5 flex-row items-center rounded-2xl border border-[#F4C95D]/30 bg-[#0F2C25]/70 px-3 py-2.5">
+                <View className="mr-2.5 h-9 w-9 items-center justify-center rounded-full border border-[#F5E6A8] bg-[#D4AF37]">
+                  <Text className="text-sm font-extrabold text-white">
+                    {initial}
+                  </Text>
+                </View>
+                <View className="flex-1">
+                  <Text
+                    numberOfLines={1}
+                    className="text-[13px] font-bold text-white"
+                  >
+                    {adminName}
+                  </Text>
+                  <Text
+                    numberOfLines={1}
+                    className="text-[11px] text-[#DCE8E4]"
+                  >
+                    {adminEmail || 'Shop Administrator'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <ScrollView
+              className="flex-1"
+              contentContainerStyle={[
+                styles.drawerContent,
+                { paddingBottom: Math.max(insets.bottom, 16) + 8 },
+              ]}
+              showsVerticalScrollIndicator={false}
+            >
+              {DRAWER_SECTIONS.map(section => (
+                <View key={section.title} className="mb-4">
+                  <Text className="mb-1.5 px-2 text-[10px] font-extrabold uppercase tracking-[1.4px] text-[#9A7620]">
+                    {section.title}
+                  </Text>
+                  <View className="overflow-hidden rounded-2xl border border-[#EAE4D3] bg-white">
+                    {section.items.map((item, idx) => {
+                      const Icon = item.icon;
+                      const isActive = item.matchScreens.includes(activeScreen);
+
+                      return (
+                        <Pressable
+                          key={item.id}
+                          accessibilityRole="button"
+                          accessibilityLabel={item.label}
+                          testID={`drawer-item-${item.id}`}
+                          accessibilityState={{ selected: isActive }}
+                          onPress={() => handleDrawerSelect(item.target)}
+                          className={`flex-row items-center px-3 py-2.5 active:bg-[#FAF7EE] ${
+                            idx < section.items.length - 1
+                              ? 'border-b border-[#F3EFE4]'
+                              : ''
+                          } ${isActive ? 'bg-[#EEF6F3]' : 'bg-white'}`}
+                        >
+                          <View
+                            className={`mr-3 h-8 w-8 items-center justify-center rounded-xl ${
+                              isActive ? 'bg-[#173F35]' : 'bg-[#F3F1E9]'
+                            }`}
+                          >
+                            <Icon
+                              size={16}
+                              color={isActive ? '#F4C95D' : '#173F35'}
+                              strokeWidth={isActive ? 2.3 : 2}
+                            />
+                          </View>
+                          <Text
+                            numberOfLines={1}
+                            className={`flex-1 text-[13.5px] ${
+                              isActive
+                                ? 'font-extrabold text-[#173F35]'
+                                : 'font-semibold text-[#293832]'
+                            }`}
+                          >
+                            {item.label}
+                          </Text>
+                          {isActive ? (
+                            <View className="h-2 w-2 rounded-full bg-[#D4AF37]" />
+                          ) : (
+                            <ChevronRight size={15} color="#A3A8A3" />
+                          )}
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              ))}
+
+              <View className="mb-2">
+                <Text className="mb-1.5 px-2 text-[10px] font-extrabold uppercase tracking-[1.4px] text-[#9A7620]">
+                  Account
+                </Text>
+                <View className="overflow-hidden rounded-2xl border border-[#EAE4D3] bg-white">
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Admin Profile"
+                    testID="drawer-item-profile"
+                    onPress={() =>
+                      handleDrawerSelect({ kind: 'more', screen: 'profile' })
+                    }
+                    className={`flex-row items-center border-b border-[#F3EFE4] px-3 py-2.5 active:bg-[#FAF7EE] ${
+                      activeScreen === 'More:profile'
+                        ? 'bg-[#EEF6F3]'
+                        : 'bg-white'
+                    }`}
+                  >
+                    <View
+                      className={`mr-3 h-8 w-8 items-center justify-center rounded-xl ${
+                        activeScreen === 'More:profile'
+                          ? 'bg-[#173F35]'
+                          : 'bg-[#E7F3EF]'
+                      }`}
+                    >
+                      <UserRound
+                        size={16}
+                        color={
+                          activeScreen === 'More:profile'
+                            ? '#F4C95D'
+                            : '#07564B'
+                        }
+                      />
+                    </View>
+                    <Text className="flex-1 text-[13.5px] font-semibold text-[#173F35]">
+                      Admin Profile
+                    </Text>
+                    <ChevronRight size={15} color="#A3A8A3" />
+                  </Pressable>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Logout"
+                    testID="drawer-item-logout"
+                    onPress={handleLogoutPress}
+                    className="flex-row items-center px-3 py-2.5 active:bg-[#FEF2F2]"
+                  >
+                    <View className="mr-3 h-8 w-8 items-center justify-center rounded-xl bg-[#FEE2E2]">
+                      <LogOut size={16} color="#B42332" />
+                    </View>
+                    <Text className="flex-1 text-[13.5px] font-bold text-[#B42332]">
+                      Logout
+                    </Text>
+                    <ChevronRight size={15} color="#FCA5A5" />
+                  </Pressable>
+                </View>
+              </View>
+            </ScrollView>
+          </Animated.View>
+        </View>
+      </Modal>
 
       <Modal
         transparent

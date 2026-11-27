@@ -45,7 +45,9 @@ import Dealers from './src/Admin/More/Dealers';
 import DealerPurchases from './src/Admin/More/DealerPurchases';
 import Reports from './src/Admin/More/Reports';
 import InnerHeader from './src/Components/InnerHeader';
-import AdminHeader from './src/Admin/Navigation/AdminHeader';
+import AdminHeader, {
+  AdminDrawerTarget,
+} from './src/Admin/Navigation/AdminHeader';
 import AdminTabBar, { AdminTab } from './src/Admin/Navigation/AdminTabBar';
 import BottomBar, {
   SuperAdminTab,
@@ -407,6 +409,25 @@ function AppContent() {
     setVisitedAdminScreens(current => new Set(current).add(`More:${screen}`));
   };
 
+  const handleAdminDrawerNavigate = (target: AdminDrawerTarget) => {
+    if (target.kind === 'tab') {
+      navigateAdminTab(target.tab);
+      return;
+    }
+    if (target.kind === 'loan') {
+      navigateAdminTab('Loans');
+      navigateAdminLoan(target.screen);
+      return;
+    }
+    if (target.kind === 'product') {
+      navigateAdminTab('Products');
+      navigateAdminProduct(target.screen);
+      return;
+    }
+    navigateAdminTab('More');
+    navigateAdminMore(target.screen);
+  };
+
   useEffect(() => {
     if (!isAuthenticated || !accountRole) return undefined;
 
@@ -618,6 +639,8 @@ function AppContent() {
           <AdminHeader
             adminName={adminName}
             adminEmail={adminEmail}
+            activeScreen={activeAdminScreen}
+            onNavigate={handleAdminDrawerNavigate}
             onLogout={handleLogout}
             onProfilePress={() => {
               navigateAdminTab('More');
