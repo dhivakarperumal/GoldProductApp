@@ -145,7 +145,7 @@ export default function GoldReleaseList({
           />
         }
       >
-        <View className="mb-3 flex-row flex-wrap gap-2">
+        <View className="mb-3 flex-row flex-wrap gap-3">
           {[
             {
               label: completionPage
@@ -156,12 +156,23 @@ export default function GoldReleaseList({
             },
             { label: 'Awaiting Handover', value: awaitingCount, icon: Clock3 },
             { label: 'Customers', value: customerCount, icon: Users },
-          ].map(({ label, value, icon: Icon }) => (
+          ].map(({ label, value, icon: Icon }, index) => (
             <LoanStatCard
               key={label}
+              id={label}
               label={label}
               value={loading ? '—' : value}
               icon={Icon}
+              trend={
+                label === 'Awaiting Handover'
+                  ? 'Physical handover'
+                  : label === 'Customers'
+                  ? 'Eligible customers'
+                  : completionPage
+                  ? 'Released or completed'
+                  : 'Ready for release'
+              }
+              paletteIndex={index}
             />
           ))}
         </View>

@@ -241,7 +241,7 @@ export default function OverdueLoans() {
           />
         }
       >
-        <View className="mb-3 flex-row flex-wrap gap-2">
+        <View className="mb-3 flex-row flex-wrap gap-3">
           {[
             {
               label: 'Overdue Loans',
@@ -259,13 +259,23 @@ export default function OverdueLoans() {
               value: String(reviewRequiredCount),
               icon: CalendarDays,
             },
-          ].map(({ label, value, icon: Icon }) => (
+          ].map(({ label, value, icon: Icon }, index) => (
             <LoanStatCard
               key={label}
-              className="w-[48%]"
+              id={label}
               label={label}
               value={loading ? '—' : value}
               icon={Icon}
+              trend={
+                label === 'Overdue Loans'
+                  ? 'Need follow-up'
+                  : label === 'Customers'
+                  ? 'With overdue loans'
+                  : label === 'Outstanding'
+                  ? 'Current balance'
+                  : 'Review due'
+              }
+              paletteIndex={index}
             />
           ))}
         </View>

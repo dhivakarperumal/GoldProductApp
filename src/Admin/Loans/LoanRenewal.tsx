@@ -199,7 +199,7 @@ export default function LoanRenewal() {
           />
         }
       >
-        <View className="mb-3 flex-row flex-wrap gap-2">
+        <View className="mb-3 flex-row flex-wrap gap-3">
           {[
             { label: 'Total Loans', value: loans.length, icon: Layers },
             {
@@ -209,13 +209,23 @@ export default function LoanRenewal() {
             },
             { label: 'Past Maturity', value: pastMaturity, icon: AlertCircle },
             { label: '15-Month Reviews', value: reviewsDue, icon: ShieldCheck },
-          ].map(({ label, value, icon: Icon }) => (
+          ].map(({ label, value, icon: Icon }, index) => (
             <LoanStatCard
               key={label}
-              className="w-[48%]"
+              id={label}
               label={label}
               value={loading ? '—' : value}
               icon={Icon}
+              trend={
+                label === 'Total Loans'
+                  ? 'Loans in review'
+                  : label === 'Maturing Today'
+                  ? 'Due today'
+                  : label === 'Past Maturity'
+                  ? 'Past due'
+                  : 'Review due'
+              }
+              paletteIndex={index}
             />
           ))}
         </View>

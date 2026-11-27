@@ -399,14 +399,24 @@ export default function KycReview() {
           />
         }
       >
-        <View className="mb-3 flex-row flex-wrap gap-2">
-          {statCards.map(({ label, value, icon: Icon }) => (
+        <View className="mb-3 flex-row flex-wrap gap-3">
+          {statCards.map(({ label, value, icon: Icon }, index) => (
             <LoanStatCard
               key={label}
-              className="w-[48%]"
+              id={label}
               label={label}
               value={value}
               icon={Icon}
+              trend={
+                label === 'Total applications'
+                  ? 'Customer submissions'
+                  : label === 'Pending'
+                  ? 'Awaiting review'
+                  : label === 'In review'
+                  ? 'Under review'
+                  : 'Verified applications'
+              }
+              paletteIndex={index}
             />
           ))}
         </View>

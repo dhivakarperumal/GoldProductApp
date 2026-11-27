@@ -305,7 +305,7 @@ export default function Loans({
               />
             }
           >
-            <View className="mb-4 flex-row gap-3">
+            <View className="mb-4 flex-row flex-wrap gap-3">
               {[
                 { label: 'Total Loans', value: loans.length, icon: HandCoins },
                 { label: 'Active', value: activeCount, icon: Check },
@@ -314,12 +314,21 @@ export default function Loans({
                   value: completedCount,
                   icon: CalendarDays,
                 },
-              ].map(({ label, value, icon: Icon }) => (
+              ].map(({ label, value, icon: Icon }, index) => (
                 <LoanStatCard
                   key={label}
+                  id={label}
                   label={label}
                   value={loading ? '—' : value}
                   icon={Icon}
+                  trend={
+                    label === 'Total Loans'
+                      ? 'Current portfolio'
+                      : label === 'Active'
+                      ? 'Active accounts'
+                      : 'Paid loans'
+                  }
+                  paletteIndex={index}
                 />
               ))}
             </View>
