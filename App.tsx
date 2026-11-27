@@ -628,61 +628,89 @@ function AppContent() {
         <CachedScreen
           cacheKey="admin-Dashboard"
           visited={visitedAdminScreens.has('Dashboard')}
-          active={activeAdminScreen === 'Dashboard'}
-        >
+          active={activeAdminScreen === 'Dashboard'}>
           <AdminHome onNavigate={navigateAdminTab} />
-        ) : adminTab === 'Loans' && adminLoanScreen === 'viewLoan' && adminLoanId !== null ? (
-          <LoanDetails
-            loanId={adminLoanId}
-            onBack={() => {
-              setAdminLoanScreen('list');
-              setAdminLoanId(null);
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Loans-list"
+          visited={visitedAdminScreens.has('Loans:list')}
+          active={activeAdminScreen === 'Loans:list'}>
+          <AdminLoans
+            onCreateLoan={() => navigateAdminLoan('createLoan')}
+            onCreateCustomer={() => navigateAdminLoan('createCustomer')}
+            onViewLoan={loanId => {
+              setAdminLoanId(loanId);
+              navigateAdminLoan('viewLoan');
             }}
-            onEdit={() => setAdminLoanScreen('editLoan')}
-          />
-        ) : adminTab === 'Loans' && adminLoanScreen === 'editLoan' && adminLoanId !== null ? (
-          <CreateLoan
-            loanId={adminLoanId}
-            onBack={() => setAdminLoanScreen('viewLoan')}
-            onCreated={() => {
-              setAdminLoanScreen('list');
-              setAdminLoanId(null);
+            onEditLoan={loanId => {
+              setAdminLoanId(loanId);
+              navigateAdminLoan('editLoan');
             }}
           />
-        ) : adminTab === 'Loans' && adminLoanScreen === 'createLoan' ? (
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Loans-createLoan"
+          visited={visitedAdminScreens.has('Loans:createLoan')}
+          active={activeAdminScreen === 'Loans:createLoan'}>
           <CreateLoan
-            onBack={() => setAdminLoanScreen('list')}
+            onBack={() => navigateAdminLoan('list')}
             onCreated={() => {
-              setAdminLoanScreen('list');
               setAdminLoanId(null);
+              navigateAdminLoan('list');
             }}
           />
         </CachedScreen>
         <CachedScreen
           cacheKey="admin-Loans-createCustomer"
           visited={visitedAdminScreens.has('Loans:createCustomer')}
-          active={activeAdminScreen === 'Loans:createCustomer'}
-        >
+          active={activeAdminScreen === 'Loans:createCustomer'}>
           <CreateCustomer
             onBack={() => navigateAdminLoan('list')}
             onCreated={() => navigateAdminLoan('list')}
           />
-        ) : adminTab === 'Loans' ? (
-          <AdminLoans
-            onCreateLoan={() => setAdminLoanScreen('createLoan')}
-            onCreateCustomer={() => setAdminLoanScreen('createCustomer')}
-            onViewLoan={loanId => {
-              setAdminLoanId(loanId);
-              setAdminLoanScreen('viewLoan');
-            }}
-            onEditLoan={loanId => {
-              setAdminLoanId(loanId);
-              setAdminLoanScreen('editLoan');
-            }}
-          />
-        ) : adminTab === 'Products' && adminProductScreen === 'addProduct' ? (
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Loans-viewLoan"
+          visited={visitedAdminScreens.has('Loans:viewLoan') && adminLoanId !== null}
+          active={activeAdminScreen === 'Loans:viewLoan' && adminLoanId !== null}>
+          {adminLoanId !== null ? (
+            <LoanDetails
+              loanId={adminLoanId}
+              onBack={() => {
+                setAdminLoanId(null);
+                navigateAdminLoan('list');
+              }}
+              onEdit={() => navigateAdminLoan('editLoan')}
+            />
+          ) : null}
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Loans-editLoan"
+          visited={visitedAdminScreens.has('Loans:editLoan') && adminLoanId !== null}
+          active={activeAdminScreen === 'Loans:editLoan' && adminLoanId !== null}>
+          {adminLoanId !== null ? (
+            <CreateLoan
+              loanId={adminLoanId}
+              onBack={() => navigateAdminLoan('viewLoan')}
+              onCreated={() => {
+                setAdminLoanId(null);
+                navigateAdminLoan('list');
+              }}
+            />
+          ) : null}
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Products-all"
+          visited={visitedAdminScreens.has('Products:all')}
+          active={activeAdminScreen === 'Products:all'}>
+          <Products onNavigate={navigateAdminProduct} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-Products-addProduct"
+          visited={visitedAdminScreens.has('Products:addProduct')}
+          active={activeAdminScreen === 'Products:addProduct'}>
           <AddProduct
-            productId={adminProductId}
+            productId={adminProductId ?? undefined}
             onBack={() => navigateAdminProduct('all')}
             onSaved={() => navigateAdminProduct('all')}
           />
@@ -690,44 +718,85 @@ function AppContent() {
         <CachedScreen
           cacheKey="admin-Products-stock"
           visited={visitedAdminScreens.has('Products:stock')}
-          active={activeAdminScreen === 'Products:stock'}
-        >
+          active={activeAdminScreen === 'Products:stock'}>
           <StockDetails onBack={() => navigateAdminProduct('all')} />
         </CachedScreen>
         <CachedScreen
           cacheKey="admin-Products-categories"
           visited={visitedAdminScreens.has('Products:categories')}
-          active={activeAdminScreen === 'Products:categories'}
-        >
+          active={activeAdminScreen === 'Products:categories'}>
           <Categories onBack={() => navigateAdminProduct('all')} />
         </CachedScreen>
         <CachedScreen
           cacheKey="admin-Products-metals"
           visited={visitedAdminScreens.has('Products:metals')}
-          active={activeAdminScreen === 'Products:metals'}
-        >
+          active={activeAdminScreen === 'Products:metals'}>
           <Metals onBack={() => navigateAdminProduct('all')} />
-        ) : adminTab === 'Products' ? (
-          <Products onNavigate={navigateAdminProduct} />
-        ) : adminTab === 'More' && adminMoreScreen === 'funds' ? (
-          <FundManagement onBack={() => setAdminMoreScreen('home')} />
-        ) : adminTab === 'More' && adminMoreScreen === 'dailyRates' ? (
-          <DailyGoldRate onBack={() => setAdminMoreScreen('home')} />
-        ) : adminTab === 'More' && adminMoreScreen === 'receiptSettings' ? (
-          <ReceiptSettings onBack={() => setAdminMoreScreen('home')} />
-        ) : adminTab === 'More' && adminMoreScreen === 'dealers' ? (
-          <Dealers onBack={() => setAdminMoreScreen('home')} />
-        ) : adminTab === 'More' && adminMoreScreen === 'dealerPurchases' ? (
-          <DealerPurchases onBack={() => setAdminMoreScreen('home')} />
-        ) : adminTab === 'More' && adminMoreScreen === 'metals' ? (
-          <Metals onBack={() => setAdminMoreScreen('home')} />
-        ) : adminTab === 'More' && adminMoreScreen === 'categories' ? (
-          <Categories onBack={() => setAdminMoreScreen('home')} />
-        ) : adminTab === 'More' && adminMoreScreen === 'stockDetails' ? (
-          <StockDetails onBack={() => setAdminMoreScreen('home')} />
-        ) : adminTab === 'More' && adminMoreScreen === 'reports' ? (
-          <Reports onBack={() => setAdminMoreScreen('home')} />
-        ) : adminTab === 'More' && adminMoreScreen === 'profile' ? (
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-home"
+          visited={visitedAdminScreens.has('More:home')}
+          active={activeAdminScreen === 'More:home'}>
+          <More onNavigate={navigateAdminMore} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-funds"
+          visited={visitedAdminScreens.has('More:funds')}
+          active={activeAdminScreen === 'More:funds'}>
+          <FundManagement onBack={() => navigateAdminMore('home')} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-dailyRates"
+          visited={visitedAdminScreens.has('More:dailyRates')}
+          active={activeAdminScreen === 'More:dailyRates'}>
+          <DailyGoldRate onBack={() => navigateAdminMore('home')} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-receiptSettings"
+          visited={visitedAdminScreens.has('More:receiptSettings')}
+          active={activeAdminScreen === 'More:receiptSettings'}>
+          <ReceiptSettings onBack={() => navigateAdminMore('home')} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-dealers"
+          visited={visitedAdminScreens.has('More:dealers')}
+          active={activeAdminScreen === 'More:dealers'}>
+          <Dealers onBack={() => navigateAdminMore('home')} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-dealerPurchases"
+          visited={visitedAdminScreens.has('More:dealerPurchases')}
+          active={activeAdminScreen === 'More:dealerPurchases'}>
+          <DealerPurchases onBack={() => navigateAdminMore('home')} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-metals"
+          visited={visitedAdminScreens.has('More:metals')}
+          active={activeAdminScreen === 'More:metals'}>
+          <Metals onBack={() => navigateAdminMore('home')} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-categories"
+          visited={visitedAdminScreens.has('More:categories')}
+          active={activeAdminScreen === 'More:categories'}>
+          <Categories onBack={() => navigateAdminMore('home')} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-stockDetails"
+          visited={visitedAdminScreens.has('More:stockDetails')}
+          active={activeAdminScreen === 'More:stockDetails'}>
+          <StockDetails onBack={() => navigateAdminMore('home')} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-reports"
+          visited={visitedAdminScreens.has('More:reports')}
+          active={activeAdminScreen === 'More:reports'}>
+          <Reports onBack={() => navigateAdminMore('home')} />
+        </CachedScreen>
+        <CachedScreen
+          cacheKey="admin-More-profile"
+          visited={visitedAdminScreens.has('More:profile')}
+          active={activeAdminScreen === 'More:profile'}>
           <>
             <InnerHeader
               title="Admin Profile"
