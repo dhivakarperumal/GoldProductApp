@@ -246,7 +246,32 @@ test('routes shop admins to the admin dashboard and its API', async () => {
       path === '/dashboard'
         ? {
             data: {
-              stats: [],
+              stats: [
+                {
+                  id: 'total_customers',
+                  label: 'Total Customers',
+                  value: '1,248',
+                  trend: '8% vs last month',
+                  trendUp: true,
+                },
+                {
+                  id: 'active_gold_loans',
+                  label: 'Active Gold Loans',
+                  value: '1',
+                  trend: '12% vs last month',
+                  trendUp: true,
+                },
+                {
+                  id: 'completed_loans',
+                  label: 'Completed Loans',
+                  value: '5',
+                },
+                {
+                  id: 'low_stock_products',
+                  label: 'Low Stock Products',
+                  value: '2',
+                },
+              ],
               revenueTrends: [],
               recentLoans: [],
               topProducts: [
@@ -321,6 +346,16 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   expect(renderer.root.findByProps({ testID: 'admin-home' })).toBeDefined();
   expect(renderer.root.findByProps({ children: 'Dashboard Customer' })).toBeDefined();
   expect(renderer.root.findByProps({ children: 'Dashboard Ring' })).toBeDefined();
+  expect(renderer.root.findByProps({ children: 'Overview' })).toBeDefined();
+  expect(
+    renderer.root.findByProps({ testID: 'dashboard-metric-total_customers' }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findByProps({ testID: 'dashboard-metric-completed_loans' }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findByProps({ testID: 'dashboard-metric-low_stock_products' }),
+  ).toBeDefined();
   expect(
     renderer.root.findAllByProps({
       children: 'Gold rates API returned an invalid response.',
