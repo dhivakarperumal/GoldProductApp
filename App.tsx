@@ -437,6 +437,7 @@ function AppContent() {
   };
 
   const handleOrdersOptionSelect = (section: OrdersQuickOption) => {
+    setIsOrdersFormOpen(false);
     setOrdersSectionRequest(prev => ({ section, key: prev.key + 1 }));
     navigateAdminTab('Orders');
   };

@@ -580,13 +580,6 @@ export default function OrdersManagement({
   const [viewingBill, setViewingBill] = useState<Bill | null>(null);
   const [paymentDraft, setPaymentDraft] = useState<BillPaymentDraft | null>(null);
 
-  useEffect(() => {
-    onFormVisibilityChange?.(
-      (section === 'orders' && ordersPage === 'create') ||
-        (section === 'billing' && billPage === 'form'),
-    );
-  }, [billPage, onFormVisibilityChange, ordersPage, section]);
-
   const loadBills = useCallback(async () => {
     setBillsLoading(true);
     setBillsError('');
@@ -948,6 +941,7 @@ export default function OrdersManagement({
       const created = parseTackOrder(response.data);
       setOrderDraft(emptyOrderDraft());
       setOrderSearchCatalog('');
+      onFormVisibilityChange?.(false);
       setOrdersPage('list');
       showAlert(
         'Take order created',
@@ -988,6 +982,7 @@ export default function OrdersManagement({
   };
 
   const openNewBill = () => {
+    onFormVisibilityChange?.(true);
     setEditingBillId(null);
     setBillDraft(emptyBillDraft());
     setBillSearchCatalog('');
@@ -995,6 +990,7 @@ export default function OrdersManagement({
   };
 
   const openBillFromOrder = (order: TackOrder) => {
+    onFormVisibilityChange?.(true);
     setEditingBillId(null);
     setBillDraft({
       ...emptyBillDraft(),
@@ -1022,6 +1018,7 @@ export default function OrdersManagement({
       showAlert('Bill cannot be edited', 'Bills with payment history cannot be changed.', { variant: 'warning' });
       return;
     }
+    onFormVisibilityChange?.(true);
     setEditingBillId(bill.id);
     setBillDraft({
       customer: { ...(bill.customers[0] || emptyCustomer()) },
@@ -1178,6 +1175,7 @@ export default function OrdersManagement({
       });
       setBillDraft(emptyBillDraft());
       setEditingBillId(null);
+      onFormVisibilityChange?.(false);
       setBillPage('list');
       showAlert(
         'Bill saved',
@@ -1282,6 +1280,7 @@ export default function OrdersManagement({
   };
 
   const openOrderForm = () => {
+    onFormVisibilityChange?.(true);
     setOrderDraft(emptyOrderDraft());
     setOrderSearchCatalog('');
     setOrdersPage('create');
@@ -2025,14 +2024,21 @@ export default function OrdersManagement({
             : (
                 <CreateBillScreen
                   title={editingBillId ? 'Edit bill' : 'Create a new bill'}
-                  onBack={() => setBillPage('list')}>
+                  onBack={() => {
+                    onFormVisibilityChange?.(false);
+                    setBillPage('list');
+                  }}>
                   {renderBillForm()}
                 </CreateBillScreen>
               )
           : ordersPage === 'list'
             ? renderOrderList()
             : (
-                <CreateTackOrderScreen onBack={() => setOrdersPage('list')}>
+                <CreateTackOrderScreen
+                  onBack={() => {
+                    onFormVisibilityChange?.(false);
+                    setOrdersPage('list');
+                  }}>
                   {renderOrderForm()}
                 </CreateTackOrderScreen>
               )}
