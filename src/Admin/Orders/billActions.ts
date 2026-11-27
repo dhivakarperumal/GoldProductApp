@@ -230,7 +230,7 @@ export async function printBillReceipt(bill: BillReceipt): Promise<string> {
   }
   await open.chooser(pdf.filePath, {
     mime: 'application/pdf',
-    title: 'Print or share bill PDF',
+    title: 'Print bill PDF',
   });
   return pdf.filePath;
 }
