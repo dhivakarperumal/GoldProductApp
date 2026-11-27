@@ -55,9 +55,11 @@ import AdminTabBar, {
 import BottomBar, {
   SuperAdminTab,
 } from './src/SuperAdmin/Navigation/Bottombar';
-import TopHeader from './src/SuperAdmin/Navigation/TopHeader';
+import TopHeader, {
+  SuperAdminDrawerTarget,
+} from './src/SuperAdmin/Navigation/TopHeader';
 import SuperAdminHome from './src/SuperAdmin/Home/Home';
-import Profile from './src/SuperAdmin/Profile/Profile';
+import Profile, { ProfileDestination } from './src/SuperAdmin/Profile/Profile';
 import Revenue from './src/SuperAdmin/Reports/Revenue';
 import Subscriptions from './src/SuperAdmin/Subscription/Subscriptions';
 import AllGoldShop from './src/SuperAdmin/Shops/AllGoldShop';
@@ -137,6 +139,10 @@ function AppContent() {
     useState(false);
   const [isPaymentManagementVisible, setIsPaymentManagementVisible] =
     useState(false);
+  const [profileDestinationRequest, setProfileDestinationRequest] = useState<{
+    destination: ProfileDestination;
+    key: number;
+  }>({ destination: 'cards', key: 0 });
   const [adminTab, setAdminTab] = useState<AdminTab>('Dashboard');
   const [visitedAdminScreens, setVisitedAdminScreens] = useState<Set<string>>(
     () => new Set(['Dashboard']),
@@ -337,11 +343,32 @@ function AppContent() {
     if (tab !== 'Plans') {
       setIsPlanFormVisible(false);
     }
-    if (tab !== 'Profile') {
+    if (tab === 'Profile') {
+      setProfileDestinationRequest(prev => ({
+        destination: 'cards',
+        key: prev.key + 1,
+      }));
+    } else {
       setIsMyProfileVisible(false);
       setIsUsersManagementVisible(false);
       setIsPaymentManagementVisible(false);
+      setProfileDestinationRequest({ destination: 'cards', key: 0 });
     }
+  };
+
+  const handleSuperAdminDrawerNavigate = (target: SuperAdminDrawerTarget) => {
+    if (target.kind === 'tab') {
+      handleTabChange(target.tab);
+      return;
+    }
+    setSuperAdminTab('Profile');
+    setVisitedSuperAdminScreens(current => new Set(current).add('Profile'));
+    setIsShopPageFullscreenVisible(false);
+    setIsPlanFormVisible(false);
+    setProfileDestinationRequest(prev => ({
+      destination: target.screen,
+      key: prev.key + 1,
+    }));
   };
 
   const handleLogout = async () => {
@@ -366,6 +393,7 @@ function AppContent() {
       setIsMyProfileVisible(false);
       setIsUsersManagementVisible(false);
       setIsPaymentManagementVisible(false);
+      setProfileDestinationRequest({ destination: 'cards', key: 0 });
     } catch (error) {
       showAlert(
         'Logout failed',
@@ -871,12 +899,25 @@ function AppContent() {
         isUsersManagementVisible ||
         isPaymentManagementVisible));
 
+  const activeSuperAdminScreen =
+    superAdminTab === 'Profile'
+      ? isMyProfileVisible
+        ? 'Profile:my-profile'
+        : isUsersManagementVisible
+          ? 'Profile:users'
+          : isPaymentManagementVisible
+            ? 'Profile:payments'
+            : 'Profile'
+      : superAdminTab;
+
   return (
     <View className="flex-1 bg-white">
       <View style={isSuperAdminFullscreen ? screenStyles.hidden : undefined}>
         <TopHeader
           adminName={adminName}
           adminEmail={adminEmail}
+          activeScreen={activeSuperAdminScreen}
+          onNavigate={handleSuperAdminDrawerNavigate}
           onTodayRegistrationsChange={setTodayRegistrationCount}
           onLogout={handleLogout}
           onProfilePress={() => handleTabChange('Profile')}
@@ -922,6 +963,8 @@ function AppContent() {
         active={superAdminTab === 'Profile'}
       >
         <Profile
+          requestedDestination={profileDestinationRequest.destination}
+          destinationRequestKey={profileDestinationRequest.key}
           onMyProfileVisibilityChange={setIsMyProfileVisible}
           onUsersManagementVisibilityChange={setIsUsersManagementVisible}
           onPaymentManagementVisibilityChange={setIsPaymentManagementVisible}
