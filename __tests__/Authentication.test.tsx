@@ -13,6 +13,45 @@ const mockGet = jest.fn();
 const mockSetTokenCache = jest.fn();
 const mockClearTokenCache = jest.fn();
 
+jest.mock('@react-native-documents/picker', () => ({
+  errorCodes: {},
+  isErrorWithCode: jest.fn(() => false),
+  pick: jest.fn(),
+  types: {},
+}));
+
+jest.mock('react-native-image-picker', () => ({
+  launchImageLibrary: jest.fn(),
+}));
+
+jest.mock('@react-native-community/datetimepicker', () => ({
+  __esModule: true,
+  default: () => null,
+  DateTimePickerAndroid: { open: jest.fn() },
+}));
+
+jest.mock('react-native-geolocation-service', () => ({
+  __esModule: true,
+  default: {
+    requestAuthorization: jest.fn().mockResolvedValue('granted'),
+    getCurrentPosition: jest.fn(),
+  },
+  PositionError: {
+    PERMISSION_DENIED: 1,
+    POSITION_UNAVAILABLE: 2,
+    TIMEOUT: 3,
+  },
+}));
+
+jest.mock('react-native-pdf', () => {
+  const ReactModule = require('react');
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: () => ReactModule.createElement(View),
+  };
+});
+
 jest.mock('@react-native-async-storage/async-storage', () => ({
   __esModule: true,
   default: {
@@ -267,6 +306,23 @@ test('routes shop admins to the admin dashboard and its API', async () => {
   expect(mockGet).toHaveBeenCalledWith('/gold-rates/current');
   expect(mockGet).toHaveBeenCalledWith('/loans');
   expect(mockGet).not.toHaveBeenCalledWith('/products/mine');
+
+  const dashboardScreen = renderer.root.findByProps({
+    testID: 'cached-screen-admin-Dashboard',
+  });
+  await act(async () => {
+    renderer.root.findByType(AdminTabBar).props.onTabPress('Orders');
+  });
+  expect(
+    renderer.root.findByProps({ testID: 'cached-screen-admin-Orders' }).props
+      .style,
+  ).toEqual({ flex: 1 });
+  expect(dashboardScreen.props.style).toEqual({ display: 'none' });
+  expect(
+    renderer.root.findByProps({
+      children: 'Review and manage your shop orders.',
+    }),
+  ).toBeDefined();
 });
 
 test('removes the saved token only when Logout is pressed', async () => {
