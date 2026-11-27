@@ -526,11 +526,27 @@ function SummaryCard({
   );
 }
 
-export default function OrdersManagement() {
+type OrdersManagementProps = {
+  requestedSection?: Section;
+  sectionRequestKey?: number;
+};
+
+export default function OrdersManagement({
+  requestedSection,
+  sectionRequestKey = 0,
+}: OrdersManagementProps) {
   const { showAlert } = useCustomAlert();
-  const [section, setSection] = useState<Section>('billing');
+  const [section, setSection] = useState<Section>(requestedSection ?? 'billing');
   const [ordersPage, setOrdersPage] = useState<'list' | 'create'>('list');
   const [billPage, setBillPage] = useState<'list' | 'form'>('list');
+
+  useEffect(() => {
+    if (sectionRequestKey > 0 && requestedSection) {
+      setSection(requestedSection);
+      setBillPage('list');
+      setOrdersPage('list');
+    }
+  }, [requestedSection, sectionRequestKey]);
   const [orders, setOrders] = useState<TackOrder[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);

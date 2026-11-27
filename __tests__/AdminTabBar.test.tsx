@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import AdminTabBar, { AdminTab } from '../src/Admin/Navigation/AdminTabBar';
+import AdminTabBar, {
+  AdminTab,
+  OrdersQuickOption,
+} from '../src/Admin/Navigation/AdminTabBar';
 
 jest.mock('react-native-safe-area-context', () => {
   const ReactModule = require('react');
@@ -22,21 +25,35 @@ const tabLabels: Array<{ tab: AdminTab; label: string }> = [
   { tab: 'More', label: 'More' },
 ];
 
-function AdminTabBarHarness() {
+function AdminTabBarHarness({
+  onOrdersOptionSelect,
+}: {
+  onOrdersOptionSelect?: (option: OrdersQuickOption) => void;
+}) {
   const [activeTab, setActiveTab] = useState<AdminTab>('Dashboard');
 
   return (
     <SafeAreaProvider>
-      <AdminTabBar activeTab={activeTab} onTabPress={setActiveTab} />
+      <AdminTabBar
+        activeTab={activeTab}
+        onTabPress={setActiveTab}
+        onOrdersOptionSelect={option => {
+          onOrdersOptionSelect?.(option);
+          setActiveTab('Orders');
+        }}
+      />
     </SafeAreaProvider>
   );
 }
 
-test('starts on Dashboard and updates selected state across all admin tabs', async () => {
+test('switches side tabs directly and opens bottom sheet on plus tap for Billing or Tack Order', async () => {
+  const onOrdersOptionSelect = jest.fn();
   let renderer!: ReactTestRenderer.ReactTestRenderer;
 
   await act(async () => {
-    renderer = ReactTestRenderer.create(<AdminTabBarHarness />);
+    renderer = ReactTestRenderer.create(
+      <AdminTabBarHarness onOrdersOptionSelect={onOrdersOptionSelect} />,
+    );
   });
 
   const expectOnlyActive = (activeLabel: string) => {
@@ -50,10 +67,31 @@ test('starts on Dashboard and updates selected state across all admin tabs', asy
 
   expectOnlyActive('Home');
 
-  for (const { label } of tabLabels.slice(1)) {
+  for (const label of ['Loans', 'Products', 'More']) {
     await act(async () => {
       renderer.root.findByProps({ accessibilityLabel: label }).props.onPress();
     });
     expectOnlyActive(label);
   }
+
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Orders' }).props.onPress();
+  });
+  expect(renderer.root.findByProps({ testID: 'orders-action-sheet' })).toBeTruthy();
+
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'orders-sheet-billing' }).props.onPress();
+  });
+  expect(onOrdersOptionSelect).toHaveBeenCalledWith('billing');
+  expectOnlyActive('Orders');
+
+  await act(async () => {
+    renderer.root.findByProps({ accessibilityLabel: 'Orders' }).props.onPress();
+  });
+  await act(async () => {
+    renderer.root
+      .findByProps({ testID: 'orders-sheet-tack-order' })
+      .props.onPress();
+  });
+  expect(onOrdersOptionSelect).toHaveBeenCalledWith('orders');
 });
