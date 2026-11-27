@@ -29,6 +29,7 @@ module.exports = {
   Home: MockIcon,
   ImagePlus: MockIcon,
   LayoutDashboard: MockIcon,
+  LayoutGrid: MockIcon,
   LockKeyhole: MockIcon,
   LogOut: MockIcon,
   MapPin: MockIcon,
