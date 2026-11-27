@@ -52,6 +52,15 @@ jest.mock('react-native-pdf', () => {
   };
 });
 
+jest.mock('react-native-blob-util', () => ({
+  fs: {},
+  open: jest.fn(),
+}));
+
+jest.mock('react-native-html-to-pdf', () => ({
+  generatePDF: jest.fn(),
+}));
+
 jest.mock('@react-native-async-storage/async-storage', () => ({
   __esModule: true,
   default: {
