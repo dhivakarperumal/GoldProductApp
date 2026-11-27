@@ -1,15 +1,24 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Dimensions,
   Image,
-  ImageBackground,
   Modal,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { Bell, LogOut, Package, X } from 'lucide-react-native';
+import {
+  Bell,
+  ChevronRight,
+  LogOut,
+  Package,
+  RefreshCw,
+  UserRound,
+  X,
+} from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import api from '../../api';
@@ -30,6 +39,36 @@ type AdminHeaderProps = {
   onProfilePress: () => void;
   onLogout: () => void;
 };
+
+const styles = StyleSheet.create({
+  headerShadow: {
+    elevation: 6,
+    shadowColor: '#0D2C24',
+    shadowOpacity: 0.16,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  avatarShadow: {
+    elevation: 4,
+    shadowColor: '#0D2C24',
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  dropdownShadow: {
+    elevation: 16,
+    shadowColor: '#0D2C24',
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+  },
+  headerScrim: {
+    backgroundColor: 'rgba(15, 44, 37, 0.38)',
+  },
+  backdrop: {
+    backgroundColor: 'rgba(13, 44, 36, 0.18)',
+  },
+});
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (
@@ -58,21 +97,34 @@ export default function AdminHeader({
   const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>(
     [],
   );
+  const [lowStockTotal, setLowStockTotal] = useState<number | null>(null);
   const [loadingLowStock, setLoadingLowStock] = useState(false);
   const [lowStockError, setLowStockError] = useState('');
   const initial = adminName.trim().charAt(0).toUpperCase() || 'A';
+
+  const windowDimensions = Dimensions.get('window');
+  const notificationPanelWidth = Math.min(350, windowDimensions.width - 28);
+  const profilePanelWidth = Math.min(284, windowDimensions.width - 28);
+  const dropdownTop = insets.top + 64;
+  const maxListHeight = Math.max(180, windowDimensions.height - insets.top - 220);
 
   const loadLowStockProducts = useCallback(async () => {
     setLoadingLowStock(true);
     setLowStockError('');
     try {
       const response = await api.get('/products/mine', {
-        params: { page: 1, limit: 8, stockStatus: 'low-stock' },
+        params: { page: 1, limit: 15, stockStatus: 'low-stock' },
       });
       if (!Array.isArray(response.data?.products)) {
         throw new Error('The server returned an invalid low-stock list.');
       }
       setLowStockProducts(response.data.products);
+      const statsCount = Number(response.data?.stats?.lowStock);
+      setLowStockTotal(
+        Number.isFinite(statsCount)
+          ? statsCount
+          : response.data.products.length,
+      );
     } catch (error) {
       setLowStockError(
         getErrorMessage(error, 'Unable to load low-stock products.'),
@@ -82,6 +134,17 @@ export default function AdminHeader({
     }
   }, []);
 
+  useEffect(() => {
+    loadLowStockProducts();
+  }, [loadLowStockProducts]);
+
+  const lowStockCount = lowStockTotal ?? lowStockProducts.length;
+
+  const closeAllMenus = () => {
+    setIsAccountMenuOpen(false);
+    setActiveDropdown(null);
+  };
+
   const toggleDropdown = (dropdown: HeaderDropdown) => {
     setIsAccountMenuOpen(false);
     if (activeDropdown === dropdown) {
@@ -89,260 +152,470 @@ export default function AdminHeader({
       return;
     }
     setActiveDropdown(dropdown);
-    if (dropdown === 'low-stock') {
+    if (dropdown === 'low-stock' || lowStockTotal === null) {
       loadLowStockProducts();
     }
   };
 
+  const toggleAccountMenu = () => {
+    setActiveDropdown(null);
+    setIsAccountMenuOpen(open => !open);
+  };
+
+  const handleLogoutPress = () => {
+    setIsAccountMenuOpen(false);
+    showAlert('Log out?', 'Are you sure you want to log out?', {
+      variant: 'warning',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Log out',
+          style: 'destructive',
+          onPress: onLogout,
+        },
+      ],
+    });
+  };
+
   return (
-    <ImageBackground
-      source={require('../../Assert/Images/bottom.png')}
-      resizeMode="stretch"
-      className="border-b border-gray-100 px-4 pb-3"
-      style={{ paddingTop: insets.top + 10 }}
+    <View
+      testID="admin-header"
+      style={[styles.headerShadow, { paddingTop: insets.top + 10 }]}
+      className="z-20 overflow-hidden border-b border-[#EAD78A]/35 bg-[#153B35] px-4 pb-3"
     >
+      <Image
+        source={require('../../Assert/Images/bottom.png')}
+        resizeMode="cover"
+        style={StyleSheet.absoluteFill}
+        className="h-full w-full"
+      />
+      <View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, styles.headerScrim]}
+      />
+
       <View className="h-12 flex-row items-center justify-between">
-        <View className="flex-row items-center">
-          <Image
-            accessibilityLabel="Sri Golds logo"
-            source={require('../../Assert/Images/App icon.png')}
-            resizeMode="cover"
-            className="mr-3 h-11 w-11 rounded-lg"
-          />
-          <View>
-            <Text className="text-[16px] font-extrabold leading-5 text-white">
+        <View className="mr-3 flex-1 flex-row items-center">
+          <View className="mr-3 h-11 w-11 overflow-hidden rounded-xl border border-[#F5E6A8]/65 bg-[#0D2C24] p-0.5">
+            <Image
+              accessibilityLabel="Sri Golds logo"
+              source={require('../../Assert/Images/App icon.png')}
+              resizeMode="cover"
+              className="h-full w-full rounded-[9px]"
+            />
+          </View>
+          <View className="flex-1">
+            <Text
+              numberOfLines={1}
+              className="text-[16px] font-extrabold leading-5 tracking-[0.2px] text-white"
+            >
               Sri GoldSuite
             </Text>
-            <Text className="text-[10px] font-bold uppercase tracking-[1.5px] text-[#FFE08A]">
-              Shop Admin
-            </Text>
+            <View className="mt-1 flex-row items-center">
+              <View className="rounded-full border border-[#F4C95D]/40 bg-[#F4C95D]/15 px-2 py-0.5">
+                <Text
+                  numberOfLines={1}
+                  className="text-[9px] font-extrabold uppercase tracking-[1.4px] text-[#FFE08A]"
+                >
+                  Shop Admin
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
+
         <View className="flex-row items-center gap-2">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Notifications"
+            testID="admin-notification-toggle"
             accessibilityState={{
               expanded: activeDropdown === 'notifications',
             }}
             onPress={() => toggleDropdown('notifications')}
-            className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
+            style={({ pressed }) => ({ opacity: pressed ? 0.78 : 1 })}
+            className={`relative h-10 w-10 items-center justify-center rounded-full border ${
+              activeDropdown === 'notifications'
+                ? 'border-[#F4C95D] bg-[#F4C95D]/20'
+                : 'border-white/20 bg-[#12332B]/85'
+            }`}
           >
-            <Bell size={19} color="#FFF8E7" />
+            <Bell
+              size={18}
+              color={activeDropdown === 'notifications' ? '#F4C95D' : '#FFF8E7'}
+              strokeWidth={2.1}
+            />
+            {lowStockCount > 0 ? (
+              <View className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border border-[#153B35] bg-[#EF4444]" />
+            ) : null}
           </Pressable>
+
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Low stock products"
+            testID="admin-low-stock-toggle"
             accessibilityState={{ expanded: activeDropdown === 'low-stock' }}
             onPress={() => toggleDropdown('low-stock')}
-            className="relative h-10 w-10 items-center justify-center rounded-full bg-white/10"
+            style={({ pressed }) => ({ opacity: pressed ? 0.78 : 1 })}
+            className={`relative h-10 w-10 items-center justify-center rounded-full border ${
+              activeDropdown === 'low-stock'
+                ? 'border-[#F4C95D] bg-[#F4C95D]/20'
+                : 'border-[#F4C95D]/45 bg-[#12332B]/85'
+            }`}
           >
-            <Package size={19} color="#FFF8E7" />
-            {lowStockProducts.length > 0 ? (
-              <View className="absolute right-0.5 top-0.5 min-h-4 min-w-4 items-center justify-center rounded-full bg-[#B42332] px-1">
-                <Text className="text-[9px] font-extrabold text-white">
-                  {lowStockProducts.length > 9 ? '9+' : lowStockProducts.length}
+            <Package
+              size={18}
+              color={activeDropdown === 'low-stock' ? '#F4C95D' : '#FFE08A'}
+              strokeWidth={2.1}
+            />
+            {lowStockCount > 0 ? (
+              <View className="absolute -right-0.5 -top-0.5 min-h-[17px] min-w-[17px] items-center justify-center rounded-full border-[1.5px] border-[#153B35] bg-[#DC2626] px-1">
+                <Text className="text-[9px] font-extrabold leading-[12px] text-white">
+                  {lowStockCount > 99 ? '99+' : lowStockCount}
                 </Text>
               </View>
             ) : null}
           </Pressable>
+
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={
               isAccountMenuOpen ? 'Close account menu' : 'Open account menu'
             }
+            testID="admin-profile-toggle"
             accessibilityState={{ expanded: isAccountMenuOpen }}
-            onPress={() => {
-              setActiveDropdown(null);
-              setIsAccountMenuOpen(open => !open);
-            }}
-            className="h-10 w-10 items-center justify-center rounded-full border-2 border-[#F5E6A8] bg-[#D4AF37]"
+            onPress={toggleAccountMenu}
+            style={({ pressed }) => [
+              styles.avatarShadow,
+              { opacity: pressed ? 0.84 : 1 },
+            ]}
+            className={`h-10 w-10 items-center justify-center rounded-full border-2 bg-[#D4AF37] ${
+              isAccountMenuOpen ? 'border-white' : 'border-[#F5E6A8]'
+            }`}
           >
-            <Text className="text-[16px] font-bold text-white">{initial}</Text>
+            <Text className="text-[16px] font-extrabold text-white">
+              {initial}
+            </Text>
           </Pressable>
         </View>
       </View>
+
       <Modal
         transparent
         animationType="fade"
-        visible={activeDropdown !== null}
+        visible={activeDropdown !== null || isAccountMenuOpen}
         statusBarTranslucent
-        onRequestClose={() => setActiveDropdown(null)}
+        onRequestClose={closeAllMenus}
       >
         <View className="flex-1">
           <Pressable
+            testID="admin-header-backdrop"
             accessibilityRole="button"
             accessibilityLabel="Dismiss dropdown"
-            onPress={() => setActiveDropdown(null)}
-            className="absolute inset-0 bg-black/10"
+            onPress={closeAllMenus}
+            style={[StyleSheet.absoluteFill, styles.backdrop]}
           />
-          <View
-            style={{ top: insets.top + 62 }}
-            className="absolute right-4 max-h-[70%] w-80 overflow-hidden rounded-2xl border border-[#ECE7D8] bg-white shadow-2xl"
-          >
-            <View className="flex-row items-center justify-between border-b border-[#F1F2EE] px-4 py-3">
-              <Text className="text-sm font-extrabold text-[#173F35]">
-                {activeDropdown === 'low-stock' ? 'Low Stock' : 'Notifications'}
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Close dropdown"
-                onPress={() => setActiveDropdown(null)}
-                className="h-8 w-8 items-center justify-center rounded-full bg-[#F3F4F6]"
-              >
-                <X size={16} color="#6B7280" />
-              </Pressable>
-            </View>
-            {activeDropdown === 'low-stock' ? (
-              loadingLowStock ? (
-                <View className="items-center py-8">
-                  <ActivityIndicator color="#B8860B" />
-                  <Text className="mt-2 text-xs text-[#6B7280]">
-                    Loading low-stock products…
-                  </Text>
-                </View>
-              ) : lowStockError ? (
-                <View className="items-center px-4 py-6">
-                  <Text className="text-center text-xs text-[#B42332]">
-                    {lowStockError}
-                  </Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={loadLowStockProducts}
-                    className="mt-3 rounded-lg bg-[#E8F3EF] px-4 py-2"
+
+          {activeDropdown !== null ? (
+            <View
+              testID={
+                activeDropdown === 'low-stock'
+                  ? 'admin-low-stock-dropdown'
+                  : 'admin-notifications-dropdown'
+              }
+              style={[
+                styles.dropdownShadow,
+                { top: dropdownTop, width: notificationPanelWidth },
+              ]}
+              className="absolute right-3.5 overflow-hidden rounded-2xl border border-[#E8E2D2] bg-white"
+            >
+              <View className="border-b border-[#EFECE2] bg-[#FAF9F5] px-4 pb-3 pt-3.5">
+                <View className="flex-row items-center">
+                  <View
+                    className={`mr-3 h-10 w-10 items-center justify-center rounded-xl ${
+                      activeDropdown === 'low-stock'
+                        ? 'bg-[#FEF3C7]'
+                        : 'bg-[#F7EDCC]'
+                    }`}
                   >
-                    <Text className="text-xs font-bold text-[#07564B]">
-                      Try again
+                    {activeDropdown === 'low-stock' ? (
+                      <Package size={18} color="#B45309" strokeWidth={2.2} />
+                    ) : (
+                      <Bell size={18} color="#A77B12" strokeWidth={2.2} />
+                    )}
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-[10px] font-bold uppercase tracking-[1.2px] text-[#9A7620]">
+                      {activeDropdown === 'low-stock'
+                        ? 'Inventory Alert'
+                        : 'Shop Activity'}
                     </Text>
-                  </Pressable>
-                </View>
-              ) : lowStockProducts.length === 0 ? (
-                <View className="items-center px-4 py-8">
-                  <Package size={24} color="#08745D" />
-                  <Text className="mt-2 text-sm font-bold text-[#173F35]">
-                    All products are stocked
-                  </Text>
-                  <Text className="mt-1 text-center text-xs text-[#6B7280]">
-                    There are no low-stock products right now.
-                  </Text>
-                </View>
-              ) : (
-                <ScrollView className="max-h-[420px]">
-                  {lowStockProducts.map(product => (
+                    <Text className="mt-0.5 text-[15px] font-extrabold text-[#173F35]">
+                      {activeDropdown === 'low-stock'
+                        ? 'Low Stock Products'
+                        : 'Notifications'}
+                    </Text>
+                  </View>
+                  {activeDropdown === 'low-stock' ? (
                     <View
-                      key={product.id}
-                      className="flex-row items-center border-b border-[#F1F2EE] px-4 py-3"
+                      className={`mr-2 min-w-[28px] items-center rounded-full px-2 py-1 ${
+                        lowStockCount > 0 ? 'bg-[#FEE2E2]' : 'bg-[#E7F3EF]'
+                      }`}
                     >
-                      <View className="h-9 w-9 items-center justify-center rounded-full bg-[#FEF3C7]">
-                        <Package size={16} color="#A16207" />
-                      </View>
-                      <View className="ml-3 flex-1">
-                        <Text
-                          numberOfLines={1}
-                          className="text-xs font-bold text-[#173F35]"
-                        >
-                          {product.name || 'Unnamed product'}
-                        </Text>
-                        <Text
-                          numberOfLines={1}
-                          className="mt-1 text-[10px] text-[#6B7280]"
-                        >
-                          {product.category ||
-                            product.sku_barcode ||
-                            'Inventory'}
-                        </Text>
-                      </View>
-                      <Text className="ml-2 text-xs font-extrabold text-[#B42332]">
-                        {Number(product.total_stock) || 0} left
+                      <Text
+                        className={`text-xs font-extrabold ${
+                          lowStockCount > 0
+                            ? 'text-[#B42332]'
+                            : 'text-[#08745D]'
+                        }`}
+                      >
+                        {lowStockCount}
                       </Text>
                     </View>
-                  ))}
-                </ScrollView>
-              )
-            ) : (
-              <View className="items-center px-4 py-8">
-                <Bell size={24} color="#B8860B" />
-                <Text className="mt-2 text-sm font-bold text-[#173F35]">
-                  No new notifications
-                </Text>
-                <Text className="mt-1 text-center text-xs text-[#6B7280]">
-                  You’re all caught up.
-                </Text>
+                  ) : null}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Refresh alerts"
+                    disabled={loadingLowStock}
+                    onPress={loadLowStockProducts}
+                    className="h-8 w-8 items-center justify-center rounded-full border border-[#EAE6DA] bg-white"
+                  >
+                    {loadingLowStock ? (
+                      <ActivityIndicator size="small" color="#08745D" />
+                    ) : (
+                      <RefreshCw size={14} color="#08745D" />
+                    )}
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Close dropdown"
+                    onPress={closeAllMenus}
+                    className="ml-1.5 h-8 w-8 items-center justify-center rounded-full border border-[#EAE6DA] bg-white"
+                  >
+                    <X size={15} color="#6B7280" />
+                  </Pressable>
+                </View>
               </View>
-            )}
-          </View>
-        </View>
-      </Modal>
-      <Modal
-        transparent
-        animationType="fade"
-        visible={isAccountMenuOpen}
-        statusBarTranslucent
-        onRequestClose={() => setIsAccountMenuOpen(false)}
-      >
-        <View className="flex-1">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Dismiss account menu"
-            onPress={() => setIsAccountMenuOpen(false)}
-            className="absolute inset-0 bg-black/10"
-          />
-          <View
-            style={{ top: insets.top + 62 }}
-            className="absolute right-4 w-72 overflow-hidden rounded-2xl border border-[#ECE7D8] bg-white shadow-2xl"
-          >
-            <View className="border-b border-[#F1F2EE] px-4 py-4">
-              <Text
-                numberOfLines={1}
-                className="text-sm font-extrabold text-[#173F35]"
-              >
-                {adminName}
-              </Text>
-              <Text numberOfLines={1} className="mt-1 text-xs text-[#6B7280]">
-                {adminEmail || 'Email not available'}
-              </Text>
+
+              {activeDropdown === 'low-stock' ? (
+                loadingLowStock && lowStockProducts.length === 0 ? (
+                  <View className="items-center py-9">
+                    <ActivityIndicator size="large" color="#B8860B" />
+                    <Text className="mt-3 text-xs font-medium text-[#6B7280]">
+                      Loading low-stock products…
+                    </Text>
+                  </View>
+                ) : lowStockError ? (
+                  <View className="items-center px-5 py-8">
+                    <Text className="text-center text-xs font-semibold text-[#B42332]">
+                      {lowStockError}
+                    </Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={loadLowStockProducts}
+                      className="mt-3 flex-row items-center rounded-xl bg-[#E7F3EF] px-4 py-2"
+                    >
+                      <RefreshCw size={13} color="#07564B" />
+                      <Text className="ml-2 text-xs font-bold text-[#07564B]">
+                        Try again
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : lowStockProducts.length === 0 ? (
+                  <View className="items-center px-5 py-9">
+                    <View className="h-12 w-12 items-center justify-center rounded-full bg-[#E7F3EF]">
+                      <Package size={22} color="#08745D" />
+                    </View>
+                    <Text className="mt-3 text-sm font-bold text-[#173F35]">
+                      All products are stocked
+                    </Text>
+                    <Text className="mt-1 text-center text-xs text-[#6B7280]">
+                      There are no low-stock products right now.
+                    </Text>
+                  </View>
+                ) : (
+                  <ScrollView style={{ maxHeight: maxListHeight }}>
+                    {lowStockProducts.map((product, index) => {
+                      const stockQty = Number(product.total_stock) || 0;
+                      const isOutOfStock = stockQty <= 0;
+
+                      return (
+                        <View
+                          key={product.id}
+                          className={`flex-row items-center px-4 py-3 ${
+                            index < lowStockProducts.length - 1
+                              ? 'border-b border-[#F2EFE7]'
+                              : ''
+                          }`}
+                        >
+                          <View
+                            className={`h-9 w-9 items-center justify-center rounded-xl ${
+                              isOutOfStock ? 'bg-[#FEE2E2]' : 'bg-[#FEF3C7]'
+                            }`}
+                          >
+                            <Package
+                              size={16}
+                              color={isOutOfStock ? '#B42332' : '#B45309'}
+                            />
+                          </View>
+                          <View className="ml-3 flex-1 pr-2">
+                            <Text
+                              numberOfLines={1}
+                              className="text-[13px] font-bold text-[#173F35]"
+                            >
+                              {product.name || 'Unnamed product'}
+                            </Text>
+                            <Text
+                              numberOfLines={1}
+                              className="mt-0.5 text-[11px] text-[#6B7280]"
+                            >
+                              {product.category ||
+                                product.sku_barcode ||
+                                'Inventory'}
+                            </Text>
+                          </View>
+                          <View
+                            className={`rounded-full px-2.5 py-1 ${
+                              isOutOfStock ? 'bg-[#FEE2E2]' : 'bg-[#FEF3C7]'
+                            }`}
+                          >
+                            <Text
+                              className={`text-[11px] font-extrabold ${
+                                isOutOfStock
+                                  ? 'text-[#B42332]'
+                                  : 'text-[#B45309]'
+                              }`}
+                            >
+                              {isOutOfStock
+                                ? 'Out of stock'
+                                : `${stockQty} left`}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </ScrollView>
+                )
+              ) : lowStockCount > 0 ? (
+                <View className="p-3">
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="View low stock products"
+                    onPress={() => setActiveDropdown('low-stock')}
+                    className="flex-row items-center rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-3 active:opacity-80"
+                  >
+                    <View className="h-9 w-9 items-center justify-center rounded-xl bg-[#FEF3C7]">
+                      <Package size={17} color="#B45309" />
+                    </View>
+                    <View className="ml-3 flex-1">
+                      <Text className="text-[13px] font-bold text-[#173F35]">
+                        Low stock alert
+                      </Text>
+                      <Text className="mt-0.5 text-[11px] text-[#6B7280]">
+                        {lowStockCount}{' '}
+                        {lowStockCount === 1 ? 'product is' : 'products are'}{' '}
+                        running low on stock.
+                      </Text>
+                    </View>
+                    <ChevronRight size={16} color="#9A7620" />
+                  </Pressable>
+                </View>
+              ) : (
+                <View className="items-center px-5 py-9">
+                  <View className="h-12 w-12 items-center justify-center rounded-full bg-[#F7EDCC]">
+                    <Bell size={20} color="#A77B12" />
+                  </View>
+                  <Text className="mt-3 text-sm font-bold text-[#173F35]">
+                    All caught up
+                  </Text>
+                  <Text className="mt-1 text-center text-xs text-[#6B7280]">
+                    No new notifications right now.
+                  </Text>
+                </View>
+              )}
             </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Open Admin profile"
-              onPress={() => {
-                setIsAccountMenuOpen(false);
-                onProfilePress();
-              }}
-              className="px-4 py-3.5"
+          ) : null}
+
+          {isAccountMenuOpen ? (
+            <View
+              testID="admin-profile-dropdown"
+              style={[
+                styles.dropdownShadow,
+                { top: dropdownTop, width: profilePanelWidth },
+              ]}
+              className="absolute right-3.5 overflow-hidden rounded-2xl border border-[#E8E2D2] bg-white"
             >
-              <Text className="text-sm font-semibold text-[#173F35]">
-                Profile
-              </Text>
-            </Pressable>
-            <View className="h-px bg-[#F1F2EE]" />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Log out"
-              onPress={() => {
-                setIsAccountMenuOpen(false);
-                showAlert('Log out?', 'Are you sure you want to log out?', {
-                  variant: 'warning',
-                  buttons: [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Log out',
-                      style: 'destructive',
-                      onPress: onLogout,
-                    },
-                  ],
-                });
-              }}
-              className="flex-row items-center px-4 py-3.5"
-            >
-              <LogOut size={16} color="#B42332" />
-              <Text className="ml-2 text-sm font-bold text-[#B42332]">
-                Logout
-              </Text>
-            </Pressable>
-          </View>
+              <View className="flex-row items-center border-b border-[#EFECE2] bg-[#FAF9F5] px-4 py-3.5">
+                <View className="mr-3 h-11 w-11 items-center justify-center rounded-full border-2 border-[#F5E6A8] bg-[#D4AF37]">
+                  <Text className="text-[17px] font-extrabold text-white">
+                    {initial}
+                  </Text>
+                </View>
+                <View className="flex-1">
+                  <Text
+                    numberOfLines={1}
+                    className="text-sm font-extrabold text-[#173F35]"
+                  >
+                    {adminName}
+                  </Text>
+                  <Text
+                    numberOfLines={1}
+                    className="mt-0.5 text-[11px] text-[#6B7280]"
+                  >
+                    {adminEmail || 'Email not available'}
+                  </Text>
+                  <View className="mt-1.5 self-start rounded-full bg-[#E7F3EF] px-2 py-0.5">
+                    <Text className="text-[9px] font-bold uppercase tracking-[0.8px] text-[#07564B]">
+                      Shop Admin
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <View className="p-2">
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Open Admin profile"
+                  testID="admin-profile-menu-action"
+                  onPress={() => {
+                    setIsAccountMenuOpen(false);
+                    onProfilePress();
+                  }}
+                  className="flex-row items-center justify-between rounded-xl px-3 py-2.5 active:bg-[#F8F7F2]"
+                >
+                  <View className="flex-row items-center">
+                    <View className="mr-3 h-8 w-8 items-center justify-center rounded-lg bg-[#E7F3EF]">
+                      <UserRound size={16} color="#07564B" />
+                    </View>
+                    <Text className="text-sm font-semibold text-[#173F35]">
+                      Profile
+                    </Text>
+                  </View>
+                  <ChevronRight size={16} color="#9CA3AF" />
+                </Pressable>
+
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Log out"
+                  testID="admin-logout-menu-action"
+                  onPress={handleLogoutPress}
+                  className="mt-1 flex-row items-center justify-between rounded-xl px-3 py-2.5 active:bg-[#FEF2F2]"
+                >
+                  <View className="flex-row items-center">
+                    <View className="mr-3 h-8 w-8 items-center justify-center rounded-lg bg-[#FEE2E2]">
+                      <LogOut size={16} color="#B42332" />
+                    </View>
+                    <Text className="text-sm font-bold text-[#B42332]">
+                      Logout
+                    </Text>
+                  </View>
+                  <ChevronRight size={16} color="#FCA5A5" />
+                </Pressable>
+              </View>
+            </View>
+          ) : null}
         </View>
       </Modal>
-    </ImageBackground>
+    </View>
   );
 }
