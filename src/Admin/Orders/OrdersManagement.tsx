@@ -2092,9 +2092,11 @@ export default function OrdersManagement({
                             value={String(item.net_gold_weight ?? '')}
                             onChangeText={value => updateOrderWeight(item.key, value)}
                             keyboardType="decimal-pad"
+                            textAlignVertical="center"
                             placeholder="0.000"
                             placeholderTextColor="#9AA6A1"
-                            className="h-8 w-20 rounded-lg border border-[#DDE6E0] bg-white px-2 text-xs font-bold text-[#173F35]"
+                            style={{ paddingVertical: 0 }}
+                            className="h-11 w-24 rounded-lg border border-[#DDE6E0] bg-white px-2 text-xs font-bold text-[#173F35]"
                           />
                           <Text className="ml-1 text-[10px] text-[#6B7E76]">g</Text>
                         </View>
@@ -2213,9 +2215,20 @@ export default function OrdersManagement({
             accessibilityRole="button"
             disabled={orderDraft.items.length === 0}
             onPress={() => setOrderFormStep('details')}
-            className={`min-h-12 flex-row items-center justify-center rounded-xl ${orderDraft.items.length === 0 ? 'bg-[#9AA6A1]' : 'bg-[#07564B]'}`}>
-            <Text className="text-sm font-extrabold text-white">Next Details</Text>
-            <Text className="ml-2 text-lg font-bold text-white">›</Text>
+            style={{
+              backgroundColor: orderDraft.items.length === 0 ? '#B7C7C0' : '#07564B',
+            }}
+            className="min-h-12 flex-row items-center justify-center rounded-xl">
+            <Text
+              style={{ color: orderDraft.items.length === 0 ? '#52645F' : '#FFFFFF' }}
+              className="text-sm font-extrabold">
+              Next Details
+            </Text>
+            <Text
+              style={{ color: orderDraft.items.length === 0 ? '#52645F' : '#FFFFFF' }}
+              className="ml-2 text-lg font-bold">
+              ›
+            </Text>
           </Pressable>
         ) : (
           <View className="flex-row gap-3">

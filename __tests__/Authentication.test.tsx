@@ -512,15 +512,26 @@ test('routes shop admins to the admin dashboard and its API', async () => {
     renderer.root.findByProps({ accessibilityLabel: 'Back to Take Orders' }),
   ).toBeDefined();
   expect(renderer.root.findByProps({ testID: 'take-order-product-14' })).toBeDefined();
+  const nextDetailsButton = renderer.root.findByProps({
+    testID: 'take-order-next-button',
+  });
+  expect(nextDetailsButton.props.disabled).toBe(true);
+  expect(nextDetailsButton.props.style).toMatchObject({
+    backgroundColor: '#B7C7C0',
+  });
   await act(async () => {
     renderer.root
       .findByProps({ accessibilityLabel: 'Add Necklace to take order' })
       .props.onPress();
   });
+  expect(
+    renderer.root.findByProps({ testID: 'take-order-next-button' }).props.disabled,
+  ).toBe(false);
   const weightInput = renderer.root.findByProps({
     accessibilityLabel: 'Net weight for Necklace',
   });
   expect(weightInput.props.value).toBe('20');
+  expect(weightInput.props.textAlignVertical).toBe('center');
   await act(async () => {
     weightInput.props.onChangeText('25.5');
   });
