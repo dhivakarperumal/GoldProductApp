@@ -173,6 +173,7 @@ export default function GoldReleaseList({
                   : 'Ready for release'
               }
               paletteIndex={index}
+              columns={3}
             />
           ))}
         </View>

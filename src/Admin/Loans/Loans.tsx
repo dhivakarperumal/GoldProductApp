@@ -329,6 +329,7 @@ export default function Loans({
                       : 'Paid loans'
                   }
                   paletteIndex={index}
+                  columns={3}
                 />
               ))}
             </View>

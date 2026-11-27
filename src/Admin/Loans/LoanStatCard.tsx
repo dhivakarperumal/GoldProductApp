@@ -10,6 +10,7 @@ type LoanStatCardProps = {
   icon: LucideIcon;
   trend: string;
   paletteIndex: number;
+  columns?: 2 | 3;
 };
 
 export default function LoanStatCard({
@@ -19,6 +20,7 @@ export default function LoanStatCard({
   icon,
   trend,
   paletteIndex,
+  columns = 2,
 }: LoanStatCardProps) {
   const palette =
     dashboardMetricPaletteList[paletteIndex % dashboardMetricPaletteList.length];
@@ -31,7 +33,12 @@ export default function LoanStatCard({
       icon={icon}
       trend={trend}
       palette={palette}
-      className="w-[48%] flex-grow-0 basis-[48%]"
+      compact={columns === 3}
+      className={
+        columns === 3
+          ? 'flex-1 basis-[30%]'
+          : 'w-[48%] grow-0 basis-[48%]'
+      }
     />
   );
 }

@@ -105,6 +105,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.85,
     shadowRadius: 5,
   },
+  compactMetricCard: {
+    aspectRatio: 0.95,
+  },
 });
 
 type DashboardMetricCardProps = {
@@ -117,6 +120,7 @@ type DashboardMetricCardProps = {
   testID?: string;
   palette?: DashboardMetricPalette;
   className?: string;
+  compact?: boolean;
 };
 
 function MetricCardArtwork({
@@ -220,6 +224,7 @@ export default function DashboardMetricCard({
   testID,
   palette = dashboardMetricPalettes[id] || defaultPalette,
   className = 'flex-1 basis-[45%]',
+  compact = false,
 }: DashboardMetricCardProps) {
   const TrendIcon = trendUp === false ? ArrowDown : ArrowUp;
   const trendColor = trendUp === false ? '#E53935' : '#2EAD48';
@@ -230,53 +235,83 @@ export default function DashboardMetricCard({
       className={`min-h-[104px] overflow-hidden rounded-[20px] border ${className}`}
       style={[
         styles.metricCard,
+        compact && styles.compactMetricCard,
         { backgroundColor: palette.start, borderColor: palette.border },
       ]}>
       <MetricCardArtwork id={id} palette={palette} />
-      <View className="flex-1 p-3">
-        <View className="flex-row items-start">
-          <View
-            className="mr-2 h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#FFE078] bg-black/20"
-            style={styles.metricIcon}>
-            <Icon size={23} color="#FFE08A" strokeWidth={2.4} />
-          </View>
-          <View className="min-w-0 flex-1 pt-0.5">
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.75}
-              className="text-[11px] font-semibold leading-[14px] text-white">
-              {label}
-            </Text>
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.7}
-              className="mt-0.5 text-[21px] font-black text-[#FFE28A]">
-              {value}
-            </Text>
-          </View>
-          <View className="ml-1 h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/25 bg-black/10">
-            <ChevronRight size={15} color="#FFF4C7" />
-          </View>
-        </View>
-        {trend ? (
-          <View className="absolute bottom-2 left-3 right-2 flex-row items-center rounded-full bg-black/25 py-1 pl-1 pr-2">
+      {compact ? (
+        <View className="flex-1 p-2.5">
+          <View className="flex-row items-center justify-between">
             <View
-              className="mr-1 h-4 w-4 shrink-0 items-center justify-center rounded-full"
-              style={{ backgroundColor: trendColor }}>
-              <TrendIcon size={11} color="#FFFFFF" strokeWidth={3} />
+              className="h-8 w-8 items-center justify-center rounded-full border-2 border-[#FFE078] bg-black/20"
+              style={styles.metricIcon}>
+              <Icon size={16} color="#FFE08A" strokeWidth={2.4} />
             </View>
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.7}
-              className="min-w-0 flex-1 text-[9px] font-bold text-white">
-              {trend}
-            </Text>
+            <View className="h-5 w-5 items-center justify-center rounded-full border border-white/25 bg-black/10">
+              <ChevronRight size={13} color="#FFF4C7" />
+            </View>
           </View>
-        ) : null}
-      </View>
+          <Text
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+            className="mt-1 text-[9px] font-semibold leading-[11px] text-white">
+            {label}
+          </Text>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.65}
+            className="mt-0.5 text-base font-black text-[#FFE28A]">
+            {value}
+          </Text>
+        </View>
+      ) : (
+        <View className="flex-1 p-3">
+          <View className="flex-row items-start">
+            <View
+              className="mr-2 h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#FFE078] bg-black/20"
+              style={styles.metricIcon}>
+              <Icon size={23} color="#FFE08A" strokeWidth={2.4} />
+            </View>
+            <View className="min-w-0 flex-1 pt-0.5">
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+                className="text-[11px] font-semibold leading-[14px] text-white">
+                {label}
+              </Text>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+                className="mt-0.5 text-[21px] font-black text-[#FFE28A]">
+                {value}
+              </Text>
+            </View>
+            <View className="ml-1 h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/25 bg-black/10">
+              <ChevronRight size={15} color="#FFF4C7" />
+            </View>
+          </View>
+          {trend ? (
+            <View className="absolute bottom-2 left-3 right-2 flex-row items-center rounded-full bg-black/25 py-1 pl-1 pr-2">
+              <View
+                className="mr-1 h-4 w-4 shrink-0 items-center justify-center rounded-full"
+                style={{ backgroundColor: trendColor }}>
+                <TrendIcon size={11} color="#FFFFFF" strokeWidth={3} />
+              </View>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+                className="min-w-0 flex-1 text-[9px] font-bold text-white">
+                {trend}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      )}
     </View>
   );
 }
