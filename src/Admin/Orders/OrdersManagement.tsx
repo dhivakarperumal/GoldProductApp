@@ -1647,7 +1647,11 @@ export default function OrdersManagement({
               <Text className="text-xs font-semibold text-emerald-700">Paid {currency(bill.paid_amount)}</Text>
               <Text className="text-xs font-semibold text-rose-700">Due {currency(bill.balance_due)}</Text>
             </View>
-            <View className="flex-row flex-wrap gap-2">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              testID={`bill-actions-scroll-${String(bill.id)}`}>
+              <View className="flex-row flex-nowrap gap-2">
               <Pressable
                 testID={`print-bill-${String(bill.id)}`}
                 accessibilityRole="button"
@@ -1661,7 +1665,7 @@ export default function OrdersManagement({
                   <Printer size={15} color="#07564B" />
                 )}
                 <Text className="ml-1.5 text-xs font-bold text-[#07564B]">
-                  {printingBillId === String(bill.id) ? 'Preparing…' : 'Print / Share'}
+                  {printingBillId === String(bill.id) ? 'Preparing…' : 'Print'}
                 </Text>
               </Pressable>
               {Number(bill.balance_due) > 0 ? (
@@ -1690,7 +1694,8 @@ export default function OrdersManagement({
                   </Pressable>
                 </>
               ) : null}
-            </View>
+              </View>
+            </ScrollView>
           </View>
         ))}
       </View>
