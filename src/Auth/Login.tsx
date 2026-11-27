@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -8,6 +8,7 @@ import {
   Text,
   TextInput,
   View,
+  type TextInputInstance,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -18,7 +19,9 @@ import {
   LockKeyhole,
   UserRound,
 } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import api, { setTokenCache } from '../api';
+import useKeyboardScroll from './useKeyboardScroll';
 
 export type LoginUser = {
   name?: string;
@@ -29,6 +32,9 @@ export type LoginUser = {
 type LoginProps = {
   onLogin: (user: LoginUser) => void;
   onWelcomePress: () => void;
+  onRegister?: () => void;
+  initialIdentifier?: string;
+  registrationMessage?: string;
 };
 
 function isLoginUser(value: unknown): value is LoginUser {
@@ -56,12 +62,20 @@ function getErrorMessage(error: unknown) {
   return 'Unable to sign in. Please try again.';
 }
 
-export default function Login({ onLogin, onWelcomePress }: LoginProps) {
-  const [identifier, setIdentifier] = useState('');
+export default function Login({
+  onLogin, onWelcomePress,
+  onRegister,
+  initialIdentifier = '',
+  registrationMessage = '',
+}: LoginProps) {
+  const [identifier, setIdentifier] = useState(initialIdentifier);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const identifierInputRef = useRef<TextInputInstance>(null);
+  const passwordInputRef = useRef<TextInputInstance>(null);
+  const { scrollViewRef, onInputFocus, onScroll } = useKeyboardScroll();
 
   const handleSubmit = async () => {
     const trimmedIdentifier = identifier.trim();
@@ -105,16 +119,21 @@ export default function Login({ onLogin, onWelcomePress }: LoginProps) {
   };
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-[#F8F7F2]"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        contentContainerClassName="flex-grow justify-center px-6 py-10"
-        keyboardShouldPersistTaps="handled">
-        <View className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#F3E8C1]" />
-        <View className="absolute -bottom-16 -left-20 h-56 w-56 rounded-full bg-[#E3EEE8]" />
+    <SafeAreaView className="flex-1 bg-[#F8F7F2]" edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerClassName="flex-grow justify-center px-6 py-10"
+          automaticallyAdjustKeyboardInsets
+          keyboardShouldPersistTaps="handled"
+          onScroll={onScroll}
+          scrollEventThrottle={16}>
+          <View className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#F3E8C1]" />
+          <View className="absolute -bottom-16 -left-20 h-56 w-56 rounded-full bg-[#E3EEE8]" />
 
-        <View className="w-full max-w-md self-center">
+          <View className="w-full max-w-md self-center">
           <View className="mb-6 items-center">
             <View className="mb-3 h-32 w-32 overflow-hidden rounded-full border-4 border-[#F5E6A8] bg-[#06452D] shadow-lg">
               <Image
@@ -124,9 +143,6 @@ export default function Login({ onLogin, onWelcomePress }: LoginProps) {
                 className="h-full w-full"
               />
             </View>
-            <Text className="mb-3 text-center text-xs font-bold uppercase tracking-[3px] text-[#A77B15]">
-              A little more sparkle, every day
-            </Text>
             <Text className="text-center text-3xl font-bold text-[#173F35]">
               Admin Sign In
             </Text>
@@ -146,6 +162,11 @@ export default function Login({ onLogin, onWelcomePress }: LoginProps) {
                 autoCapitalize="none"
                 autoComplete="username"
                 keyboardType="email-address"
+                onFocus={() => {
+                  if (identifierInputRef.current) {
+                    onInputFocus(identifierInputRef.current);
+                  }
+                }}
                 onChangeText={value => {
                   setIdentifier(value);
                   setErrorMessage('');
@@ -153,6 +174,7 @@ export default function Login({ onLogin, onWelcomePress }: LoginProps) {
                 onSubmitEditing={handleSubmit}
                 placeholder="Enter your email or mobile number"
                 placeholderTextColor="#9CA3AF"
+                ref={identifierInputRef}
                 returnKeyType="next"
                 value={identifier}
                 className="flex-1 py-3.5 pl-3 text-sm text-[#374151]"
@@ -169,6 +191,11 @@ export default function Login({ onLogin, onWelcomePress }: LoginProps) {
               <TextInput
                 accessibilityLabel="Password"
                 autoCapitalize="none"
+                onFocus={() => {
+                  if (passwordInputRef.current) {
+                    onInputFocus(passwordInputRef.current);
+                  }
+                }}
                 onChangeText={value => {
                   setPassword(value);
                   setErrorMessage('');
@@ -176,6 +203,7 @@ export default function Login({ onLogin, onWelcomePress }: LoginProps) {
                 onSubmitEditing={handleSubmit}
                 placeholder="Enter your password"
                 placeholderTextColor="#9CA3AF"
+                ref={passwordInputRef}
                 returnKeyType="done"
                 secureTextEntry={!showPassword}
                 value={password}
@@ -212,6 +240,13 @@ export default function Login({ onLogin, onWelcomePress }: LoginProps) {
                 {errorMessage}
               </Text>
             ) : null}
+            {registrationMessage ? (
+              <Text
+                accessibilityRole="alert"
+                className="mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                {registrationMessage}
+              </Text>
+            ) : null}
 
             <Pressable
               testID="login-submit"
@@ -237,8 +272,19 @@ export default function Login({ onLogin, onWelcomePress }: LoginProps) {
               </Text>
               <View className="h-px flex-1 bg-[#E5E7EB]" />
             </View>
+            {onRegister ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={onRegister}
+                className="mt-5 items-center py-2">
+                <Text className="text-sm text-[#6B7280]">
+                  New gold shop?{' '}
+                  <Text className="font-bold text-[#07564B]">Register here</Text>
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
-          <Pressable
+            <Pressable
             testID="login-welcome"
             accessibilityRole="button"
             accessibilityLabel="Back to Welcome"
@@ -251,7 +297,8 @@ export default function Login({ onLogin, onWelcomePress }: LoginProps) {
             </Text>
           </Pressable>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

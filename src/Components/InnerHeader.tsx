@@ -6,12 +6,14 @@ type InnerHeaderProps = {
   title: string;
   onBack: () => void;
   sectionLabel?: string;
+  backAccessibilityLabel?: string;
 };
 
 export default function InnerHeader({
   title,
   onBack,
   sectionLabel = 'Loan Management',
+  backAccessibilityLabel = 'Back to all loans',
 }: InnerHeaderProps) {
   const insets = useSafeAreaInsets();
 
@@ -21,7 +23,7 @@ export default function InnerHeader({
       className="mb-5 flex-row items-center bg-[#173F35] px-4 pb-4">
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Back to all loans"
+        accessibilityLabel={backAccessibilityLabel}
         onPress={onBack}
         className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-white/10">
         <ChevronLeft size={22} color="#EAD78A" />

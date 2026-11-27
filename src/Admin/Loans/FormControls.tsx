@@ -114,18 +114,20 @@ export function DatePicker({
   onChange,
   minimumDate,
   maximumDate = new Date(),
+  initialDate = new Date(new Date().getFullYear() - 18, 0, 1),
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   minimumDate?: Date;
   maximumDate?: Date | null;
+  initialDate?: Date;
 }) {
   const [open, setOpen] = useState(false);
   const [draftDate, setDraftDate] = useState(new Date());
   const selectedDate = /^\d{4}-\d{2}-\d{2}$/.test(value)
     ? new Date(`${value}T00:00:00`)
-    : new Date(new Date().getFullYear() - 18, 0, 1);
+    : initialDate;
   const dateLabel = value
     ? new Date(`${value}T00:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
     : `Select ${label.toLowerCase()}`;
@@ -171,7 +173,9 @@ export function DatePicker({
         <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
           <View className="flex-1 items-center justify-center bg-black/40 px-5">
             <View className="w-full rounded-3xl bg-white p-5">
-              <Text className="mb-4 text-lg font-extrabold text-[#173F35]">Date of birth</Text>
+              <Text className="mb-4 text-lg font-extrabold text-[#173F35]">
+                Select {label.toLowerCase()}
+              </Text>
               <DateTimePicker
                 value={draftDate}
                 mode="date"
@@ -308,6 +312,20 @@ export function SubmitButton({
 }
 
 export function errorMessage(error: unknown) {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof error.response === 'object' &&
+    error.response !== null &&
+    'data' in error.response &&
+    typeof error.response.data === 'object' &&
+    error.response.data !== null &&
+    'message' in error.response.data &&
+    typeof error.response.data.message === 'string'
+  ) {
+    return error.response.data.message;
+  }
   if (
     typeof error === 'object' &&
     error !== null &&
