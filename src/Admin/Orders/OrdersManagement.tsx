@@ -8,6 +8,7 @@ import {
   Platform,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
@@ -38,6 +39,7 @@ import DashboardMetricCard, {
   dashboardMetricPalettes,
 } from '../Components/DashboardMetricCard';
 import { CustomDropdown } from '../Loans/FormControls';
+import type { Category, Metal } from '../Products/inventory';
 import CreateBillScreen from './CreateBillScreen';
 import CreateTackOrderScreen from './CreateTackOrderScreen';
 
@@ -200,6 +202,13 @@ const PAYMENT_METHODS: PaymentMethod[] = [
   'Cheque',
   'Other',
 ];
+const screenStyles = StyleSheet.create({
+  stepButtonEnabled: { backgroundColor: '#07564B' },
+  stepButtonDisabled: { backgroundColor: '#B7C7C0' },
+  stepButtonLabelEnabled: { color: '#FFFFFF' },
+  stepButtonLabelDisabled: { color: '#52645F' },
+  weightInput: { paddingVertical: 0 },
+});
 const ORDER_STATUS_OPTIONS: Option[] = [
   { value: 'Order Placed', label: 'Order Placed' },
   { value: 'Confirmed', label: 'Confirmed' },
@@ -261,8 +270,8 @@ const emptyBillDraft = (): BillDraft => ({
 const emptyExchange = (): ExchangeItem => ({
   product_name: 'Gold exchange item',
   category: '',
-  metal_type: 'Gold',
-  purity: '22K',
+  metal_type: '',
+  purity: '',
   weight: '',
   wastage_weight: '0',
   rate_per_unit: '',
@@ -439,6 +448,21 @@ function currency(value: number | string | null | undefined): string {
   })}`;
 }
 
+function purityCode(purity: string): string {
+  const normalized = purity.trim().toLowerCase();
+  const grade = normalized.match(/\b(999|916|833|750|585)\b/);
+  if (grade) return grade[1];
+  const karat = normalized.match(/\b(24|22|20|18|14)\s*k\b/);
+  const codes: Record<string, string> = {
+    '24': '999',
+    '22': '916',
+    '20': '833',
+    '18': '750',
+    '14': '585',
+  };
+  return karat ? codes[karat[1]] : '';
+}
+
 function productPrice(product: CatalogProduct): number {
   const finalPrice = Number(product.final_selling_price);
   if (finalPrice > 0) return finalPrice;
@@ -565,6 +589,7 @@ export default function OrdersManagement({
   const [ordersPage, setOrdersPage] = useState<'list' | 'create'>('list');
   const [orderFormStep, setOrderFormStep] = useState<'products' | 'details'>('products');
   const [billPage, setBillPage] = useState<'list' | 'form'>('list');
+  const [billFormStep, setBillFormStep] = useState<'products' | 'details'>('products');
 
   useEffect(() => {
     if (sectionRequestKey > 0 && requestedSection) {
@@ -577,14 +602,21 @@ export default function OrdersManagement({
   const [bills, setBills] = useState<Bill[]>([]);
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
   const [goldRates, setGoldRates] = useState<GoldRate[]>([]);
+  const [exchangeCategories, setExchangeCategories] = useState<Category[]>([]);
+  const [exchangeMetals, setExchangeMetals] = useState<Metal[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [billsLoading, setBillsLoading] = useState(false);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [catalogLoaded, setCatalogLoaded] = useState(false);
+  const [exchangeOptionsLoaded, setExchangeOptionsLoaded] = useState(false);
+  const [exchangeOptionsLoading, setExchangeOptionsLoading] = useState(false);
+  const [ratesLoaded, setRatesLoaded] = useState(false);
+  const [ratesLoading, setRatesLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');
   const [billsError, setBillsError] = useState('');
   const [catalogError, setCatalogError] = useState('');
   const [ratesError, setRatesError] = useState('');
+  const [exchangeOptionsError, setExchangeOptionsError] = useState('');
   const [billStartDate, setBillStartDate] = useState('');
   const [billEndDate, setBillEndDate] = useState('');
   const [billSearch, setBillSearch] = useState('');
@@ -677,6 +709,7 @@ export default function OrdersManagement({
   }, []);
 
   const loadGoldRates = useCallback(async () => {
+    setRatesLoading(true);
     setRatesError('');
     try {
       const response = await api.get('/gold-rates/current');
@@ -684,10 +717,38 @@ export default function OrdersManagement({
         throw new TypeError('The server returned an invalid daily gold-rate list.');
       }
       setGoldRates(response.data.rates.filter(isRecord) as GoldRate[]);
+      setRatesLoaded(true);
     } catch (error) {
       setRatesError(errorText(error, 'Could not load current gold rates.'));
       setGoldRates([]);
+      setRatesLoaded(false);
       console.error('[Orders] Could not load current gold rates:', error);
+    } finally {
+      setRatesLoading(false);
+    }
+  }, []);
+
+  const loadExchangeOptions = useCallback(async () => {
+    setExchangeOptionsLoading(true);
+    setExchangeOptionsError('');
+    try {
+      const [categoryResponse, metalResponse] = await Promise.all([
+        api.get<Category[]>('/categories/manage'),
+        api.get<Metal[]>('/metals/manage'),
+      ]);
+      if (!Array.isArray(categoryResponse.data) || !Array.isArray(metalResponse.data)) {
+        throw new TypeError('The server returned invalid exchange category or metal options.');
+      }
+      setExchangeCategories(categoryResponse.data);
+      setExchangeMetals(metalResponse.data);
+      setExchangeOptionsLoaded(true);
+    } catch (error) {
+      setExchangeCategories([]);
+      setExchangeMetals([]);
+      setExchangeOptionsError(errorText(error, 'Could not load exchange categories and metals.'));
+      console.error('[Billing] Could not load exchange options:', error);
+    } finally {
+      setExchangeOptionsLoading(false);
     }
   }, []);
 
@@ -717,10 +778,46 @@ export default function OrdersManagement({
   ]);
 
   useEffect(() => {
-    if (section === 'billing' && billPage === 'form' && billDraft.paymentType === 'EXCHANGE_GOLD' && goldRates.length === 0 && !ratesError) {
-      void loadGoldRates();
+    if (
+      section === 'billing' &&
+      billPage === 'form' &&
+      billDraft.paymentType === 'EXCHANGE_GOLD' &&
+      !ratesLoaded &&
+      !ratesLoading &&
+      !ratesError
+    ) {
+      loadGoldRates();
     }
-  }, [billDraft.paymentType, billPage, goldRates.length, loadGoldRates, ratesError, section]);
+  }, [
+    billDraft.paymentType,
+    billPage,
+    loadGoldRates,
+    ratesError,
+    ratesLoaded,
+    ratesLoading,
+    section,
+  ]);
+
+  useEffect(() => {
+    if (
+      section === 'billing' &&
+      billPage === 'form' &&
+      billDraft.paymentType === 'EXCHANGE_GOLD' &&
+      !exchangeOptionsLoaded &&
+      !exchangeOptionsLoading &&
+      !exchangeOptionsError
+    ) {
+      loadExchangeOptions();
+    }
+  }, [
+    billDraft.paymentType,
+    billPage,
+    exchangeOptionsError,
+    exchangeOptionsLoaded,
+    exchangeOptionsLoading,
+    loadExchangeOptions,
+    section,
+  ]);
 
   const orderTotals = useMemo(() => {
     const subtotal = orderDraft.items.reduce(
@@ -751,10 +848,53 @@ export default function OrdersManagement({
       goldRates.find(
         rate =>
           rate.metal_type.toLowerCase() === metalType.trim().toLowerCase() &&
-          rate.purity.toLowerCase() === purity.trim().toLowerCase(),
+          (rate.purity.toLowerCase() === purity.trim().toLowerCase() ||
+            (purityCode(rate.purity) !== '' && purityCode(rate.purity) === purityCode(purity))),
       ),
     [goldRates],
   );
+
+  const exchangeCategoryOptions = useMemo(
+    () => exchangeCategories
+      .filter(category => (category.status || 'Active').toLowerCase() === 'active')
+      .map(category => ({ value: category.name, label: category.name })),
+    [exchangeCategories],
+  );
+  const exchangeMetalOptions = useMemo(
+    () => exchangeMetals
+      .filter(metal => (metal.status || 'Active').toLowerCase() === 'active')
+      .map(metal => ({ value: metal.name, label: metal.name }))
+      .filter((option, index, options) =>
+        options.findIndex(item => item.value.toLowerCase() === option.value.toLowerCase()) === index,
+      ),
+    [exchangeMetals],
+  );
+  const exchangePurityOptions = useCallback((metalType: string): Option[] => {
+    const values = [
+      ...exchangeMetals
+        .filter(metal => metal.name.toLowerCase() === metalType.trim().toLowerCase())
+        .map(metal => metal.purity || ''),
+      ...goldRates
+        .filter(rate => rate.metal_type.toLowerCase() === metalType.trim().toLowerCase())
+        .map(rate => rate.purity),
+    ].map(value => value.trim()).filter(Boolean);
+    const uniqueValues = values.filter((value, index) =>
+      values.findIndex(item =>
+        purityCode(item) ? purityCode(item) === purityCode(value) : item.toLowerCase() === value.toLowerCase(),
+      ) === index,
+    );
+    const labels: Record<string, string> = {
+      '999': '24K / 999',
+      '916': '22K / 916',
+      '833': '20K / 833',
+      '750': '18K / 750',
+      '585': '14K / 585',
+    };
+    return uniqueValues.map(value => ({
+      value,
+      label: labels[purityCode(value)] || value,
+    }));
+  }, [exchangeMetals, goldRates]);
 
   const billTotals = useMemo(() => {
     const subtotal = billDraft.items.reduce(
@@ -1039,6 +1179,7 @@ export default function OrdersManagement({
   const openNewBill = () => {
     onFormVisibilityChange?.(true);
     setEditingBillId(null);
+    setBillFormStep('products');
     setBillDraft(emptyBillDraft());
     setBillSearchCatalog('');
     setBillPage('form');
@@ -1064,6 +1205,7 @@ export default function OrdersManagement({
       tackOrder: order,
     });
     setBillSearchCatalog('');
+    setBillFormStep('details');
     setBillPage('form');
     setSection('billing');
   };
@@ -1087,6 +1229,7 @@ export default function OrdersManagement({
       advancePaymentMethod: 'Other',
     });
     setBillSearchCatalog('');
+    setBillFormStep('products');
     setBillPage('form');
   };
 
@@ -1144,6 +1287,21 @@ export default function OrdersManagement({
         itemIndex === index ? { ...item, ...patch } : item,
       ),
     }));
+  };
+
+  const updateExchangeMetal = (index: number, metalType: string) => {
+    updateExchange(index, { metal_type: metalType, purity: '', rate_per_unit: '' });
+  };
+
+  const updateExchangePurity = (index: number, purity: string) => {
+    const item = billDraft.exchanges[index];
+    const rate = item ? findRate(item.metal_type, purity) : undefined;
+    updateExchange(index, {
+      purity,
+      rate_per_unit: rate
+        ? String(rate.rate_per_unit ?? rate.rate_per_gram ?? '')
+        : '',
+    });
   };
 
   const saveBill = async () => {
@@ -1230,6 +1388,7 @@ export default function OrdersManagement({
       });
       setBillDraft(emptyBillDraft());
       setEditingBillId(null);
+      setBillFormStep('products');
       onFormVisibilityChange?.(false);
       setBillPage('list');
       showAlert(
@@ -1515,248 +1674,467 @@ export default function OrdersManagement({
   );
 
   const renderBillForm = () => (
-    <ScrollView
-      testID="billing-form-scroll"
-      className="flex-1"
-      keyboardShouldPersistTaps="handled"
-      automaticallyAdjustKeyboardInsets
-      contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 24) }}>
-      <View className="p-4">
-        {billDraft.tackOrder ? (
-          <View className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-            <Text className="text-sm font-extrabold text-emerald-900">
-              Take order {billDraft.tackOrder.order_no}
-            </Text>
-            <Text className="mt-1 text-xs leading-5 text-emerald-800">
-              Product quantities and saved order totals will be used. Advance {currency(billDraft.tackOrder.advance_amount)} will be added to the bill as a payment.
-            </Text>
-          </View>
-        ) : null}
-
-        <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
-          <Text className="mb-3 text-base font-extrabold text-[#173F35]">Customer details</Text>
-          <InputField label="Customer name *" value={billDraft.customer.name} onChangeText={value => updateBillCustomer('name', value)} placeholder="Enter customer name" />
-          <InputField label="Phone number *" value={billDraft.customer.phone} onChangeText={value => updateBillCustomer('phone', value)} keyboardType="phone-pad" placeholder="Enter phone number" />
-          <InputField label="Email address" value={billDraft.customer.email} onChangeText={value => updateBillCustomer('email', value)} keyboardType="email-address" placeholder="Optional" />
-          <InputField label="Address" value={billDraft.customer.address} onChangeText={value => updateBillCustomer('address', value)} multiline placeholder="Customer address" />
-        </View>
-
-        {!billDraft.tackOrder ? (
-          <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
-            <Text className="mb-2 text-base font-extrabold text-[#173F35]">Add catalog products</Text>
-            <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-[#F8FAF8] px-3">
-              <Search size={16} color="#7B8A83" />
-              <TextInput
-                accessibilityLabel="Search catalog products for bill"
-                value={billSearchCatalog}
-                onChangeText={setBillSearchCatalog}
-                placeholder="Search products"
-                placeholderTextColor="#9AA6A1"
-                className="min-h-11 flex-1 px-2 text-sm text-[#173F35]"
-              />
+    <View className="flex-1">
+      <ScrollView
+        testID="billing-form-scroll"
+        className="flex-1"
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 24) }}>
+        <View className="p-4">
+          <View className="mb-4 flex-row items-center justify-between rounded-xl bg-[#EAF3EF] p-3">
+            <View>
+              <Text className="text-xs font-extrabold text-[#07564B]">
+                {billFormStep === 'products' && !billDraft.tackOrder
+                  ? 'Step 1 of 2 · Products'
+                  : 'Step 2 of 2 · Bill details'}
+              </Text>
+              <Text className="mt-0.5 text-[10px] text-[#52645F]">
+                {billFormStep === 'products' && !billDraft.tackOrder
+                  ? 'Choose products and review quantities.'
+                  : 'Enter customer, payment and tax details.'}
+              </Text>
             </View>
-            {catalogLoading ? (
-              <ActivityIndicator color="#07564B" />
-            ) : catalogError ? (
-              <View>
-                <Text className="text-sm text-rose-700">{catalogError}</Text>
-                <Pressable onPress={() => void loadCatalog()} className="mt-2 self-start rounded-lg bg-rose-700 px-3 py-2">
-                  <Text className="text-xs font-bold text-white">Retry</Text>
-                </Pressable>
-              </View>
-            ) : (
-              <View className="max-h-64">
-                <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
-                  {billProductResults.map(product => (
-                    <View key={String(product.id)} className="mb-2 flex-row items-center justify-between rounded-xl bg-[#F8FAF8] p-3">
-                      <View className="mr-2 flex-1">
-                        <Text numberOfLines={1} className="text-sm font-bold text-[#173F35]">{product.name}</Text>
-                        <Text numberOfLines={1} className="mt-0.5 text-xs text-[#6B7E76]">
-                          {product.category || 'Uncategorized'} · {product.purity || 'Purity not set'}
-                        </Text>
-                        <Text className="mt-1 text-xs font-bold text-[#07564B]">{currency(productPrice(product))}</Text>
-                      </View>
-                      <Pressable accessibilityRole="button" accessibilityLabel={`Add ${product.name} to bill`} onPress={() => addBillProduct(product)} className="h-9 w-9 items-center justify-center rounded-full bg-[#07564B]">
-                        <Plus size={17} color="white" />
-                      </Pressable>
-                    </View>
-                  ))}
-                  {billProductResults.length === 0 && !catalogLoading ? (
-                    <Text className="py-4 text-center text-xs text-[#6B7E76]">No matching products.</Text>
-                  ) : null}
-                </ScrollView>
-              </View>
-            )}
+            <Text className="text-xs font-extrabold text-[#07564B]">
+              {billDraft.items.length} product{billDraft.items.length === 1 ? '' : 's'}
+            </Text>
           </View>
-        ) : null}
 
-        <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
-          <Text className="mb-3 text-base font-extrabold text-[#173F35]">Products in bill · {billDraft.items.length}</Text>
-          {billDraft.items.length === 0 ? (
-            <Text className="rounded-xl bg-[#F8FAF8] p-4 text-center text-xs text-[#6B7E76]">Add a catalog product to continue.</Text>
-          ) : billDraft.items.map((item, index) => (
-            <View key={`${item.product_id}-${index}`} className="mb-2 flex-row items-center rounded-xl bg-[#F8FAF8] p-3">
-              <View className="mr-2 flex-1">
-                <Text numberOfLines={1} className="text-sm font-bold text-[#173F35]">{item.product_name}</Text>
-                <Text className="mt-0.5 text-xs text-[#6B7E76]">
-                  {item.category || 'Product'} · {item.purity || '—'} · {currency(item.price)}
-                </Text>
-              </View>
-              {!billDraft.tackOrder ? (
-                <TextInput
-                  accessibilityLabel={`Quantity for ${item.product_name}`}
-                  value={String(item.quantity)}
-                  onChangeText={value => updateBillItem(index, { quantity: Math.max(1, Number(value) || 1) })}
-                  keyboardType="number-pad"
-                  className="mr-2 h-10 w-12 rounded-lg border border-[#DDE6E0] bg-white text-center text-sm font-bold text-[#173F35]"
-                />
-              ) : (
-                <Text className="mr-2 text-xs font-bold text-[#52645F]">Qty {item.quantity}</Text>
-              )}
-              {!billDraft.tackOrder ? (
-                <Pressable accessibilityRole="button" accessibilityLabel={`Remove ${item.product_name}`} onPress={() => setBillDraft(current => ({ ...current, items: current.items.filter((_, itemIndex) => itemIndex !== index) }))} className="h-9 w-9 items-center justify-center rounded-lg bg-rose-50">
-                  <Trash2 size={15} color="#B42332" />
-                </Pressable>
-              ) : null}
-            </View>
-          ))}
-        </View>
-
-        <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
-          <Text className="mb-3 text-base font-extrabold text-[#173F35]">Payment method</Text>
-          <View className="mb-3 flex-row gap-2">
-            {([
-              ['FULL_PAYMENT', 'Full payment'],
-              ['EXCHANGE_GOLD', 'Exchange gold'],
-            ] as Array<[PaymentType, string]>).map(([value, label]) => (
-              <Pressable
-                key={value}
-                accessibilityRole="button"
-                accessibilityState={{ selected: billDraft.paymentType === value }}
-                onPress={() => setBillDraft(current => ({
-                  ...current,
-                  paymentType: value,
-                  exchanges: value === 'EXCHANGE_GOLD' && current.exchanges.length === 0
-                    ? [emptyExchange()]
-                    : current.exchanges,
-                }))}
-                className={`flex-1 rounded-xl border p-3 ${billDraft.paymentType === value ? 'border-emerald-700 bg-emerald-50' : 'border-[#E6E9E3] bg-white'}`}>
-                <Text className={`text-center text-xs font-extrabold ${billDraft.paymentType === value ? 'text-emerald-800' : 'text-[#52645F]'}`}>{label}</Text>
-              </Pressable>
-            ))}
-          </View>
-          {billDraft.tackOrder && Number(billDraft.tackOrder.advance_amount) > 0 ? (
-            <CustomDropdown
-              label="Take order advance method"
-              value={billDraft.advancePaymentMethod}
-              options={PAYMENT_METHODS.map(method => ({ value: method, label: method }))}
-              onSelect={value => setBillDraft(current => ({ ...current, advancePaymentMethod: value as PaymentMethod }))}
-            />
-          ) : null}
-          {billDraft.paymentType === 'EXCHANGE_GOLD' ? (
-            <View className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
-              <View className="mb-2 flex-row items-center justify-between">
-                <Text className="text-sm font-extrabold text-amber-900">Exchange items</Text>
-                <Pressable accessibilityRole="button" onPress={() => setBillDraft(current => ({ ...current, exchanges: [...current.exchanges, emptyExchange()] }))} className="flex-row items-center rounded-lg bg-amber-100 px-3 py-2">
-                  <Plus size={14} color="#92400E" />
-                  <Text className="ml-1 text-xs font-bold text-amber-900">Add item</Text>
-                </Pressable>
-              </View>
-              {ratesError ? (
-                <Text className="mb-2 text-xs text-rose-700">{ratesError} Enter the exchange rate manually.</Text>
-              ) : null}
-              {billDraft.exchanges.map((item, index) => (
-                <View key={`exchange-${index}`} className="mb-3 rounded-xl bg-white p-3">
-                  <View className="mb-2 flex-row items-center justify-between">
-                    <Text className="text-xs font-extrabold text-[#173F35]">Exchange item {index + 1}</Text>
-                    <Pressable accessibilityRole="button" accessibilityLabel={`Remove exchange item ${index + 1}`} onPress={() => setBillDraft(current => ({ ...current, exchanges: current.exchanges.filter((_, itemIndex) => itemIndex !== index) }))}>
-                      <X size={17} color="#B42332" />
+          {billFormStep === 'products' && !billDraft.tackOrder ? (
+            <>
+              <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-3">
+                <View className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-[#F8FAF8] px-3">
+                  <Search size={16} color="#7B8A83" />
+                  <TextInput
+                    accessibilityLabel="Search catalog products for bill"
+                    value={billSearchCatalog}
+                    onChangeText={setBillSearchCatalog}
+                    placeholder="Search products by name or ID"
+                    placeholderTextColor="#9AA6A1"
+                    className="min-h-11 flex-1 px-2 text-sm text-[#173F35]"
+                  />
+                </View>
+                {catalogLoading ? (
+                  <View className="items-center py-8">
+                    <ActivityIndicator color="#07564B" />
+                    <Text className="mt-2 text-xs text-[#6B7E76]">Loading products…</Text>
+                  </View>
+                ) : catalogError ? (
+                  <View className="py-2">
+                    <Text className="text-sm text-rose-700">{catalogError}</Text>
+                    <Pressable onPress={() => void loadCatalog()} className="mt-2 self-start rounded-lg bg-rose-700 px-3 py-2">
+                      <Text className="text-xs font-bold text-white">Retry</Text>
                     </Pressable>
                   </View>
-                  <InputField label="Category *" value={item.category} onChangeText={value => updateExchange(index, { category: value })} placeholder="e.g. Gold jewellery" />
-                  <View className="flex-row gap-2">
-                    <View className="flex-1"><InputField label="Metal *" value={item.metal_type} onChangeText={value => updateExchange(index, { metal_type: value })} placeholder="Gold" /></View>
-                    <View className="flex-1"><InputField label="Purity *" value={item.purity} onChangeText={value => updateExchange(index, { purity: value })} placeholder="22K" /></View>
+                ) : billProductResults.length === 0 ? (
+                  <Text className="py-8 text-center text-xs text-[#6B7E76]">
+                    {catalog.length ? 'No matching products.' : 'No active products available.'}
+                  </Text>
+                ) : (
+                  <View className="flex-row flex-wrap justify-between">
+                    {billProductResults.map(product => {
+                      const image = mediaUrl(firstCatalogImage(product));
+                      const isAdded = billDraft.items.some(
+                        item => String(item.product_id) === String(product.id),
+                      );
+                      return (
+                        <View
+                          key={String(product.id)}
+                          testID={`billing-product-${String(product.id)}`}
+                          className="mb-3 w-[48%] overflow-hidden rounded-xl border border-[#E6E9E3] bg-white">
+                          {image ? (
+                            <Image
+                              source={{ uri: image }}
+                              resizeMode="cover"
+                              className="h-24 w-full bg-[#F3F4F1]"
+                            />
+                          ) : (
+                            <View className="h-24 items-center justify-center bg-[#EAF3EF]">
+                              <Package size={24} color="#07564B" />
+                            </View>
+                          )}
+                          <View className="p-2.5">
+                            <Text numberOfLines={1} className="text-sm font-extrabold text-[#173F35]">
+                              {product.name}
+                            </Text>
+                            <Text numberOfLines={1} className="mt-0.5 text-[10px] text-[#6B7E76]">
+                              {product.product_code || `Product ID: ${product.id}`}
+                            </Text>
+                            <Text numberOfLines={1} className="mt-1 text-[10px] text-[#6B7E76]">
+                              {product.category || 'Uncategorized'} · {product.metal_type || 'Metal'} · {product.purity || 'Purity'}
+                            </Text>
+                            <View className="mt-2 flex-row items-center justify-between">
+                              <Text numberOfLines={1} className="mr-1 flex-1 text-xs font-extrabold text-[#07564B]">
+                                {currency(productPrice(product))}
+                              </Text>
+                              <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel={`${isAdded ? 'Add another' : 'Add'} ${product.name} to bill`}
+                                onPress={() => addBillProduct(product)}
+                                className="h-9 w-9 items-center justify-center rounded-lg bg-[#07564B]">
+                                <Plus size={18} color="white" />
+                              </Pressable>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
                   </View>
-                  <View className="flex-row gap-2">
-                    <View className="flex-1"><InputField label="Weight (g) *" value={item.weight} onChangeText={value => updateExchange(index, { weight: value })} keyboardType="decimal-pad" placeholder="0.000" /></View>
-                    <View className="flex-1"><InputField label="Wastage (g)" value={item.wastage_weight} onChangeText={value => updateExchange(index, { wastage_weight: value })} keyboardType="decimal-pad" placeholder="0.000" /></View>
+                )}
+              </View>
+
+              <View className="mb-2 rounded-2xl border border-[#E6E9E3] bg-white p-4">
+                <View className="mb-3 flex-row items-center justify-between border-b border-[#E6E9E3] pb-3">
+                  <View>
+                    <Text className="text-base font-extrabold text-[#173F35]">Products in bill</Text>
+                    <Text className="mt-0.5 text-xs text-[#6B7E76]">
+                      {billDraft.items.reduce((count, item) => count + item.quantity, 0)} items selected
+                    </Text>
                   </View>
-                  <InputField label="Rate per unit (₹)" value={item.rate_per_unit} onChangeText={value => updateExchange(index, { rate_per_unit: value })} keyboardType="decimal-pad" placeholder={findRate(item.metal_type, item.purity) ? String(findRate(item.metal_type, item.purity)?.rate_per_unit ?? findRate(item.metal_type, item.purity)?.rate_per_gram ?? '') : 'Enter rate'} />
-                  <Text className="text-right text-xs font-extrabold text-amber-800">
-                    Credit: {currency(Math.max(0, (Number(item.weight) - Number(item.wastage_weight || 0)) * (Number(item.rate_per_unit) || Number(findRate(item.metal_type, item.purity)?.rate_per_unit ?? findRate(item.metal_type, item.purity)?.rate_per_gram) || 0)))}
+                  <View className="rounded-full border border-[#DDE6E0] bg-[#EAF3EF] px-3 py-1">
+                    <Text className="text-xs font-bold text-[#07564B]">{billDraft.items.length} products</Text>
+                  </View>
+                </View>
+                {billDraft.items.length === 0 ? (
+                  <Text className="py-5 text-center text-xs text-[#6B7E76]">
+                    Add products above to start this bill.
+                  </Text>
+                ) : billDraft.items.map((item, index) => {
+                  const product = catalog.find(
+                    catalogItem => String(catalogItem.id) === String(item.product_id),
+                  );
+                  const image = product ? mediaUrl(firstCatalogImage(product)) : undefined;
+                  return (
+                    <View key={`${item.product_id}-${index}`} className="mb-3 flex-row items-center rounded-xl border border-[#E6E9E3] bg-[#F8FAF8] p-3">
+                      {image ? (
+                        <Image source={{ uri: image }} className="mr-3 h-12 w-12 rounded-xl bg-white" />
+                      ) : (
+                        <View className="mr-3 h-12 w-12 items-center justify-center rounded-xl bg-[#EAF3EF]">
+                          <Package size={18} color="#07564B" />
+                        </View>
+                      )}
+                      <View className="mr-2 min-w-0 flex-1">
+                        <Text numberOfLines={1} className="text-sm font-extrabold text-[#173F35]">
+                          {item.product_name}
+                        </Text>
+                        <Text numberOfLines={1} className="mt-0.5 text-[10px] text-[#6B7E76]">
+                          {item.category || 'Product'} · {item.purity || '—'} · {currency(item.price)} each
+                        </Text>
+                      </View>
+                      <TextInput
+                        accessibilityLabel={`Quantity for ${item.product_name}`}
+                        value={String(item.quantity)}
+                        onChangeText={value => updateBillItem(index, { quantity: Math.max(1, Number(value) || 1) })}
+                        keyboardType="number-pad"
+                        className="mr-2 h-10 w-12 rounded-lg border border-[#DDE6E0] bg-white text-center text-sm font-bold text-[#173F35]"
+                      />
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Remove ${item.product_name}`}
+                        onPress={() => setBillDraft(current => ({
+                          ...current,
+                          items: current.items.filter((_product, itemIndex) => itemIndex !== index),
+                        }))}
+                        className="h-9 w-9 items-center justify-center rounded-lg bg-rose-50">
+                        <Trash2 size={15} color="#B42332" />
+                      </Pressable>
+                    </View>
+                  );
+                })}
+              </View>
+            </>
+          ) : (
+            <>
+              {billDraft.tackOrder ? (
+                <View className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                  <Text className="text-sm font-extrabold text-emerald-900">
+                    Take order {billDraft.tackOrder.order_no}
+                  </Text>
+                  <Text className="mt-1 text-xs leading-5 text-emerald-800">
+                    Product quantities and saved order totals will be used. Advance {currency(billDraft.tackOrder.advance_amount)} will be added to the bill as a payment.
                   </Text>
                 </View>
-              ))}
-            </View>
-          ) : null}
-        </View>
+              ) : null}
 
-        <View className="mb-4 rounded-2xl bg-[#173F35] p-4">
-          <Text className="mb-3 text-base font-extrabold text-white">Bill summary</Text>
-          <View className="flex-row justify-between py-1.5">
-            <Text className="text-xs text-white/70">Subtotal</Text>
-            <Text className="text-xs font-bold text-white">{currency(billTotals.subtotal)}</Text>
-          </View>
-          <View className="flex-row items-center justify-between py-1.5">
-            <Text className="mr-2 text-xs text-white/70">Discount (₹)</Text>
-            <TextInput
-              accessibilityLabel="Bill discount"
-              value={billDraft.discountAmount}
-              onChangeText={value => setBillDraft(current => ({ ...current, discountAmount: value }))}
-              keyboardType="decimal-pad"
-              className="h-10 w-28 rounded-lg border border-white/20 bg-white/10 px-2 text-right text-sm font-bold text-white"
-            />
-          </View>
-          {billDraft.paymentType === 'EXCHANGE_GOLD' ? (
-            <View className="flex-row justify-between py-1.5">
-              <Text className="text-xs text-white/70">Exchange credit</Text>
-              <Text className="text-xs font-bold text-amber-200">−{currency(billTotals.exchangeCredit)}</Text>
-            </View>
-          ) : null}
-          <View className="flex-row gap-2">
-            <View className="flex-1">
-              <InputField label="GST %" value={billDraft.gstRate} onChangeText={value => setBillDraft(current => ({ ...current, gstRate: value }))} keyboardType="decimal-pad" placeholder="0" />
-            </View>
-            <View className="flex-1">
-              <CustomDropdown
-                label="Tax mode"
-                value={billDraft.taxMode}
-                options={[
-                  { value: 'Tax Exclusive', label: 'Tax Exclusive' },
-                  { value: 'Tax Inclusive', label: 'Tax Inclusive' },
-                ]}
-                onSelect={value => setBillDraft(current => ({ ...current, taxMode: value as BillDraft['taxMode'] }))}
-              />
-            </View>
-          </View>
-          <View className="flex-row justify-between border-t border-white/15 py-2">
-            <Text className="text-xs text-white/70">GST amount</Text>
-            <Text className="text-xs font-bold text-white">{currency(billTotals.gstAmount)}</Text>
-          </View>
-          <View className="flex-row justify-between border-t border-white/15 pt-3">
-            <Text className="text-sm font-extrabold text-white">Total bill</Text>
-            <Text className="text-lg font-black text-amber-200">{currency(billTotals.total)}</Text>
-          </View>
-          {billDraft.tackOrder && Number(billDraft.tackOrder.advance_amount) > 0 ? (
-            <View className="mt-2 flex-row justify-between">
-              <Text className="text-xs text-white/70">Advance paid</Text>
-              <Text className="text-xs font-bold text-emerald-200">−{currency(billDraft.tackOrder.advance_amount)}</Text>
-            </View>
-          ) : null}
-        </View>
+              <View testID="billing-customer-details" className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
+                <Text className="mb-3 text-base font-extrabold text-[#173F35]">Customer details</Text>
+                <InputField label="Customer name *" value={billDraft.customer.name} onChangeText={value => updateBillCustomer('name', value)} placeholder="Enter customer name" />
+                <InputField label="Phone number *" value={billDraft.customer.phone} onChangeText={value => updateBillCustomer('phone', value)} keyboardType="phone-pad" placeholder="Enter phone number" />
+                <InputField label="Email address" value={billDraft.customer.email} onChangeText={value => updateBillCustomer('email', value)} keyboardType="email-address" placeholder="Optional" />
+                <InputField label="Address" value={billDraft.customer.address} onChangeText={value => updateBillCustomer('address', value)} multiline placeholder="Customer address" />
+              </View>
 
-        <Pressable
-          testID="billing-save-button"
-          accessibilityRole="button"
-          disabled={billSaving}
-          onPress={() => void saveBill()}
-          className={`min-h-12 flex-row items-center justify-center rounded-xl px-5 ${billSaving ? 'bg-[#8DA69B]' : 'bg-[#07564B]'}`}>
-          {billSaving ? <ActivityIndicator color="white" /> : <Check size={18} color="white" />}
-          <Text className="ml-2 text-sm font-extrabold text-white">{billSaving ? 'Saving bill…' : editingBillId ? 'Update bill' : 'Save bill'}</Text>
-        </Pressable>
+              <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
+                <Text className="mb-3 text-base font-extrabold text-[#173F35]">Payment method</Text>
+                <View className="mb-3 flex-row gap-2">
+                  {([
+                    ['FULL_PAYMENT', 'Full payment'],
+                    ['EXCHANGE_GOLD', 'Exchange gold'],
+                  ] as Array<[PaymentType, string]>).map(([value, label]) => (
+                    <Pressable
+                      key={value}
+                      testID={value === 'EXCHANGE_GOLD' ? 'billing-payment-exchange' : 'billing-payment-full'}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: billDraft.paymentType === value }}
+                      onPress={() => setBillDraft(current => ({
+                        ...current,
+                        paymentType: value,
+                        exchanges: value === 'EXCHANGE_GOLD' && current.exchanges.length === 0
+                          ? [emptyExchange()]
+                          : current.exchanges,
+                      }))}
+                      className={`flex-1 rounded-xl border p-3 ${billDraft.paymentType === value ? 'border-emerald-700 bg-emerald-50' : 'border-[#E6E9E3] bg-white'}`}>
+                      <Text className={`text-center text-xs font-extrabold ${billDraft.paymentType === value ? 'text-emerald-800' : 'text-[#52645F]'}`}>
+                        {label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+                {billDraft.tackOrder && Number(billDraft.tackOrder.advance_amount) > 0 ? (
+                  <CustomDropdown
+                    label="Take order advance method"
+                    value={billDraft.advancePaymentMethod}
+                    options={PAYMENT_METHODS.map(method => ({ value: method, label: method }))}
+                    onSelect={value => setBillDraft(current => ({ ...current, advancePaymentMethod: value as PaymentMethod }))}
+                  />
+                ) : null}
+                {billDraft.paymentType === 'EXCHANGE_GOLD' ? (
+                  <View className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                    <View className="mb-2 flex-row items-center justify-between">
+                      <Text className="text-sm font-extrabold text-amber-900">Exchange items</Text>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Add exchange item"
+                        onPress={() => setBillDraft(current => ({
+                          ...current,
+                          exchanges: [...current.exchanges, emptyExchange()],
+                        }))}
+                        className="flex-row items-center rounded-lg bg-amber-100 px-3 py-2">
+                        <Plus size={14} color="#92400E" />
+                        <Text className="ml-1 text-xs font-bold text-amber-900">Add item</Text>
+                      </Pressable>
+                    </View>
+                    {exchangeOptionsLoading ? (
+                      <View className="flex-row items-center py-2">
+                        <ActivityIndicator size="small" color="#92400E" />
+                        <Text className="ml-2 text-xs text-amber-900">Loading categories and metals…</Text>
+                      </View>
+                    ) : exchangeOptionsError ? (
+                      <View className="mb-2">
+                        <Text className="text-xs text-rose-700">{exchangeOptionsError}</Text>
+                        <Pressable onPress={() => loadExchangeOptions()} className="mt-2 self-start rounded-lg bg-rose-700 px-3 py-2">
+                          <Text className="text-xs font-bold text-white">Retry options</Text>
+                        </Pressable>
+                      </View>
+                    ) : null}
+                    {ratesLoading ? (
+                      <View className="mb-2 flex-row items-center py-1">
+                        <ActivityIndicator size="small" color="#92400E" />
+                        <Text className="ml-2 text-xs text-amber-900">Loading current rates…</Text>
+                      </View>
+                    ) : null}
+                    {ratesError ? (
+                      <View className="mb-2">
+                        <Text className="text-xs text-rose-700">{ratesError} Enter the exchange rate manually.</Text>
+                        <Pressable onPress={() => loadGoldRates()} className="mt-2 self-start rounded-lg bg-amber-100 px-3 py-2">
+                          <Text className="text-xs font-bold text-amber-900">Retry rate</Text>
+                        </Pressable>
+                      </View>
+                    ) : null}
+                    {billDraft.exchanges.map((item, index) => {
+                      const rate = findRate(item.metal_type, item.purity);
+                      const rateValue = Number(item.rate_per_unit) ||
+                        Number(rate?.rate_per_unit ?? rate?.rate_per_gram) || 0;
+                      const exchangeCredit = Math.max(
+                        0,
+                        Number(item.weight) - Number(item.wastage_weight || 0),
+                      ) * rateValue;
+                      return (
+                        <View
+                          key={`exchange-${index}`}
+                          testID={`billing-exchange-item-${index}`}
+                          className="mb-3 rounded-xl border border-amber-100 bg-white p-3">
+                          <View className="mb-2 flex-row items-center justify-between">
+                            <Text className="text-xs font-extrabold text-[#173F35]">
+                              Exchange item {index + 1}
+                            </Text>
+                            {billDraft.exchanges.length > 1 ? (
+                              <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel={`Remove exchange item ${index + 1}`}
+                                onPress={() => setBillDraft(current => ({
+                                  ...current,
+                                  exchanges: current.exchanges.filter((_exchange, itemIndex) => itemIndex !== index),
+                                }))}>
+                                <X size={17} color="#B42332" />
+                              </Pressable>
+                            ) : null}
+                          </View>
+                          <CustomDropdown
+                            label="Category *"
+                            value={item.category}
+                            options={exchangeCategoryOptions}
+                            onSelect={value => updateExchange(index, { category: value })}
+                            placeholder={exchangeOptionsLoading ? 'Loading categories…' : 'Choose category'}
+                            searchable
+                            required
+                          />
+                          <CustomDropdown
+                            label="Metal *"
+                            value={item.metal_type}
+                            options={exchangeMetalOptions}
+                            onSelect={value => updateExchangeMetal(index, value)}
+                            placeholder={exchangeOptionsLoading ? 'Loading metals…' : 'Choose metal'}
+                            searchable
+                            required
+                          />
+                          <CustomDropdown
+                            label="Purity *"
+                            value={item.purity}
+                            options={exchangePurityOptions(item.metal_type)}
+                            onSelect={value => updateExchangePurity(index, value)}
+                            placeholder={item.metal_type ? 'Choose purity' : 'Choose a metal first'}
+                            searchable
+                            required
+                          />
+                          <View className="flex-row gap-2">
+                            <View className="flex-1">
+                              <InputField label="Weight (g) *" value={item.weight} onChangeText={value => updateExchange(index, { weight: value })} keyboardType="decimal-pad" placeholder="0.000" />
+                            </View>
+                            <View className="flex-1">
+                              <InputField label="Wastage (g)" value={item.wastage_weight} onChangeText={value => updateExchange(index, { wastage_weight: value })} keyboardType="decimal-pad" placeholder="0.000" />
+                            </View>
+                          </View>
+                          <InputField
+                            label="Rate per gram (₹)"
+                            value={item.rate_per_unit}
+                            onChangeText={value => updateExchange(index, { rate_per_unit: value })}
+                            keyboardType="decimal-pad"
+                            placeholder={rate ? String(rate.rate_per_unit ?? rate.rate_per_gram ?? '') : 'Select purity or enter rate'}
+                          />
+                          <Text className="text-right text-xs font-extrabold text-amber-800">
+                            Credit: {currency(exchangeCredit)}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : null}
+              </View>
+
+              <View className="mb-2 rounded-2xl bg-[#173F35] p-4">
+                <Text className="mb-3 text-base font-extrabold text-white">Bill summary</Text>
+                <View className="flex-row justify-between py-1.5">
+                  <Text className="text-xs text-white/70">Subtotal</Text>
+                  <Text className="text-xs font-bold text-white">{currency(billTotals.subtotal)}</Text>
+                </View>
+                <View className="flex-row items-center justify-between py-1.5">
+                  <Text className="mr-2 text-xs text-white/70">Discount (₹)</Text>
+                  <TextInput
+                    accessibilityLabel="Bill discount"
+                    value={billDraft.discountAmount}
+                    onChangeText={value => setBillDraft(current => ({ ...current, discountAmount: value }))}
+                    keyboardType="decimal-pad"
+                    className="h-10 w-28 rounded-lg border border-white/20 bg-white/10 px-2 text-right text-sm font-bold text-white"
+                  />
+                </View>
+                {billDraft.paymentType === 'EXCHANGE_GOLD' ? (
+                  <View className="flex-row justify-between py-1.5">
+                    <Text className="text-xs text-white/70">Exchange credit</Text>
+                    <Text testID="billing-exchange-credit" className="text-xs font-bold text-amber-200">
+                      −{currency(billTotals.exchangeCredit)}
+                    </Text>
+                  </View>
+                ) : null}
+                <View className="flex-row gap-2">
+                  <View className="flex-1">
+                    <InputField label="GST %" value={billDraft.gstRate} onChangeText={value => setBillDraft(current => ({ ...current, gstRate: value }))} keyboardType="decimal-pad" placeholder="0" />
+                  </View>
+                  <View className="flex-1">
+                    <CustomDropdown
+                      label="Tax mode"
+                      value={billDraft.taxMode}
+                      options={[
+                        { value: 'Tax Exclusive', label: 'Tax Exclusive' },
+                        { value: 'Tax Inclusive', label: 'Tax Inclusive' },
+                      ]}
+                      onSelect={value => setBillDraft(current => ({ ...current, taxMode: value as BillDraft['taxMode'] }))}
+                    />
+                  </View>
+                </View>
+                <View className="flex-row justify-between border-t border-white/15 py-2">
+                  <Text className="text-xs text-white/70">GST amount</Text>
+                  <Text className="text-xs font-bold text-white">{currency(billTotals.gstAmount)}</Text>
+                </View>
+                <View className="flex-row justify-between border-t border-white/15 pt-3">
+                  <Text className="text-sm font-extrabold text-white">Total bill</Text>
+                  <Text className="text-lg font-black text-amber-200">{currency(billTotals.total)}</Text>
+                </View>
+                {billDraft.tackOrder && Number(billDraft.tackOrder.advance_amount) > 0 ? (
+                  <View className="mt-2 flex-row justify-between">
+                    <Text className="text-xs text-white/70">Advance paid</Text>
+                    <Text className="text-xs font-bold text-emerald-200">−{currency(billDraft.tackOrder.advance_amount)}</Text>
+                  </View>
+                ) : null}
+              </View>
+            </>
+          )}
+        </View>
+      </ScrollView>
+
+      <View
+        style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+        className="border-t border-[#E6E9E3] bg-[#F8F7F2] px-4 pt-3">
+        {billFormStep === 'products' && !billDraft.tackOrder ? (
+          <Pressable
+            testID="billing-next-button"
+            accessibilityRole="button"
+            disabled={billDraft.items.length === 0}
+            onPress={() => setBillFormStep('details')}
+            style={billDraft.items.length === 0
+              ? screenStyles.stepButtonDisabled
+              : screenStyles.stepButtonEnabled}
+            className="min-h-12 flex-row items-center justify-center rounded-xl">
+            <Text
+              style={billDraft.items.length === 0
+                ? screenStyles.stepButtonLabelDisabled
+                : screenStyles.stepButtonLabelEnabled}
+              className="text-sm font-extrabold">
+              Next Details
+            </Text>
+            <Text
+              style={billDraft.items.length === 0
+                ? screenStyles.stepButtonLabelDisabled
+                : screenStyles.stepButtonLabelEnabled}
+              className="ml-2 text-lg font-bold">
+              ›
+            </Text>
+          </Pressable>
+        ) : (
+          <View className="flex-row gap-3">
+            {!billDraft.tackOrder ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setBillFormStep('products')}
+                className="min-h-12 flex-1 items-center justify-center rounded-xl border border-[#07564B] bg-white">
+                <Text className="text-sm font-extrabold text-[#07564B]">Back to products</Text>
+              </Pressable>
+            ) : null}
+            <Pressable
+              testID="billing-save-button"
+              accessibilityRole="button"
+              disabled={billSaving}
+              onPress={() => void saveBill()}
+              className={`min-h-12 flex-1 flex-row items-center justify-center rounded-xl px-5 ${billSaving ? 'bg-[#8DA69B]' : 'bg-[#07564B]'}`}>
+              {billSaving ? <ActivityIndicator color="white" /> : <Check size={18} color="white" />}
+              <Text className="ml-2 text-sm font-extrabold text-white">
+                {billSaving ? 'Saving bill…' : editingBillId ? 'Update bill' : 'Save bill'}
+              </Text>
+            </Pressable>
+          </View>
+        )}
       </View>
-    </ScrollView>
+    </View>
   );
 
   const renderOrderList = () => (
@@ -2094,7 +2472,7 @@ export default function OrdersManagement({
                             textAlignVertical="center"
                             placeholder="0.000"
                             placeholderTextColor="#9AA6A1"
-                            style={{ paddingVertical: 0 }}
+                            style={screenStyles.weightInput}
                             className="h-11 w-24 rounded-lg border border-[#DDE6E0] bg-white px-2 text-xs font-bold text-[#173F35]"
                           />
                           <Text className="ml-1 text-[10px] text-[#6B7E76]">g</Text>
@@ -2216,17 +2594,21 @@ export default function OrdersManagement({
             accessibilityRole="button"
             disabled={orderDraft.items.length === 0}
             onPress={() => setOrderFormStep('details')}
-            style={{
-              backgroundColor: orderDraft.items.length === 0 ? '#B7C7C0' : '#07564B',
-            }}
+            style={orderDraft.items.length === 0
+              ? screenStyles.stepButtonDisabled
+              : screenStyles.stepButtonEnabled}
             className="min-h-12 flex-row items-center justify-center rounded-xl">
             <Text
-              style={{ color: orderDraft.items.length === 0 ? '#52645F' : '#FFFFFF' }}
+              style={orderDraft.items.length === 0
+                ? screenStyles.stepButtonLabelDisabled
+                : screenStyles.stepButtonLabelEnabled}
               className="text-sm font-extrabold">
               Next Details
             </Text>
             <Text
-              style={{ color: orderDraft.items.length === 0 ? '#52645F' : '#FFFFFF' }}
+              style={orderDraft.items.length === 0
+                ? screenStyles.stepButtonLabelDisabled
+                : screenStyles.stepButtonLabelEnabled}
               className="ml-2 text-lg font-bold">
               ›
             </Text>

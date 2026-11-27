@@ -350,9 +350,31 @@ test('routes shop admins to the admin dashboard and its API', async () => {
                       purity: '999',
                       rate_per_gram: 10000,
                     },
+                    {
+                      metal_type: 'Gold',
+                      purity: '916',
+                      rate_per_gram: 9000,
+                    },
                   ],
                 },
               }
+            : path === '/categories/manage'
+                ? {
+                    data: [{
+                      catId: 'gold-jewellery',
+                      name: 'Gold Jewellery',
+                      status: 'Active',
+                    }],
+                  }
+                : path === '/metals/manage'
+                  ? {
+                      data: [{
+                        id: 1,
+                        name: 'Gold',
+                        purity: '916',
+                        status: 'Active',
+                      }],
+                    }
             : path === '/billings' || path === '/tack-orders'
               ? { data: [] }
               : path === '/products/mine'
@@ -365,6 +387,7 @@ test('routes shop admins to the admin dashboard and its API', async () => {
                           category: 'Necklace',
                           metal_type: 'Gold',
                           purity: '22K',
+                          images: ['https://images.example.test/necklace.jpg'],
                           final_selling_price: '10000',
                           net_weight: '20',
                           status: 'Active',
@@ -455,6 +478,53 @@ test('routes shop admins to the admin dashboard and its API', async () => {
     renderer.root.findByProps({ testID: 'billing-form-scroll' }).props
       .contentContainerStyle.paddingBottom,
   ).toBeGreaterThanOrEqual(24);
+  expect(renderer.root.findByProps({ testID: 'billing-product-14' })).toBeDefined();
+  await act(async () => {
+    renderer.root
+      .findByProps({ accessibilityLabel: 'Add Necklace to bill' })
+      .props.onPress();
+  });
+  expect(
+    renderer.root.findByProps({ testID: 'billing-next-button' }).props.disabled,
+  ).toBe(false);
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'billing-next-button' }).props.onPress();
+  });
+  expect(renderer.root.findByProps({ testID: 'billing-customer-details' })).toBeDefined();
+  await act(async () => {
+    renderer.root.findByProps({ testID: 'billing-payment-exchange' }).props.onPress();
+    await new Promise<void>(resolve => setImmediate(resolve));
+  });
+  expect(renderer.root.findByProps({ accessibilityLabel: 'Category *' })).toBeDefined();
+  expect(renderer.root.findByProps({ accessibilityLabel: 'Metal *' })).toBeDefined();
+  expect(renderer.root.findByProps({ accessibilityLabel: 'Purity *' })).toBeDefined();
+  expect(mockGet).toHaveBeenCalledWith('/categories/manage');
+  expect(mockGet).toHaveBeenCalledWith('/metals/manage');
+  const chooseExchangeOption = async (label: string, optionLabel: string) => {
+    await act(async () => {
+      renderer.root.findByProps({ accessibilityLabel: label }).props.onPress();
+    });
+    const option = renderer.root.findByProps({
+      accessibilityLabel: `${label} option ${optionLabel}`,
+    });
+    await act(async () => {
+      option.props.onPress();
+    });
+  };
+  await chooseExchangeOption('Category *', 'Gold Jewellery');
+  await chooseExchangeOption('Metal *', 'Gold');
+  await chooseExchangeOption('Purity *', '22K / 916');
+  expect(
+    renderer.root.findByProps({ accessibilityLabel: 'Rate per gram (₹)' }).props.value,
+  ).toBe('9000');
+  await act(async () => {
+    renderer.root
+      .findByProps({ accessibilityLabel: 'Weight (g) *' })
+      .props.onChangeText('2');
+  });
+  expect(
+    renderer.root.findByProps({ testID: 'billing-exchange-credit' }).props.children,
+  ).toEqual(['−', '₹18,000.00']);
   expect(
     renderer.root.findByProps({ testID: 'admin-header-container' }).props.style,
   ).toEqual({ display: 'none' });

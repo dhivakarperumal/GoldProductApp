@@ -103,6 +103,7 @@ export function CustomDropdown({
                 <Pressable
                   key={option.value}
                   accessibilityRole="button"
+                  accessibilityLabel={`${label} option ${option.label}`}
                   accessibilityState={{ selected: option.value === value }}
                   onPress={() => {
                     onSelect(option.value);
