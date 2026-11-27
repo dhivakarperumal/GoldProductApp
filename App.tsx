@@ -907,7 +907,7 @@ function AppContent() {
           ? 'Profile:users'
           : isPaymentManagementVisible
             ? 'Profile:payments'
-            : 'Profile'
+            : 'More'
       : superAdminTab;
 
   return (

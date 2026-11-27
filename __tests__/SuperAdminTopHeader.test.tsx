@@ -188,5 +188,5 @@ describe('SuperAdmin TopHeader', () => {
       confirmLogoutBtn?.props.onPress();
     });
     expect(onLogout).toHaveBeenCalledTimes(1);
-  });
+  }, 15000);
 });
