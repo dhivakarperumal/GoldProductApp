@@ -487,6 +487,19 @@ test('routes shop admins to the admin dashboard and its API', async () => {
       .props.onPress();
   });
   expect(
+    renderer.root.findByProps({ testID: 'billing-product-added-14' }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findByProps({
+      accessibilityLabel: 'Added to bill, quantity 1',
+    }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findByProps({
+      accessibilityLabel: 'Add another Necklace to bill',
+    }).props.accessibilityState,
+  ).toEqual({ selected: true });
+  expect(
     renderer.root.findByProps({ testID: 'billing-next-button' }).props.disabled,
   ).toBe(false);
   await act(async () => {

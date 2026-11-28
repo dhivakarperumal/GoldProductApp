@@ -1803,6 +1803,7 @@ export default function OrdersManagement({
                           {isAdded ? (
                             <View
                               testID={`billing-product-added-${String(product.id)}`}
+                              accessibilityLabel={`Added to bill, quantity ${addedQuantity}`}
                               pointerEvents="none"
                               className="absolute right-2 top-2 z-10 flex-row items-center rounded-full border border-[#DDE6E0] bg-white px-2 py-1">
                               <CheckCircle2 size={13} color="#07564B" />
