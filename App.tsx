@@ -32,6 +32,7 @@ import CreateCustomer from './src/Admin/Loans/CreateCustomer';
 import LoanDetails from './src/Admin/Loans/LoanDetails';
 import Products from './src/Admin/Products/Products';
 import AddProduct from './src/Admin/Products/AddProduct';
+import ProductDetails from './src/Admin/Products/ProductDetails';
 import StockDetails from './src/Admin/Products/StockDetails';
 import Categories from './src/Admin/Products/Categories';
 import Metals from './src/Admin/Products/Metals';
@@ -781,6 +782,25 @@ function AppContent() {
             active={activeAdminScreen === 'Products:all'}
           >
             <Products onNavigate={navigateAdminProduct} />
+          </CachedScreen>
+          <CachedScreen
+            cacheKey="admin-Products-viewProduct"
+            visited={
+              visitedAdminScreens.has('Products:viewProduct') &&
+              adminProductId !== null
+            }
+            active={
+              activeAdminScreen === 'Products:viewProduct' &&
+              adminProductId !== null
+            }
+          >
+            {adminProductId !== null ? (
+              <ProductDetails
+                productId={adminProductId}
+                onBack={() => navigateAdminProduct('all')}
+                onEdit={() => navigateAdminProduct('addProduct', adminProductId)}
+              />
+            ) : null}
           </CachedScreen>
           <CachedScreen
             cacheKey="admin-Products-addProduct"

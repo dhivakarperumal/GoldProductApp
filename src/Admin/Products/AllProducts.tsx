@@ -95,7 +95,6 @@ export default function AllProducts({ onNavigate }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [categoryError, setCategoryError] = useState('');
-  const [selected, setSelected] = useState<Product | null>(null);
 
   const loadProducts = useCallback(async () => {
     setError('');
@@ -181,7 +180,6 @@ export default function AllProducts({ onNavigate }: Props) {
           onPress: async () => {
             try {
               await api.delete(`/products/${product.id}`);
-              setSelected(null);
               await loadProducts();
               showAlert('Product deleted', 'The product was removed successfully.', {
                 variant: 'success',
@@ -432,7 +430,7 @@ export default function AllProducts({ onNavigate }: Props) {
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel={`View ${product.name || 'product'}`}
-                      onPress={() => setSelected(product)}
+                      onPress={() => onNavigate('viewProduct', product.id)}
                       className="h-8 w-8 items-center justify-center rounded-lg border border-[#E8D596] bg-white">
                       <Eye size={16} color="#07564B" />
                     </Pressable>
@@ -483,46 +481,6 @@ export default function AllProducts({ onNavigate }: Props) {
         </View>
       </ScrollView>
 
-      {selected ? (
-        <View className="absolute inset-0 justify-end bg-black/40">
-          <Pressable accessibilityLabel="Close product details" onPress={() => setSelected(null)} className="flex-1" />
-          <View className="max-h-[78%] rounded-t-3xl bg-white p-5">
-            <View className="mb-3 flex-row items-center justify-between">
-              <Text className="flex-1 text-lg font-extrabold text-[#173F35]">{selected.name || 'Product details'}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Close product details"
-                onPress={() => setSelected(null)}
-                className="rounded-xl border border-[#E8D596] bg-white px-3 py-2">
-                <Text className="font-bold text-[#07564B]">Close</Text>
-              </Pressable>
-            </View>
-            <ScrollView>
-              {[
-                ['Product code', selected.product_code],
-                ['Category', selected.category],
-                ['Subcategory', selected.subcategory],
-                ['Metal type', selected.metal_type],
-                ['Product type', selected.product_type],
-                ['Purity', selected.purity],
-                ['Gross weight', selected.gross_weight],
-                ['Net weight', selected.net_weight],
-                ['Stock', selected.total_stock],
-                ['Stock status', selected.stock_status],
-                ['MRP', currency(selected.mrp)],
-                ['Offer price', currency(selected.offer_price || selected.final_price)],
-                ['Description', selected.full_description || selected.description],
-                ['Care instructions', selected.care_instructions],
-              ].map(([label, value]) => (
-                <View key={String(label)} className="border-b border-[#F1F2EE] py-2">
-                  <Text className="text-xs font-bold uppercase text-[#6B7E76]">{String(label)}</Text>
-                  <Text className="mt-1 text-sm text-[#173F35]">{String(value || '—')}</Text>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      ) : null}
     </View>
   );
 }

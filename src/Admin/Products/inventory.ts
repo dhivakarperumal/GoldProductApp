@@ -45,7 +45,13 @@ export type Metal = {
   totalProducts?: number;
 };
 
-export type InventoryScreen = 'all' | 'addProduct' | 'stock' | 'categories' | 'metals';
+export type InventoryScreen =
+  | 'all'
+  | 'viewProduct'
+  | 'addProduct'
+  | 'stock'
+  | 'categories'
+  | 'metals';
 
 export function parseArray(value: unknown): string[] {
   if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string');
