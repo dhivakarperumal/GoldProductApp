@@ -25,6 +25,7 @@ export function CustomDropdown({
   required = false,
   searchable = false,
   variant = 'default',
+  labelClassName,
 }: {
   label: string;
   value: string;
@@ -34,6 +35,7 @@ export function CustomDropdown({
   required?: boolean;
   searchable?: boolean;
   variant?: 'default' | 'filter' | 'glass';
+  labelClassName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -49,8 +51,8 @@ export function CustomDropdown({
         style={isGlass ? glassStyles.label : undefined}
         className={
           isGlass
-            ? 'mb-1.5 ml-1 text-xs font-bold uppercase tracking-[0.8px]'
-            : 'mb-1.5 text-xs font-bold uppercase tracking-wide text-[#173F35]'
+            ? `mb-1.5 ml-1 text-xs font-bold uppercase tracking-[0.8px] ${labelClassName || ''}`
+            : `mb-1.5 text-xs font-bold uppercase tracking-wide ${labelClassName || 'text-[#173F35]'}`
         }>
         {label}
         {required ? (

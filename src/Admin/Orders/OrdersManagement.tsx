@@ -40,6 +40,7 @@ import DashboardMetricCard, {
   dashboardMetricPalettes,
 } from '../Components/DashboardMetricCard';
 import { CustomDropdown, DatePicker } from '../Loans/FormControls';
+import { INDIAN_STATES_AND_UTS } from '../Loans/loanOptions';
 import type { Category, Metal } from '../Products/inventory';
 import CreateBillScreen from './CreateBillScreen';
 import CreateTackOrderScreen from './CreateTackOrderScreen';
@@ -512,6 +513,7 @@ function billStatus(bill: Bill): string {
 
 function InputField({
   label,
+  labelClassName = 'text-[#52645F]',
   value,
   onChangeText,
   placeholder,
@@ -520,6 +522,7 @@ function InputField({
   editable = true,
 }: {
   label: string;
+  labelClassName?: string;
   value: string;
   onChangeText: (value: string) => void;
   placeholder?: string;
@@ -529,7 +532,7 @@ function InputField({
 }) {
   return (
     <View className="mb-3">
-      <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]">
+      <Text className={`mb-1.5 text-xs font-bold uppercase tracking-wide ${labelClassName}`}>
         {label}
       </Text>
       <TextInput
@@ -2556,7 +2559,19 @@ export default function OrdersManagement({
                     <View className="flex-1"><InputField label="District" value={orderDraft.customer.district || ''} onChangeText={value => updateOrderCustomer('district', value)} placeholder="District" /></View>
                   </View>
                   <View className="flex-row gap-2">
-                    <View className="flex-1"><InputField label="State" value={orderDraft.customer.state || ''} onChangeText={value => updateOrderCustomer('state', value)} placeholder="State" /></View>
+                    <View className="flex-1">
+                      <CustomDropdown
+                        label="State"
+                        value={orderDraft.customer.state || ''}
+                        options={INDIAN_STATES_AND_UTS.map(state => ({
+                          value: state,
+                          label: state,
+                        }))}
+                        onSelect={value => updateOrderCustomer('state', value)}
+                        placeholder="Select state"
+                        searchable
+                      />
+                    </View>
                     <View className="flex-1"><InputField label="PIN code" value={orderDraft.customer.pincode || ''} onChangeText={value => updateOrderCustomer('pincode', value)} keyboardType="number-pad" placeholder="6 digits" /></View>
                   </View>
                 </View>
@@ -2567,7 +2582,7 @@ export default function OrdersManagement({
                     <Text className="text-xs text-white/70">Subtotal</Text>
                     <Text className="text-xs font-bold text-white">{currency(orderTotals.subtotal)}</Text>
                   </View>
-                  <InputField label="GST rate (%)" value={orderDraft.gstRate} onChangeText={value => setOrderDraft(current => ({ ...current, gstRate: value }))} keyboardType="decimal-pad" placeholder="0" />
+                  <InputField label="GST rate (%)" labelClassName="text-white/80" value={orderDraft.gstRate} onChangeText={value => setOrderDraft(current => ({ ...current, gstRate: value }))} keyboardType="decimal-pad" placeholder="0" />
                   <Pressable
                     testID="take-order-gst-toggle"
                     accessibilityRole="checkbox"
@@ -2589,6 +2604,7 @@ export default function OrdersManagement({
                     <View className="flex-1">
                       <CustomDropdown
                         label="Discount type"
+                        labelClassName="text-white/80"
                         value={orderDraft.discountType}
                         options={[
                           { value: 'Percent', label: 'Percent' },
@@ -2598,10 +2614,10 @@ export default function OrdersManagement({
                       />
                     </View>
                     <View className="flex-1">
-                      <InputField label="Discount" value={orderDraft.discountValue} onChangeText={value => setOrderDraft(current => ({ ...current, discountValue: value }))} keyboardType="decimal-pad" placeholder="0" />
+                      <InputField label="Discount" labelClassName="text-white/80" value={orderDraft.discountValue} onChangeText={value => setOrderDraft(current => ({ ...current, discountValue: value }))} keyboardType="decimal-pad" placeholder="0" />
                     </View>
                   </View>
-                  <InputField label="Advance amount (₹)" value={orderDraft.advanceAmount} onChangeText={value => setOrderDraft(current => ({ ...current, advanceAmount: value }))} keyboardType="decimal-pad" placeholder="0" />
+                  <InputField label="Advance amount (₹)" labelClassName="text-white/80" value={orderDraft.advanceAmount} onChangeText={value => setOrderDraft(current => ({ ...current, advanceAmount: value }))} keyboardType="decimal-pad" placeholder="0" />
                   <View className="flex-row justify-between py-1">
                     <Text className="text-xs text-white/70">Discount applied</Text>
                     <Text testID="take-order-discount-amount" className="text-xs font-bold text-white">−{currency(orderTotals.discount)}</Text>
