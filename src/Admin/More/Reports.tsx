@@ -21,6 +21,7 @@ import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
 import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import { CustomDropdown, DatePicker } from '../Loans/FormControls';
+import { shareCsvFile } from '../../utils/shareCsv';
 
 type Props = { onBack: () => void };
 type DateRange = { preset: string; startDate: string; endDate: string };
@@ -251,9 +252,14 @@ export default function Reports({ onBack }: Props) {
   const shareCsv = async () => {
     if (!reportsData) return;
     try {
-      await Share.share({
+      const fileRange = rangeLabel
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') || 'all-time';
+      await shareCsvFile({
+        fileName: `gold-shop-report-${fileRange}.csv`,
         title: 'Gold Shop Report CSV',
-        message: createReportCsv(reportsData, rangeLabel),
+        contents: createReportCsv(reportsData, rangeLabel),
       });
     } catch (error) {
       showAlert('Could not share report data', getErrorMessage(error), { variant: 'error' });
@@ -377,7 +383,7 @@ export default function Reports({ onBack }: Props) {
               })}
             />
 
-            <View className="mb-4 rounded-2xl border border-[#ECE7D8] bg-white p-4">
+            <View className="mb-4 rounded-2xl border border-[#E8D596] bg-white p-4 shadow-sm">
               <View className="mb-4 flex-row items-start justify-between">
                 <View>
                   <Text className="text-base font-extrabold text-[#173F35]">Sales trend</Text>
@@ -420,7 +426,7 @@ export default function Reports({ onBack }: Props) {
               )}
             </View>
 
-            <View className="mb-4 rounded-2xl border border-[#ECE7D8] bg-white p-4">
+            <View className="mb-4 rounded-2xl border border-[#E8D596] bg-white p-4 shadow-sm">
               <View className="mb-3 flex-row items-center justify-between">
                 <Text className="text-base font-extrabold text-[#173F35]">Loan status</Text>
                 <Text className="text-xs font-semibold text-[#6B7E76]">
@@ -450,7 +456,7 @@ export default function Reports({ onBack }: Props) {
               })}
             </View>
 
-            <View className="mb-4 rounded-2xl border border-[#ECE7D8] bg-white p-4">
+            <View className="mb-4 rounded-2xl border border-[#E8D596] bg-white p-4 shadow-sm">
               <Text className="mb-3 text-base font-extrabold text-[#173F35]">Recent loans</Text>
               {(reportsData.recentLoans || []).length ? (
                 reportsData.recentLoans?.map(loan => (
@@ -479,7 +485,7 @@ export default function Reports({ onBack }: Props) {
               )}
             </View>
 
-            <View className="mb-4 rounded-2xl border border-[#ECE7D8] bg-white p-4">
+            <View className="mb-4 rounded-2xl border border-[#E8D596] bg-white p-4 shadow-sm">
               <Text className="mb-3 text-base font-extrabold text-[#173F35]">Top products</Text>
               {(reportsData.topProducts || []).length ? (
                 reportsData.topProducts?.map(product => (

@@ -6,7 +6,6 @@ import {
   Platform,
   Pressable,
   RefreshControl,
-  Share,
   ScrollView,
   Text,
   TextInput,
@@ -30,6 +29,7 @@ import InnerHeader from '../../Components/InnerHeader';
 import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import { CustomDropdown, DatePicker, Field } from '../Loans/FormControls';
 import { currency, inventoryError } from '../Products/inventory';
+import { shareCsvFile } from '../../utils/shareCsv';
 
 type Props = { onBack: () => void };
 type Dealer = {
@@ -185,7 +185,6 @@ export default function DealerPurchases({ onBack }: Props) {
   const [rangeStart, setRangeStart] = useState('');
   const [rangeEnd, setRangeEnd] = useState('');
   const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -577,11 +576,15 @@ export default function DealerPurchases({ onBack }: Props) {
         item.outstanding,
       ]),
     ];
-    const escapeCsv = (value: string | number) =>
-      `"${String(value).replaceAll('"', '""')}"`;
+    const escapeCsv = (value: unknown) =>
+      `"${String(value ?? '').replace(/"/g, '""')}"`;
     const csv = rows.map(row => row.map(escapeCsv).join(',')).join('\n');
     try {
-      await Share.share({ title: 'Dealer purchases', message: csv });
+      await shareCsvFile({
+        fileName: `dealer-purchases-${today()}.csv`,
+        title: 'Dealer Purchases & Payables',
+        contents: csv,
+      });
     } catch (error) {
       showAlert('Could not export purchases', inventoryError(error), {
         variant: 'error',
@@ -744,46 +747,6 @@ export default function DealerPurchases({ onBack }: Props) {
             <Text className="text-sm font-bold text-[#173F35]">Export CSV</Text>
           </Pressable>
         </View>
-        <View className="mb-4 flex-row items-center justify-between">
-          <Text className="text-sm font-bold text-[#52645F]">View</Text>
-          <View className="flex-row rounded-xl bg-[#F3F4F1] p-1">
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Show purchases as a list"
-              accessibilityState={{ selected: viewMode === 'list' }}
-              onPress={() => setViewMode('list')}
-              className={`h-10 px-4 items-center justify-center rounded-lg ${
-                viewMode === 'list' ? 'bg-[#07564B]' : ''
-              }`}
-            >
-              <Text
-                className={`text-xs font-bold ${
-                  viewMode === 'list' ? 'text-white' : 'text-[#6B7E76]'
-                }`}
-              >
-                List
-              </Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Show purchases as cards"
-              accessibilityState={{ selected: viewMode === 'grid' }}
-              onPress={() => setViewMode('grid')}
-              className={`h-10 px-4 items-center justify-center rounded-lg ${
-                viewMode === 'grid' ? 'bg-[#07564B]' : ''
-              }`}
-            >
-              <Text
-                className={`text-xs font-bold ${
-                  viewMode === 'grid' ? 'text-white' : 'text-[#6B7E76]'
-                }`}
-              >
-                Cards
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-
         {loadError ? (
           <View className="mb-3 rounded-xl bg-[#FFF1F0] p-3">
             <Text className="text-sm text-[#B42332]">{loadError}</Text>
@@ -795,99 +758,64 @@ export default function DealerPurchases({ onBack }: Props) {
         {loading && purchases.length === 0 ? (
           <ActivityIndicator className="py-8" color="#07564B" />
         ) : visiblePurchases.length ? (
-          visiblePurchases.map((item, index) =>
-            viewMode === 'list' ? (
-              <View
-                key={String(item.id)}
-                className="mb-2 rounded-xl border border-[#E6E9E3] bg-white p-3"
-              >
-                <View className="flex-row items-start justify-between gap-3">
-                  <View className="flex-1">
-                    <Text className="font-extrabold text-[#07564B]">
-                      {item.document_number}
-                    </Text>
-                    <Text className="mt-1 text-xs text-[#52645F]">
-                      {item.dealer_name || '—'} ·{' '}
-                      {displayDocType(item.document_type)}
-                    </Text>
-                    <Text className="mt-1 text-[10px] text-[#6B7E76]">
-                      {displayDate(item.document_date)} · Due{' '}
-                      {displayDate(item.due_date)}
-                    </Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="font-extrabold text-[#173F35]">
-                      {currency(item.outstanding)}
-                    </Text>
-                    <Text className="text-[10px] text-[#6B7E76]">
-                      Outstanding
-                    </Text>
-                  </View>
+          visiblePurchases.map((item, index) => (
+            <View
+              key={String(item.id)}
+              className="mb-3 rounded-2xl border border-[#E8D596] bg-white p-4 shadow-sm"
+            >
+              <View className="flex-row items-start justify-between gap-3">
+                <View className="flex-1">
+                  <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">
+                    Entry {index + 1}
+                  </Text>
+                  <Text className="mt-1 font-extrabold text-[#07564B]">
+                    {item.document_number}
+                  </Text>
+                  <Text className="mt-1 text-[10px] font-semibold uppercase text-[#6B7E76]">
+                    {displayDocType(item.document_type)}
+                  </Text>
                 </View>
-                <Text className="mt-2 border-t border-[#F1F2EE] pt-2 text-xs text-[#6B7E76]">
-                  Invoice ref: {item.supplier_invoice_number || '—'} · Paid{' '}
-                  {currency(item.paid_amount)} of {currency(item.total)}
+                <View className="items-end">
+                  <Text className="font-extrabold text-[#173F35]">
+                    {currency(item.outstanding)}
+                  </Text>
+                  <Text className="text-[10px] text-[#6B7E76]">
+                    Outstanding
+                  </Text>
+                </View>
+              </View>
+              <View className="mt-3 border-t border-[#F1F2EE] pt-3">
+                <Text className="text-sm text-[#52645F]">
+                  Dealer: {item.dealer_name || '—'}
+                </Text>
+                <Text className="mt-1 text-sm text-[#52645F]">
+                  Invoice ref: {item.supplier_invoice_number || '—'}
+                </Text>
+                <Text className="mt-1 text-sm text-[#52645F]">
+                  Date: {displayDate(item.document_date)} · Due:{' '}
+                  {displayDate(item.due_date)}
                 </Text>
               </View>
-            ) : (
-              <View
-                key={String(item.id)}
-                className="mb-3 rounded-2xl border border-[#E6E9E3] bg-white p-4"
-              >
-                <View className="flex-row items-start justify-between gap-3">
-                  <View className="flex-1">
-                    <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">
-                      Entry {index + 1}
-                    </Text>
-                    <Text className="mt-1 font-extrabold text-[#07564B]">
-                      {item.document_number}
-                    </Text>
-                    <Text className="mt-1 text-[10px] font-semibold uppercase text-[#6B7E76]">
-                      {displayDocType(item.document_type)}
-                    </Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="font-extrabold text-[#173F35]">
-                      {currency(item.outstanding)}
-                    </Text>
-                    <Text className="text-[10px] text-[#6B7E76]">
-                      Outstanding
-                    </Text>
-                  </View>
-                </View>
-                <View className="mt-3 border-t border-[#F1F2EE] pt-3">
-                  <Text className="text-sm text-[#52645F]">
-                    Dealer: {item.dealer_name || '—'}
+              <View className="mt-3 flex-row gap-2">
+                <View className="flex-1 rounded-xl bg-[#F8F7F2] p-3">
+                  <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">
+                    Amount
                   </Text>
-                  <Text className="mt-1 text-sm text-[#52645F]">
-                    Invoice ref: {item.supplier_invoice_number || '—'}
-                  </Text>
-                  <Text className="mt-1 text-sm text-[#52645F]">
-                    Date: {displayDate(item.document_date)} · Due:{' '}
-                    {displayDate(item.due_date)}
+                  <Text className="mt-1 font-bold text-[#173F35]">
+                    {currency(item.total)}
                   </Text>
                 </View>
-                <View className="mt-3 flex-row gap-2">
-                  <View className="flex-1 rounded-xl bg-[#F8F7F2] p-3">
-                    <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">
-                      Amount
-                    </Text>
-                    <Text className="mt-1 font-bold text-[#173F35]">
-                      {currency(item.total)}
-                    </Text>
-                  </View>
-                  <View className="flex-1 rounded-xl bg-[#F8F7F2] p-3">
-                    <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">
-                      Paid
-                    </Text>
-                    <Text className="mt-1 font-bold text-[#173F35]">
-                      {currency(item.paid_amount)}
-                    </Text>
-                  </View>
+                <View className="flex-1 rounded-xl bg-[#F8F7F2] p-3">
+                  <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">
+                    Paid
+                  </Text>
+                  <Text className="mt-1 font-bold text-[#173F35]">
+                    {currency(item.paid_amount)}
+                  </Text>
                 </View>
               </View>
-            ),
-          )
+            </View>
+          ))
         ) : !loadError ? (
           <View className="items-center rounded-2xl bg-white p-8">
             <Text className="font-bold text-[#173F35]">
