@@ -650,7 +650,7 @@ export default function FundManagement({ onBack }: Props) {
       />
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pb-28"
+        contentContainerClassName="px-4 pb-28 pt-5"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
