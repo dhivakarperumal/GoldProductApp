@@ -20,9 +20,11 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
   List,
   Plus,
   Search,
+  UserRound,
   Wallet,
   X,
 } from 'lucide-react-native';
@@ -579,17 +581,23 @@ export default function FundManagement({ onBack }: Props) {
           </View>
           <View className="mt-3 flex-row gap-2">
             <View className="min-w-0 flex-1 rounded-xl bg-[#F7F9F7] p-3">
-              <Text className="text-[10px] font-extrabold uppercase tracking-wide text-[#52645F]">
-                Payment
-              </Text>
+              <View className="flex-row items-center">
+                <CreditCard size={13} color="#52645F" />
+                <Text className="ml-1 text-[10px] font-extrabold uppercase tracking-wide text-[#52645F]">
+                  Payment
+                </Text>
+              </View>
               <Text numberOfLines={1} className="mt-1 text-xs font-bold text-[#173F35]">
                 {transaction.payment_method || '—'}
               </Text>
             </View>
             <View className="min-w-0 flex-1 rounded-xl bg-[#F7F9F7] p-3">
-              <Text className="text-[10px] font-extrabold uppercase tracking-wide text-[#52645F]">
-                Admin
-              </Text>
+              <View className="flex-row items-center">
+                <UserRound size={13} color="#52645F" />
+                <Text className="ml-1 text-[10px] font-extrabold uppercase tracking-wide text-[#52645F]">
+                  Admin
+                </Text>
+              </View>
               <Text numberOfLines={1} className="mt-1 text-xs font-bold text-[#173F35]">
                 {transaction.admin_name || '—'}
               </Text>
