@@ -201,6 +201,35 @@ test('restores a saved session without showing the login screen', async () => {
   expect(mockRemoveItem).not.toHaveBeenCalled();
 });
 
+test('returns subscription-restricted saved sessions to login', async () => {
+  mockGetItem.mockImplementation((key: unknown) =>
+    Promise.resolve(key === 'hasSeenWelcomeScreen' ? 'true' : 'expired-token'),
+  );
+  mockGet.mockImplementation((path: unknown) =>
+    path === '/auth/me'
+      ? Promise.reject({
+          status: 403,
+          message: 'Your free trial has ended.',
+          data: { code: 'TRIAL_EXPIRED' },
+        })
+      : Promise.resolve({ data: [] }),
+  );
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<App />);
+    await new Promise<void>(resolve => setImmediate(resolve));
+    await new Promise<void>(resolve => setImmediate(resolve));
+  });
+
+  expect(mockRemoveItem).toHaveBeenCalledWith('userToken');
+  expect(mockClearTokenCache).toHaveBeenCalled();
+  expect(renderer.root.findByProps({ children: 'Sign In' })).toBeDefined();
+  expect(
+    renderer.root.findAllByProps({ children: 'Unable to verify your account' }),
+  ).toHaveLength(0);
+});
+
 test('does not redirect to login when session storage cannot be read', async () => {
   mockGetItem.mockImplementation((key: unknown) =>
     key === 'hasSeenWelcomeScreen'

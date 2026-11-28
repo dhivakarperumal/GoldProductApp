@@ -117,6 +117,29 @@ function normalizeRole(role: unknown): AccountRole | null {
     : null;
 }
 
+function getApiErrorDetails(error: unknown) {
+  if (typeof error !== 'object' || error === null) return {};
+
+  const status =
+    'status' in error && typeof error.status === 'number'
+      ? error.status
+      : undefined;
+  const message =
+    'message' in error && typeof error.message === 'string'
+      ? error.message
+      : undefined;
+  const data =
+    'data' in error && typeof error.data === 'object' && error.data !== null
+      ? error.data
+      : null;
+  const code =
+    data && 'code' in data && typeof data.code === 'string'
+      ? data.code
+      : undefined;
+
+  return { status, code, message };
+}
+
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -284,20 +307,46 @@ function AppContent() {
             error,
           );
         }
-        if (isMounted) {
-          setSessionError(
-            error instanceof Error
-              ? error.message
-              : 'Unable to verify the saved account. Please try again.',
-          );
+        if (!isMounted) return;
+
+        const errorDetails = getApiErrorDetails(error);
+        const requiresSignIn =
+          errorDetails.status === 401 ||
+          errorDetails.status === 403 ||
+          errorDetails.code === 'TRIAL_EXPIRED' ||
+          errorDetails.code === 'SUBSCRIPTION_REQUIRED';
+
+        if (requiresSignIn) {
+          AsyncStorage.removeItem('userToken')
+            .then(() => {
+              if (!isMounted) return;
+              clearTokenCache();
+              setAccountRole(null);
+              setAdminName('Super Admin');
+              setAdminEmail('');
+              setSessionError(null);
+              setIsAuthenticated(false);
+            })
+            .catch(storageError => {
+              if (__DEV__) {
+                console.warn(
+                  '[Auth] Could not clear an expired saved session:',
+                  storageError,
+                );
+              }
+              if (isMounted) {
+                setSessionError(
+                  'The saved session is no longer valid, but it could not be cleared. Please retry.',
+                );
+              }
+            });
+          return;
         }
-        if (isMounted) {
-          setSessionError(
-            error instanceof Error
-              ? error.message
-              : 'Unable to verify the saved account. Please try again.',
-          );
-        }
+
+        setSessionError(
+          errorDetails.message ||
+            'Unable to verify the saved account. Please try again.',
+        );
       });
 
     return () => {
