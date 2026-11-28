@@ -613,7 +613,7 @@ export default function DailyGoldRate({ onBack }: Props) {
           </View>
         </View>
 
-        <View className="mb-4 rounded-2xl bg-[#07564B] p-4">
+        <View className="mb-4 rounded-2xl border border-[#DDBB57] bg-[#07564B] p-4">
           <View className="flex-row items-start justify-between gap-3">
             <View className="flex-1">
               <Text className="text-xs font-bold uppercase tracking-wide text-[#C5E7DA]">
@@ -743,7 +743,7 @@ export default function DailyGoldRate({ onBack }: Props) {
                 {visibleBatches.map(batch => (
                   <View
                     key={batch.batch_id}
-                    className="mb-3 rounded-2xl border border-[#E6E9E3] bg-white p-4"
+                    className="mb-3 rounded-2xl border border-[#E8D596] bg-white p-4"
                   >
                     <View className="flex-row items-center justify-between gap-2">
                       <Text className="flex-1 font-extrabold text-[#173F35]">
@@ -802,7 +802,7 @@ export default function DailyGoldRate({ onBack }: Props) {
                   </View>
                 ))}
                 {batches.length === 0 ? (
-                  <View className="mb-4 rounded-2xl bg-white p-5">
+                  <View className="mb-4 rounded-2xl border border-[#E8D596] bg-white p-5">
                     <Text className="text-sm text-[#6B7E76]">
                       No rate sets found.
                     </Text>
@@ -842,7 +842,7 @@ export default function DailyGoldRate({ onBack }: Props) {
                 {visibleHistory.map(item => (
                   <View
                     key={String(item.id)}
-                    className="mb-2 rounded-xl border border-[#E6E9E3] bg-white p-3"
+                    className="mb-2 rounded-xl border border-[#E8D596] bg-white p-3"
                   >
                     <View className="flex-row items-start justify-between gap-2">
                       <Text className="flex-1 font-bold text-[#173F35]">
@@ -870,7 +870,7 @@ export default function DailyGoldRate({ onBack }: Props) {
                   </View>
                 ))}
                 {history.length === 0 ? (
-                  <View className="mb-4 rounded-2xl bg-white p-5">
+                  <View className="mb-4 rounded-2xl border border-[#E8D596] bg-white p-5">
                     <Text className="text-sm text-[#6B7E76]">
                       No rate changes have been recorded.
                     </Text>
@@ -962,7 +962,8 @@ export default function DailyGoldRate({ onBack }: Props) {
             </Pressable>
           </View>
           <ScrollView
-            contentContainerClassName="p-4 pb-10"
+            className="flex-1"
+            contentContainerClassName="p-4 pb-4"
             keyboardShouldPersistTaps="handled"
             automaticallyAdjustKeyboardInsets
           >
@@ -1127,32 +1128,35 @@ export default function DailyGoldRate({ onBack }: Props) {
               ) : null}
             </View>
 
-            <View className="flex-row gap-3">
-              <Pressable
-                accessibilityRole="button"
-                disabled={saving}
-                onPress={() => setFormOpen(false)}
-                className="min-h-12 flex-1 items-center justify-center rounded-xl border border-[#E6E9E3] bg-white"
-              >
-                <Text className="font-bold text-[#52645F]">Cancel</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                disabled={saving}
-                onPress={saveAndActivate}
-                className="min-h-12 flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-[#07564B] disabled:opacity-50"
-              >
-                {saving ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Save size={17} color="white" />
-                )}
-                <Text className="font-extrabold text-white">
-                  {saving ? 'Saving…' : 'Save & Activate'}
-                </Text>
-              </Pressable>
-            </View>
           </ScrollView>
+          <View
+            style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+            className="flex-row gap-3 border-t border-[#E6E9E3] bg-[#F8F7F2] px-4 pt-3"
+          >
+            <Pressable
+              accessibilityRole="button"
+              disabled={saving}
+              onPress={() => setFormOpen(false)}
+              className="min-h-12 flex-1 items-center justify-center rounded-xl border border-[#E6E9E3] bg-white"
+            >
+              <Text className="font-bold text-[#52645F]">Cancel</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              disabled={saving}
+              onPress={saveAndActivate}
+              className="min-h-12 flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-[#07564B] disabled:opacity-50"
+            >
+              {saving ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Save size={17} color="white" />
+              )}
+              <Text className="font-extrabold text-white">
+                {saving ? 'Saving…' : 'Save & Activate'}
+              </Text>
+            </Pressable>
+          </View>
         </KeyboardAvoidingView>
       </Modal>
     </View>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -270,6 +271,7 @@ export function TimePickerField({
 
 export default function FundManagement({ onBack }: Props) {
   const { showAlert } = useCustomAlert();
+  const insets = useSafeAreaInsets();
   const [summary, setSummary] = useState<FundSummary | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [total, setTotal] = useState(0);
@@ -867,7 +869,10 @@ export default function FundManagement({ onBack }: Props) {
           if (!saving) setFormOpen(false);
         }}
       >
-        <View className="flex-1 bg-[#F8F7F2]">
+        <KeyboardAvoidingView
+          className="flex-1 bg-[#F8F7F2]"
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
           <View className="flex-row items-center justify-between bg-[#173F35] px-5 pb-4 pt-12">
             <View>
               <Text className="text-xs font-bold uppercase tracking-wide text-[#EAD78A]">
@@ -887,7 +892,8 @@ export default function FundManagement({ onBack }: Props) {
             </Pressable>
           </View>
           <ScrollView
-            contentContainerClassName="p-4 pb-10"
+            className="flex-1"
+            contentContainerClassName="p-4 pb-4"
             keyboardShouldPersistTaps="handled"
             automaticallyAdjustKeyboardInsets
           >
@@ -973,15 +979,18 @@ export default function FundManagement({ onBack }: Props) {
                 placeholder="Invoice, receipt, or reference number"
               />
             </View>
-            <View className="mt-4">
-              <SubmitButton
-                label="Save Entry"
-                loading={saving}
-                onPress={saveEntry}
-              />
-            </View>
           </ScrollView>
-        </View>
+          <View
+            style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+            className="border-t border-[#E6E9E3] bg-[#F8F7F2] px-4 pt-3"
+          >
+            <SubmitButton
+              label="Save Entry"
+              loading={saving}
+              onPress={saveEntry}
+            />
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

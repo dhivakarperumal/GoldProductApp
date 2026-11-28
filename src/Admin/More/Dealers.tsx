@@ -796,7 +796,8 @@ export default function Dealers({ onBack }: Props) {
             </Pressable>
           </View>
           <ScrollView
-            contentContainerClassName="p-4 pb-10"
+            className="flex-1"
+            contentContainerClassName="p-4 pb-4"
             keyboardShouldPersistTaps="handled"
             automaticallyAdjustKeyboardInsets
           >
@@ -1038,29 +1039,34 @@ export default function Dealers({ onBack }: Props) {
                 multiline
               />
             </View>
-            <View className="mt-4 flex-row gap-3">
-              <Pressable
-                disabled={saving}
-                onPress={() => setFormOpen(false)}
-                className="min-h-12 flex-1 items-center justify-center rounded-xl border border-[#E6E9E3] bg-white"
-              >
-                <Text className="font-bold text-[#52645F]">Cancel</Text>
-              </Pressable>
-              <Pressable
-                disabled={saving}
-                onPress={saveDealer}
-                className="min-h-12 flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-[#07564B] disabled:opacity-50"
-              >
-                {saving ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <Text className="font-extrabold text-white">
-                    {editingDealer ? 'Save Profile' : 'Create Dealer'}
-                  </Text>
-                )}
-              </Pressable>
-            </View>
           </ScrollView>
+          <View
+            style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+            className="flex-row gap-3 border-t border-[#E6E9E3] bg-[#F8F7F2] px-4 pt-3"
+          >
+            <Pressable
+              accessibilityRole="button"
+              disabled={saving}
+              onPress={() => setFormOpen(false)}
+              className="min-h-12 flex-1 items-center justify-center rounded-xl border border-[#E6E9E3] bg-white"
+            >
+              <Text className="font-bold text-[#52645F]">Cancel</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              disabled={saving}
+              onPress={saveDealer}
+              className="min-h-12 flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-[#07564B] disabled:opacity-50"
+            >
+              {saving ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text className="font-extrabold text-white">
+                  {editingDealer ? 'Save Profile' : 'Create Dealer'}
+                </Text>
+              )}
+            </Pressable>
+          </View>
         </KeyboardAvoidingView>
       </Modal>
 
