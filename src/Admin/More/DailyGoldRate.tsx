@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     zIndex: 100,
     elevation: 100,
   },
-  floatingActionButton: { zIndex: 100, elevation: 100 },
+  floatingActionButton: { bottom: 20, zIndex: 100, elevation: 100 },
 });
 type RateField = {
   key: string;
@@ -922,7 +922,7 @@ export default function DailyGoldRate({ onBack }: Props) {
           accessibilityHint="Opens the form to add daily metal and diamond rates"
           onPress={openNewForm}
           hitSlop={10}
-          style={[styles.floatingActionButton, { bottom: 20 }]}
+          style={styles.floatingActionButton}
           className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg"
         >
           <Plus size={24} color="white" />

@@ -759,8 +759,7 @@ export default function Dealers({ onBack }: Props) {
         accessibilityRole="button"
         accessibilityLabel="Register dealer"
         onPress={() => startDealerEdit()}
-        style={{ bottom: 20 }}
-        className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg"
+        className="absolute bottom-5 right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg"
       >
         <Plus size={24} color="white" />
       </Pressable>

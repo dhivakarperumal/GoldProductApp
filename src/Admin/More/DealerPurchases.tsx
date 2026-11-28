@@ -911,10 +911,7 @@ export default function DealerPurchases({ onBack }: Props) {
         />
       ) : null}
       {showActions ? (
-        <View
-          style={{ bottom: 92 }}
-          className="absolute right-5 items-end gap-3"
-        >
+        <View className="absolute bottom-[92px] right-5 items-end gap-3">
           <Pressable
             accessibilityRole="button"
             onPress={openPayment}
@@ -944,8 +941,7 @@ export default function DealerPurchases({ onBack }: Props) {
         }
         accessibilityState={{ expanded: showActions }}
         onPress={() => setShowActions(open => !open)}
-        style={{ bottom: 20 }}
-        className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg"
+        className="absolute bottom-5 right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg"
       >
         {showActions ? (
           <X size={24} color="white" />
