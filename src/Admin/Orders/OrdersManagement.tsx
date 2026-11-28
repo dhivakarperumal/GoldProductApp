@@ -1775,14 +1775,20 @@ export default function OrdersManagement({
                   <View className="flex-row flex-wrap justify-between">
                     {billProductResults.map(product => {
                       const image = mediaUrl(firstCatalogImage(product));
-                      const isAdded = billDraft.items.some(
-                        item => String(item.product_id) === String(product.id),
-                      );
+                      const addedQuantity = billDraft.items
+                        .filter(
+                          item =>
+                            String(item.product_id) === String(product.id),
+                        )
+                        .reduce((total, item) => total + item.quantity, 0);
+                      const isAdded = addedQuantity > 0;
                       return (
                         <View
                           key={String(product.id)}
                           testID={`billing-product-${String(product.id)}`}
-                          className="mb-3 w-[48%] overflow-hidden rounded-xl border border-[#E6E9E3] bg-white">
+                          className={`mb-3 w-[48%] overflow-hidden rounded-xl border bg-white ${
+                            isAdded ? 'border-[#07564B]' : 'border-[#E6E9E3]'
+                          }`}>
                           {image ? (
                             <Image
                               source={{ uri: image }}
@@ -1794,6 +1800,17 @@ export default function OrdersManagement({
                               <Package size={24} color="#07564B" />
                             </View>
                           )}
+                          {isAdded ? (
+                            <View
+                              testID={`billing-product-added-${String(product.id)}`}
+                              pointerEvents="none"
+                              className="absolute right-2 top-2 z-10 flex-row items-center rounded-full border border-[#DDE6E0] bg-white px-2 py-1">
+                              <CheckCircle2 size={13} color="#07564B" />
+                              <Text className="ml-1 text-[10px] font-bold text-[#07564B]">
+                                Added · Qty {addedQuantity}
+                              </Text>
+                            </View>
+                          ) : null}
                           <View className="p-2.5">
                             <Text numberOfLines={1} className="text-sm font-extrabold text-[#173F35]">
                               {product.name}
@@ -1811,9 +1828,16 @@ export default function OrdersManagement({
                               <Pressable
                                 accessibilityRole="button"
                                 accessibilityLabel={`${isAdded ? 'Add another' : 'Add'} ${product.name} to bill`}
+                                accessibilityState={{ selected: isAdded }}
                                 onPress={() => addBillProduct(product)}
-                                className="h-9 w-9 items-center justify-center rounded-lg bg-[#07564B]">
-                                <Plus size={18} color="white" />
+                                className={`h-9 w-9 items-center justify-center rounded-lg ${
+                                  isAdded ? 'bg-[#0A7A69]' : 'bg-[#07564B]'
+                                }`}>
+                                {isAdded ? (
+                                  <Check size={18} color="white" />
+                                ) : (
+                                  <Plus size={18} color="white" />
+                                )}
                               </Pressable>
                             </View>
                           </View>
