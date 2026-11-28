@@ -17,9 +17,9 @@ import DateTimePicker, {
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
-  LayoutGrid,
   List,
   Plus,
   Search,
@@ -51,7 +51,28 @@ const styles = StyleSheet.create({
     elevation: 100,
   },
   floatingActionButton: { bottom: 20, zIndex: 100, elevation: 100 },
+  transactionCard: {
+    borderWidth: 2,
+    borderLeftWidth: 5,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 9,
+    elevation: 5,
+  },
 });
+
+function transactionCardStyle(
+  borderColor: string,
+  sideBorder: string,
+  glowColor: string,
+) {
+  return {
+    ...styles.transactionCard,
+    borderColor,
+    borderLeftColor: sideBorder,
+    shadowColor: glowColor,
+  };
+}
 type DateRange = { preset: string; startDate: string; endDate: string };
 type FundSummary = {
   opening_balance?: string | number;
@@ -266,7 +287,6 @@ export default function FundManagement({ onBack }: Props) {
   const [transactionType, setTransactionType] = useState('ALL');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -467,49 +487,149 @@ export default function FundManagement({ onBack }: Props) {
 
   const renderTransaction = (transaction: Transaction, index: number) => {
     const isDebit = transaction.transaction_type === 'DEBIT';
-    const amountColor = isDebit ? '#B42332' : '#087443';
+    const isCredit = transaction.transaction_type === 'CREDIT';
+    const isFundAdded = transaction.transaction_type === 'FUND_ADDED';
+    const theme = isDebit
+      ? {
+          borderColor: '#E3A4A7',
+          glowColor: '#C94B52',
+          sideBorder: '#C94B52',
+          iconBackground: 'bg-[#FFF0F0]',
+          iconColor: '#B42332',
+          labelBackground: 'bg-[#FFF0F0]',
+          labelColor: 'text-[#B42332]',
+          amountColor: 'text-[#B42332]',
+          descriptionBackground: 'bg-[#FFF9F8]',
+          balanceBackground: 'bg-[#FBF3F3]',
+        }
+      : isCredit
+      ? {
+          borderColor: '#8DCBA5',
+          glowColor: '#168653',
+          sideBorder: '#168653',
+          iconBackground: 'bg-[#EAF7EF]',
+          iconColor: '#087443',
+          labelBackground: 'bg-[#EAF7EF]',
+          labelColor: 'text-[#087443]',
+          amountColor: 'text-[#087443]',
+          descriptionBackground: 'bg-[#F5FBF7]',
+          balanceBackground: 'bg-[#F2F8F4]',
+        }
+      : {
+          borderColor: '#E6C966',
+          glowColor: '#C79A2B',
+          sideBorder: '#C79A2B',
+          iconBackground: 'bg-[#FFF7DF]',
+          iconColor: '#A77B15',
+          labelBackground: 'bg-[#FFF7DF]',
+          labelColor: 'text-[#8D6811]',
+          amountColor: 'text-[#8D6811]',
+          descriptionBackground: 'bg-[#FFFCF2]',
+          balanceBackground: 'bg-[#FAF7EC]',
+        };
+    const amountSign = isDebit ? '−' : isCredit || isFundAdded ? '+' : '';
     return (
       <View
         key={String(transaction.id)}
-        className="mb-3 rounded-2xl border border-[#E6E9E3] bg-white p-4"
+        style={transactionCardStyle(
+          theme.borderColor,
+          theme.sideBorder,
+          theme.glowColor,
+        )}
+        className="mb-4 rounded-2xl border-2 bg-white"
       >
-        <View className="flex-row items-start justify-between gap-3">
-          <View className="flex-1">
-            <Text className="text-xs font-semibold text-[#8A8F8B]">
-              Entry {(page - 1) * PAGE_SIZE + index + 1}
-            </Text>
-            <Text className="mt-1 font-bold text-[#173F35]">
-              {typeLabel(transaction.transaction_type)}
+        <View className="p-4">
+          <View className="flex-row items-center justify-between gap-3">
+            <View className="min-w-0 flex-1 flex-row items-center">
+              <View
+                className={`h-10 w-10 items-center justify-center rounded-full ${theme.iconBackground}`}
+              >
+                {isDebit ? (
+                  <ArrowUpRight size={19} color={theme.iconColor} />
+                ) : isCredit ? (
+                  <ArrowDownLeft size={19} color={theme.iconColor} />
+                ) : (
+                  <Wallet size={19} color={theme.iconColor} />
+                )}
+              </View>
+              <View className="ml-3 min-w-0 flex-1">
+                <View
+                  className={`self-start rounded-full px-2.5 py-1 ${theme.labelBackground}`}
+                >
+                  <Text
+                    className={`text-[10px] font-extrabold uppercase tracking-wide ${theme.labelColor}`}
+                  >
+                    {typeLabel(transaction.transaction_type)}
+                  </Text>
+                </View>
+                <Text className="mt-1 text-[10px] font-semibold text-[#52645F]">
+                  Entry {(page - 1) * PAGE_SIZE + index + 1}
+                </Text>
+              </View>
+            </View>
+            <Text
+              numberOfLines={1}
+              className={`text-base font-black ${theme.amountColor}`}
+            >
+              {amountSign}
+              {currency(transaction.amount)}
             </Text>
           </View>
-          <Text
-            style={{ color: amountColor }}
-            className="text-base font-extrabold"
-          >
-            {currency(transaction.amount)}
-          </Text>
-        </View>
-        <Text className="mt-2 text-xs text-[#6B7E76]">
-          {displayDate(transaction.transaction_date)}
-        </Text>
-        <View className="mt-3 border-t border-[#F1F2EE] pt-3">
-          <Text className="text-sm text-[#52645F]">
-            Payment: {transaction.payment_method || '—'}
-          </Text>
-          <Text className="mt-1 text-sm text-[#52645F]">
-            Admin: {transaction.admin_name || '—'}
-          </Text>
-          <Text className="mt-1 text-sm text-[#52645F]">
-            Description: {transaction.description || '—'}
-          </Text>
-          {transaction.related_reference ? (
-            <Text className="mt-1 text-sm text-[#52645F]">
-              Reference: {transaction.related_reference}
+          <View className="mt-3 flex-row items-center">
+            <CalendarDays size={14} color="#52645F" />
+            <Text
+              numberOfLines={1}
+              className="ml-1.5 flex-1 text-xs font-medium text-[#52645F]"
+            >
+              {displayDate(transaction.transaction_date)}
             </Text>
+          </View>
+          <View className="mt-3 flex-row gap-2">
+            <View className="min-w-0 flex-1 rounded-xl bg-[#F7F9F7] p-3">
+              <Text className="text-[10px] font-extrabold uppercase tracking-wide text-[#52645F]">
+                Payment
+              </Text>
+              <Text numberOfLines={1} className="mt-1 text-xs font-bold text-[#173F35]">
+                {transaction.payment_method || '—'}
+              </Text>
+            </View>
+            <View className="min-w-0 flex-1 rounded-xl bg-[#F7F9F7] p-3">
+              <Text className="text-[10px] font-extrabold uppercase tracking-wide text-[#52645F]">
+                Admin
+              </Text>
+              <Text numberOfLines={1} className="mt-1 text-xs font-bold text-[#173F35]">
+                {transaction.admin_name || '—'}
+              </Text>
+            </View>
+          </View>
+          <View className={`mt-3 rounded-xl p-3 ${theme.descriptionBackground}`}>
+            <Text className="text-[10px] font-extrabold uppercase tracking-wide text-[#52645F]">
+              Description
+            </Text>
+            <Text className="mt-1 text-sm leading-5 text-[#52645F]">
+              {transaction.description || '—'}
+            </Text>
+          </View>
+          {transaction.related_reference ? (
+            <View className="mt-3 flex-row items-start">
+              <Text className="mr-2 text-xs font-bold text-[#52645F]">
+                Reference
+              </Text>
+              <Text className="flex-1 text-xs text-[#52645F]">
+                {transaction.related_reference}
+              </Text>
+            </View>
           ) : null}
-          <Text className="mt-2 text-sm font-bold text-[#173F35]">
-            Running Balance: {currency(transaction.running_balance)}
-          </Text>
+          <View
+            className={`mt-3 flex-row items-center justify-between rounded-xl px-3 py-2.5 ${theme.balanceBackground}`}
+          >
+            <Text className="text-xs font-semibold text-[#52645F]">
+              Running balance
+            </Text>
+            <Text className="text-sm font-extrabold text-[#173F35]">
+              {currency(transaction.running_balance)}
+            </Text>
+          </View>
         </View>
       </View>
     );
@@ -521,10 +641,11 @@ export default function FundManagement({ onBack }: Props) {
         title="Fund Management"
         sectionLabel="More"
         onBack={onBack}
+        bottomSpacing={false}
       />
       <ScrollView
         className="flex-1"
-        contentContainerClassName="p-4 pb-28"
+        contentContainerClassName="px-4 pb-28"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -658,40 +779,6 @@ export default function FundManagement({ onBack }: Props) {
             </Pressable>
           </>
         ) : null}
-        <View className="mb-4 flex-row items-center justify-between">
-          <Text className="text-sm font-bold text-[#52645F]">View</Text>
-          <View className="flex-row rounded-xl bg-[#F3F4F1] p-1">
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Show transactions as a list"
-              accessibilityState={{ selected: viewMode === 'list' }}
-              onPress={() => setViewMode('list')}
-              className={`h-10 w-11 items-center justify-center rounded-lg ${
-                viewMode === 'list' ? 'bg-[#07564B]' : ''
-              }`}
-            >
-              <List
-                size={18}
-                color={viewMode === 'list' ? 'white' : '#6B7E76'}
-              />
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Show transactions as cards"
-              accessibilityState={{ selected: viewMode === 'grid' }}
-              onPress={() => setViewMode('grid')}
-              className={`h-10 w-11 items-center justify-center rounded-lg ${
-                viewMode === 'grid' ? 'bg-[#07564B]' : ''
-              }`}
-            >
-              <LayoutGrid
-                size={18}
-                color={viewMode === 'grid' ? 'white' : '#6B7E76'}
-              />
-            </Pressable>
-          </View>
-        </View>
-
         {loadError ? (
           <View className="mb-3 rounded-xl bg-[#FFF1F0] p-3">
             <Text className="text-sm text-[#B42332]">{loadError}</Text>
@@ -705,18 +792,9 @@ export default function FundManagement({ onBack }: Props) {
             <ActivityIndicator color="#07564B" />
           </View>
         ) : transactions.length ? (
-          <View
-            className={
-              viewMode === 'grid' ? 'flex-row flex-wrap justify-between' : ''
-            }
-          >
+          <View>
             {transactions.map((transaction, index) => (
-              <View
-                key={String(transaction.id)}
-                className={viewMode === 'grid' ? 'w-[48%]' : 'w-full'}
-              >
-                {renderTransaction(transaction, index)}
-              </View>
+              renderTransaction(transaction, index)
             ))}
           </View>
         ) : !loadError ? (
