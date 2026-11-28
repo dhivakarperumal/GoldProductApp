@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Modal,
   Pressable,
   Platform,
@@ -79,11 +80,13 @@ export function CustomDropdown({
         <ChevronDown size={18} color={isGlass ? '#F5C451' : '#6B7E76'} />
       </Pressable>
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <View className="flex-1 justify-end bg-black/40">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1 justify-end bg-black/40">
           <Pressable accessibilityLabel="Close options" onPress={() => setOpen(false)} className="flex-1" />
           <View
-            style={{ paddingBottom: Math.max(insets.bottom, 32) }}
-            className="max-h-[70%] rounded-t-3xl bg-white">
+            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+            className={`rounded-t-3xl bg-white ${searchable ? 'max-h-[85%]' : 'max-h-[70%]'}`}>
             <View className="flex-row items-center justify-between rounded-t-3xl bg-[#173F35] px-5 py-4">
               <Text className="text-base font-extrabold text-white">Select {label}</Text>
               <Pressable accessibilityRole="button" accessibilityLabel="Close dropdown" onPress={() => setOpen(false)}>
@@ -123,7 +126,7 @@ export function CustomDropdown({
               ) : null}
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
