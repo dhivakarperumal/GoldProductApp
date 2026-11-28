@@ -93,8 +93,9 @@ type DashboardAccountPlan = {
   account_plan_type?: string;
   plan_name?: string;
   payment_status?: string;
-  trial_active?: boolean;
-  trial_days_remaining?: number;
+  trial_active?: boolean | number | string;
+  trial_days_remaining?: number | string | null;
+  trial_end_date?: string;
   account_end_date?: string;
 };
 
@@ -241,6 +242,37 @@ function formatDate(value: string | undefined) {
         month: 'short',
         year: 'numeric',
       });
+}
+
+function getTrialDaysRemaining(accountPlan?: DashboardAccountPlan | null) {
+  const configuredValue = accountPlan?.trial_days_remaining;
+  const configuredDays =
+    typeof configuredValue === 'number'
+      ? configuredValue
+      : typeof configuredValue === 'string' && configuredValue.trim()
+        ? Number(configuredValue)
+        : Number.NaN;
+  if (Number.isFinite(configuredDays)) return configuredDays;
+
+  const endDate = accountPlan?.trial_end_date || accountPlan?.account_end_date;
+  if (!endDate) return Number.NaN;
+  const endDateText = endDate.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(endDateText)) return Number.NaN;
+
+  const [year, month, day] = endDateText.split('-').map(Number);
+  const endDay = Date.UTC(year, month - 1, day) / 86_400_000;
+  if (
+    new Date(Date.UTC(year, month - 1, day)).toISOString().slice(0, 10) !==
+    endDateText
+  ) {
+    return Number.NaN;
+  }
+
+  const today = new Date();
+  const todayDay =
+    Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) /
+    86_400_000;
+  return endDay - todayDay + 1;
 }
 
 function MetricCardArtwork({
@@ -414,7 +446,8 @@ export default function Home({ onNavigate }: HomeProps) {
     useState(false);
   const [subscriptionRequestBusy, setSubscriptionRequestBusy] = useState(false);
   const [subscriptionRequestSent, setSubscriptionRequestSent] = useState(false);
-  const [trialWarningDismissed, setTrialWarningDismissed] = useState(false);
+  const [dismissedTrialReminderKey, setDismissedTrialReminderKey] =
+    useState('');
 
   const loadDashboard = useCallback(async () => {
     setErrorMessage('');
@@ -489,16 +522,22 @@ export default function Home({ onNavigate }: HomeProps) {
   ).slice(0, 5);
   const products = dashboard?.topProducts || [];
   const accountPlan = dashboard?.accountPlan;
-  const trialDaysRemaining = Number(accountPlan?.trial_days_remaining);
+  const trialDaysRemaining = getTrialDaysRemaining(accountPlan);
+  const trialFlag = accountPlan?.trial_active;
+  const accountPlanType = accountPlan?.account_plan_type?.trim().toLowerCase();
   const isActiveTrial =
-    accountPlan?.account_plan_type === 'trial' &&
-    accountPlan.trial_active === true;
+    trialFlag === true ||
+    trialFlag === 1 ||
+    (typeof trialFlag === 'string' &&
+      ['true', '1', 'yes'].includes(trialFlag.trim().toLowerCase())) ||
+    accountPlanType === 'trial';
+  const trialReminderKey = `${accountPlan?.trial_end_date || accountPlan?.account_end_date || ''}:${trialDaysRemaining}`;
   const showTrialWarning =
     isActiveTrial &&
     Number.isFinite(trialDaysRemaining) &&
     trialDaysRemaining >= 0 &&
     trialDaysRemaining < 3 &&
-    !trialWarningDismissed &&
+    dismissedTrialReminderKey !== trialReminderKey &&
     !subscriptionCheckoutVisible;
 
   const requestSuperAdminHelp = async () => {
@@ -587,7 +626,7 @@ export default function Home({ onNavigate }: HomeProps) {
             <Pressable
               accessibilityRole="button"
               onPress={() => {
-                setTrialWarningDismissed(true);
+                setDismissedTrialReminderKey(trialReminderKey);
                 setSubscriptionCheckoutVisible(true);
               }}
               className="mt-4 min-h-11 flex-row items-center justify-center rounded-xl bg-[#07564B] px-4">
@@ -846,7 +885,7 @@ export default function Home({ onNavigate }: HomeProps) {
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={() => setTrialWarningDismissed(true)}>
+      onRequestClose={() => setDismissedTrialReminderKey(trialReminderKey)}>
       <View className="flex-1 items-center justify-center bg-black/60 px-4">
         <View className="w-full max-w-md rounded-[26px] border border-[#E6D39A] bg-white p-5 shadow-2xl">
           <View className="h-12 w-12 items-center justify-center rounded-2xl bg-[#FFF5D6]">
@@ -870,7 +909,7 @@ export default function Home({ onNavigate }: HomeProps) {
           <Pressable
             accessibilityRole="button"
             onPress={() => {
-              setTrialWarningDismissed(true);
+              setDismissedTrialReminderKey(trialReminderKey);
               setSubscriptionCheckoutVisible(true);
             }}
             className="mt-5 min-h-12 items-center justify-center rounded-2xl bg-[#07564B] px-4">
@@ -893,7 +932,7 @@ export default function Home({ onNavigate }: HomeProps) {
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            onPress={() => setTrialWarningDismissed(true)}
+            onPress={() => setDismissedTrialReminderKey(trialReminderKey)}
             className="mt-2 min-h-10 items-center justify-center rounded-xl">
             <Text className="text-sm font-semibold text-[#64748B]">
               Remind me later
@@ -907,7 +946,7 @@ export default function Home({ onNavigate }: HomeProps) {
       onClose={() => setSubscriptionCheckoutVisible(false)}
       onPaymentComplete={async () => {
         setSubscriptionCheckoutVisible(false);
-        setTrialWarningDismissed(true);
+        setDismissedTrialReminderKey(trialReminderKey);
         await loadDashboard();
       }}
     />

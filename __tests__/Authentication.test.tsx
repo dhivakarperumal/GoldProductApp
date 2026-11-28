@@ -789,14 +789,45 @@ test('opens subscription checkout with scoped access after an expired-trial logi
   expect(onLogin).not.toHaveBeenCalled();
 });
 
-test('shows a reminder for an active trial with two days remaining', async () => {
+test('shows a reminder when a trial has two days remaining even if the trial flag is absent', async () => {
   const renderer = await renderDashboardWithAccountPlan({
-    account_plan_type: 'trial',
-    trial_active: true,
-    trial_days_remaining: 2,
+    account_plan_type: 'TRIAL',
+    trial_days_remaining: '2',
     payment_status: 'paid',
     plan_name: 'Gold Shop',
     account_end_date: '2026-11-30',
+  });
+
+  expect(
+    renderer.root.findByProps({ children: 'Your free trial is ending soon' }),
+  ).toBeDefined();
+});
+
+test('shows a reminder when the trial flag is active without a trial account type', async () => {
+  const renderer = await renderDashboardWithAccountPlan({
+    account_plan_type: 'live',
+    trial_active: 'true',
+    trial_days_remaining: 2,
+    payment_status: 'paid',
+  });
+
+  expect(
+    renderer.root.findByProps({ children: 'Your free trial is ending soon' }),
+  ).toBeDefined();
+});
+
+test('calculates the reminder from the trial end date when remaining days are missing', async () => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const trialEndDate = [
+    tomorrow.getFullYear(),
+    String(tomorrow.getMonth() + 1).padStart(2, '0'),
+    String(tomorrow.getDate()).padStart(2, '0'),
+  ].join('-');
+  const renderer = await renderDashboardWithAccountPlan({
+    account_plan_type: 'trial',
+    trial_end_date: trialEndDate,
+    payment_status: 'paid',
   });
 
   expect(
