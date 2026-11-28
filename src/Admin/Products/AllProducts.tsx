@@ -62,6 +62,19 @@ function firstImage(product: Product): string | undefined {
   return parseArray(firstVariant?.images)[0];
 }
 
+function stockStatusClasses(status?: string) {
+  switch (status?.trim().toLowerCase()) {
+    case 'in stock':
+      return 'border-emerald-200 bg-emerald-50 text-emerald-800';
+    case 'low stock':
+      return 'border-amber-200 bg-amber-50 text-amber-800';
+    case 'out of stock':
+      return 'border-rose-200 bg-rose-50 text-rose-800';
+    default:
+      return 'border-[#E6E9E3] bg-[#F3F4F1] text-[#52645F]';
+  }
+}
+
 export default function AllProducts({ onNavigate }: Props) {
   const { showAlert } = useCustomAlert();
   const [products, setProducts] = useState<Product[]>([]);
@@ -379,8 +392,9 @@ export default function AllProducts({ onNavigate }: Props) {
 
         {products.map(product => {
           const image = mediaUrl(firstImage(product));
+          const stockStatus = product.stock_status?.trim() || 'Status unavailable';
           return (
-            <View key={String(product.id)} className="mb-3 flex-row rounded-2xl bg-white p-3 shadow-sm">
+            <View key={String(product.id)} className="mb-3 flex-row rounded-2xl border border-[#E6E9E3] bg-white p-3 shadow-sm">
               {image ? (
                 <Image source={{ uri: image }} className="h-24 w-24 rounded-xl bg-[#F3F4F1]" />
               ) : (
@@ -401,17 +415,29 @@ export default function AllProducts({ onNavigate }: Props) {
                   </Text>
                 </View>
                 <View className="mt-2 flex-row items-center justify-between">
-                  <Text className="text-xs font-semibold text-[#6B7E76]">
-                    Stock {Number(product.total_stock) || 0} · {product.stock_status || '—'}
-                  </Text>
-                  <View className="flex-row gap-3">
+                  <View className="mr-2 flex-1 flex-row flex-wrap items-center gap-2">
+                    <View
+                      className={`rounded-full border px-2.5 py-1 ${stockStatusClasses(product.stock_status)}`}>
+                      <Text className="text-[10px] font-extrabold">
+                        {stockStatus}
+                      </Text>
+                    </View>
+                    <Text className="text-xs font-semibold text-[#6B7E76]">
+                      Qty {Number(product.total_stock) || 0}
+                    </Text>
+                  </View>
+                  <View className="flex-row gap-2">
                     <Pressable accessibilityLabel="View product" onPress={() => setSelected(product)}>
                       <Eye size={18} color="#07564B" />
                     </Pressable>
                     <Pressable
-                      accessibilityLabel="Edit product"
+                      accessibilityRole="button"
+                      accessibilityLabel={`Edit ${product.name || 'product'}`}
+                      hitSlop={8}
                       onPress={() => onNavigate('addProduct', product.id)}>
-                      <Pencil size={18} color="#07564B" />
+                      <View className="h-9 w-9 items-center justify-center rounded-xl border border-[#E8D596] bg-[#FFF8E7]">
+                        <Pencil size={17} color="#8A5A00" strokeWidth={2.5} />
+                      </View>
                     </Pressable>
                     <Pressable accessibilityLabel="Delete product" onPress={() => showDeleteConfirmation(product)}>
                       <Trash2 size={18} color="#B42332" />

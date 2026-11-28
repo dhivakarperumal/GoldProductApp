@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -21,6 +22,7 @@ import {
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SubmitButton } from '../Loans/FormControls';
 import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import {
@@ -59,6 +61,7 @@ function firstProductImage(product: Product): string | undefined {
 
 export default function StockDetails({ onBack }: Props) {
   const { showAlert } = useCustomAlert();
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [stats, setStats] = useState({
@@ -116,6 +119,13 @@ export default function StockDetails({ onBack }: Props) {
     () => Boolean(selected?.variants.some(variant => variant.sizesStock && Object.keys(variant.sizesStock).length)),
     [selected],
   );
+
+  const closeStockEditor = () => {
+    if (saving || loadingProduct) return;
+    setSelected(null);
+    setAdditions({});
+    setManualAddition('');
+  };
 
   const selectProduct = async (product: Product) => {
     setSelected(null);
@@ -189,6 +199,7 @@ export default function StockDetails({ onBack }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <InnerHeader title="Stock Details" sectionLabel="Shop Inventory" onBack={onBack} />
       <ScrollView
+        className="flex-1"
         contentContainerClassName="p-4 pb-9"
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets>
@@ -256,7 +267,7 @@ export default function StockDetails({ onBack }: Props) {
             </Pressable>
           ) : null}
         </View>
-        {loading || loadingProduct ? (
+        {loading ? (
           <View className="py-5"><ActivityIndicator color="#07564B" /></View>
         ) : null}
         {error ? (
@@ -267,102 +278,163 @@ export default function StockDetails({ onBack }: Props) {
             </Pressable>
           </View>
         ) : null}
-        {!selected && !loading && !loadingProduct ? (
-          <View className="mb-4 rounded-2xl bg-white p-2">
-            {products.map(product => {
+        {!loading
+          ? products.map(product => {
               const image = mediaUrl(firstProductImage(product));
               return (
                 <Pressable
                   key={String(product.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Add stock to ${product.name || 'product'}`}
                   onPress={() => selectProduct(product)}
-                  className="flex-row items-center border-b border-[#F1F2EE] p-2">
+                  className="mb-3 flex-row items-center rounded-2xl border border-[#E6E9E3] bg-white p-3 shadow-sm">
                   {image ? (
-                    <Image source={{ uri: image }} className="h-12 w-12 rounded-lg bg-[#F3F4F1]" />
+                    <Image source={{ uri: image }} className="h-16 w-16 rounded-xl bg-[#F3F4F1]" />
                   ) : (
-                    <View className="h-12 w-12 items-center justify-center rounded-lg bg-[#EAF3EF]">
-                      <Text className="text-[10px] font-bold text-[#07564B]">Image</Text>
+                    <View className="h-16 w-16 items-center justify-center rounded-xl bg-[#EAF3EF]">
+                      <Text className="text-xs font-bold text-[#07564B]">Product</Text>
                     </View>
                   )}
                   <View className="ml-3 flex-1">
-                    <Text numberOfLines={1} className="font-bold text-[#173F35]">{product.name || 'Unnamed product'}</Text>
-                    <Text className="mt-1 text-xs text-[#6B7E76]">{product.product_code || 'No SKU'} · Stock {Number(product.total_stock) || 0}</Text>
+                    <Text numberOfLines={1} className="font-extrabold text-[#173F35]">
+                      {product.name || 'Unnamed product'}
+                    </Text>
+                    <Text className="mt-1 text-xs text-[#6B7E76]">
+                      {product.product_code || 'No SKU'}
+                    </Text>
+                    <Text className="mt-1 text-xs font-bold text-[#07564B]">
+                      Stock {Number(product.total_stock) || 0} · {product.stock_status || '—'}
+                    </Text>
                   </View>
                 </Pressable>
               );
-            })}
-            {products.length === 0 && !error ? (
-              <Text className="p-5 text-center text-sm text-[#6B7E76]">No matching products.</Text>
-            ) : null}
-          </View>
-        ) : null}
-
-        {selected ? (
-          <View className="rounded-2xl bg-white p-4 shadow-sm">
-            <View className="mb-4 flex-row items-center">
-              {mediaUrl(firstProductImage(selected)) ? (
-                <Image source={{ uri: mediaUrl(firstProductImage(selected)) }} className="h-16 w-16 rounded-xl bg-[#F3F4F1]" />
-              ) : (
-                <View className="h-16 w-16 items-center justify-center rounded-xl bg-[#EAF3EF]">
-                  <Text className="text-xs font-bold text-[#07564B]">Product</Text>
-                </View>
-              )}
-              <View className="ml-3 flex-1">
-                <Text className="font-extrabold text-[#173F35]">{selected.name}</Text>
-                <Text className="mt-1 text-xs text-[#6B7E76]">{selected.product_code || 'No SKU'}</Text>
-                <Text className="mt-1 text-xs font-bold text-[#07564B]">Current stock: {Number(selected.total_stock) || 0}</Text>
-              </View>
-              <Pressable onPress={() => setSelected(null)} className="px-2 py-1">
-                <Text className="font-bold text-[#07564B]">Change</Text>
-              </Pressable>
-            </View>
-
-            {hasSizes ? selected.variants.map((variant, variantIndex) => (
-              <View key={`variant-${variantIndex}`} className="mb-3 rounded-xl bg-[#F8F7F2] p-3">
-                <Text className="mb-2 text-sm font-bold text-[#173F35]">
-                  {String(variant.color || variant.name || `Variant ${variantIndex + 1}`)}
-                </Text>
-                {Object.entries(variant.sizesStock || {}).map(([size, current]) => {
-                  const key = `${variantIndex}-${size}`;
-                  return (
-                    <View key={key} className="mb-2 flex-row items-center justify-between gap-2">
-                      <View className="flex-1">
-                        <Text className="text-sm font-semibold text-[#173F35]">{size}</Text>
-                        <Text className="text-xs text-[#6B7E76]">Current: {Number(current) || 0}</Text>
-                      </View>
-                      <TextInput
-                        accessibilityLabel={`Add stock for ${size}`}
-                        value={additions[key] || ''}
-                        onChangeText={value => setAdditions(currentAdditions => ({
-                          ...currentAdditions,
-                          [key]: value.replace(/\D/g, ''),
-                        }))}
-                        keyboardType="number-pad"
-                        placeholder="Add qty"
-                        placeholderTextColor="#9AA6A1"
-                        className="min-h-11 w-28 rounded-xl border border-[#E6E9E3] bg-white px-3 text-sm text-[#173F35]"
-                      />
-                    </View>
-                  );
-                })}
-              </View>
-            )) : (
-              <View className="mb-4">
-                <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]">Stock quantity to add</Text>
-                <TextInput
-                  accessibilityLabel="Stock quantity to add"
-                  value={manualAddition}
-                  onChangeText={value => setManualAddition(value.replace(/\D/g, ''))}
-                  keyboardType="number-pad"
-                  placeholder="Enter quantity"
-                  placeholderTextColor="#9AA6A1"
-                  className="min-h-12 rounded-xl border border-[#E6E9E3] bg-white px-3.5 text-sm text-[#173F35]"
-                />
-              </View>
-            )}
-            <SubmitButton label="Save Stock" loading={saving} onPress={save} />
+            })
+          : null}
+        {!loading && products.length === 0 && !error ? (
+          <View className="items-center rounded-2xl border border-[#ECE7D8] bg-white p-8">
+            <Text className="text-sm font-bold text-[#173F35]">No matching products.</Text>
           </View>
         ) : null}
       </ScrollView>
+
+      <Modal
+        visible={loadingProduct || Boolean(selected)}
+        transparent
+        animationType="slide"
+        statusBarTranslucent
+        onRequestClose={closeStockEditor}>
+        <View className="flex-1 justify-end bg-black/50">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close stock adjustment"
+            disabled={saving || loadingProduct}
+            onPress={closeStockEditor}
+            className="flex-1"
+          />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+            className="max-h-[88%] shrink rounded-t-3xl bg-[#F8F7F2]">
+            <View className="flex-row items-center justify-between rounded-t-3xl bg-[#173F35] px-5 py-4">
+              <View className="flex-1 pr-3">
+                <Text className="text-[10px] font-bold uppercase tracking-widest text-[#EAD78A]">
+                  Stock Adjustment
+                </Text>
+                <Text numberOfLines={1} className="mt-1 text-base font-extrabold text-white">
+                  {selected?.name || 'Loading product...'}
+                </Text>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Close stock adjustment"
+                disabled={saving || loadingProduct}
+                onPress={closeStockEditor}
+                className="h-10 w-10 items-center justify-center rounded-full bg-white/10">
+                <X size={20} color="#EAD78A" />
+              </Pressable>
+            </View>
+            {loadingProduct ? (
+              <View className="items-center p-8">
+                <ActivityIndicator color="#07564B" />
+                <Text className="mt-2 text-sm text-[#6B7E76]">Loading product details...</Text>
+              </View>
+            ) : selected ? (
+              <ScrollView
+                className="shrink"
+                contentContainerClassName="p-4 pb-6"
+                keyboardShouldPersistTaps="handled"
+                automaticallyAdjustKeyboardInsets>
+                <View className="mb-4 flex-row items-center rounded-2xl border border-[#E6E9E3] bg-white p-4">
+                  {mediaUrl(firstProductImage(selected)) ? (
+                    <Image source={{ uri: mediaUrl(firstProductImage(selected)) }} className="h-16 w-16 rounded-xl bg-[#F3F4F1]" />
+                  ) : (
+                    <View className="h-16 w-16 items-center justify-center rounded-xl bg-[#EAF3EF]">
+                      <Text className="text-xs font-bold text-[#07564B]">Product</Text>
+                    </View>
+                  )}
+                  <View className="ml-3 flex-1">
+                    <Text className="font-extrabold text-[#173F35]">{selected.name}</Text>
+                    <Text className="mt-1 text-xs text-[#6B7E76]">{selected.product_code || 'No SKU'}</Text>
+                    <Text className="mt-1 text-xs font-bold text-[#07564B]">
+                      Current stock: {Number(selected.total_stock) || 0}
+                    </Text>
+                  </View>
+                </View>
+                {hasSizes ? selected.variants.map((variant, variantIndex) => (
+                  <View key={`variant-${variantIndex}`} className="mb-3 rounded-xl bg-white p-3">
+                    <Text className="mb-2 text-sm font-bold text-[#173F35]">
+                      {String(variant.color || variant.name || `Variant ${variantIndex + 1}`)}
+                    </Text>
+                    {Object.entries(variant.sizesStock || {}).map(([size, current]) => {
+                      const key = `${variantIndex}-${size}`;
+                      return (
+                        <View key={key} className="mb-2 flex-row items-center justify-between gap-2">
+                          <View className="flex-1">
+                            <Text className="text-sm font-semibold text-[#173F35]">{size}</Text>
+                            <Text className="text-xs text-[#6B7E76]">Current: {Number(current) || 0}</Text>
+                          </View>
+                          <TextInput
+                            accessibilityLabel={`Add stock for ${size}`}
+                            value={additions[key] || ''}
+                            onChangeText={value => setAdditions(currentAdditions => ({
+                              ...currentAdditions,
+                              [key]: value.replace(/\D/g, ''),
+                            }))}
+                            keyboardType="number-pad"
+                            placeholder="Add qty"
+                            placeholderTextColor="#9AA6A1"
+                            className="min-h-11 w-28 rounded-xl border border-[#E6E9E3] bg-white px-3 text-sm text-[#173F35]"
+                          />
+                        </View>
+                      );
+                    })}
+                  </View>
+                )) : (
+                  <View className="mb-4 rounded-2xl bg-white p-4">
+                    <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]">
+                      Stock quantity to add
+                    </Text>
+                    <TextInput
+                      accessibilityLabel="Stock quantity to add"
+                      value={manualAddition}
+                      onChangeText={value => setManualAddition(value.replace(/\D/g, ''))}
+                      keyboardType="number-pad"
+                      placeholder="Enter quantity"
+                      placeholderTextColor="#9AA6A1"
+                      className="min-h-12 rounded-xl border border-[#E6E9E3] bg-white px-3.5 text-sm text-[#173F35]"
+                    />
+                  </View>
+                )}
+              </ScrollView>
+            ) : null}
+            {selected ? (
+              <View className="border-t border-[#E6E9E3] bg-[#F8F7F2] px-4 pt-3">
+                <SubmitButton label="Save Stock" loading={saving} onPress={save} compact />
+              </View>
+            ) : null}
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }

@@ -130,7 +130,8 @@ export default function MetalForm({ visible, metal, onClose, onSaved }: Props) {
           </Pressable>
         </View>
         <ScrollView
-          contentContainerClassName="p-[18px] pb-10"
+          className="flex-1"
+          contentContainerClassName="p-[18px] pb-6"
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets>
           <View className="mb-4 rounded-2xl bg-white p-4">
@@ -165,7 +166,15 @@ export default function MetalForm({ visible, metal, onClose, onSaved }: Props) {
               <Text className="font-bold text-[#07564B]">{newImage || image ? 'Change image' : 'Choose image'}</Text>
             </Pressable>
           </View>
-          <Pressable disabled={saving} onPress={save} className="min-h-12 items-center justify-center rounded-xl bg-[#07564B]">
+        </ScrollView>
+        <View
+          style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+          className="border-t border-[#E6E9E3] bg-[#F8F7F2] px-4 pt-3">
+          <Pressable
+            accessibilityRole="button"
+            disabled={saving}
+            onPress={save}
+            className="min-h-12 items-center justify-center rounded-xl bg-[#07564B] disabled:opacity-60">
             {saving ? (
               <ActivityIndicator color="white" />
             ) : (
@@ -174,7 +183,7 @@ export default function MetalForm({ visible, metal, onClose, onSaved }: Props) {
               </Text>
             )}
           </Pressable>
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     </Modal>
   );

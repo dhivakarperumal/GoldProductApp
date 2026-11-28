@@ -628,6 +628,7 @@ export default function AddProduct({ productId, onBack, onSaved }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <InnerHeader title={productId ? 'Edit Product' : 'Add Product'} sectionLabel="Shop Inventory" onBack={onBack} />
       <ScrollView
+        className="flex-1"
         contentContainerClassName="p-4 pb-[42px]"
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets>
@@ -878,12 +879,15 @@ export default function AddProduct({ productId, onBack, onSaved }: Props) {
           </View>
         </Section>
 
+      </ScrollView>
+      <View className="border-t border-[#E6E9E3] bg-[#F8F7F2] px-4 py-3">
         <SubmitButton
           label={productId ? 'Update Product' : 'Save Product'}
           loading={saving || uploading}
           onPress={save}
+          compact
         />
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
