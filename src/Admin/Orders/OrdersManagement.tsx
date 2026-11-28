@@ -2264,46 +2264,84 @@ export default function OrdersManagement({
           const payment = orderPaymentStatus(order);
           const itemCount = order.items.reduce((total, item) => total + item.quantity, 0);
           return (
-            <View key={String(order.id)} className="mb-3 rounded-2xl border border-[#E6E9E3] bg-white p-4">
-              <View className="mb-3 flex-row items-start justify-between">
-                <View className="mr-2 flex-1">
-                  <Text className="text-[10px] font-bold uppercase tracking-wider text-orange-700">Take order</Text>
-                  <Text className="mt-1 text-base font-black text-[#173F35]">{order.order_no}</Text>
-                </View>
-                <View className={`rounded-full px-2.5 py-1 ${status === 'Ready' ? 'bg-sky-50' : status === 'Completed' ? 'bg-emerald-50' : 'bg-amber-50'}`}>
-                  <Text className={`text-[10px] font-extrabold ${status === 'Ready' ? 'text-sky-800' : status === 'Completed' ? 'text-emerald-800' : 'text-amber-800'}`}>{status}</Text>
-                </View>
-              </View>
-              <View className="flex-row items-center">
-                <UserRound size={15} color="#B7791F" />
-                <Text className="ml-2 flex-1 text-sm font-bold text-[#173F35]">{order.customer.name}</Text>
-                <Text className="text-[10px] font-bold text-[#6B7E76]">{payment}</Text>
-              </View>
-              <View className="mt-1 flex-row items-center">
-                <CalendarDays size={14} color="#7B8A83" />
-                <Text className="ml-2 text-xs text-[#6B7E76]">{dateLabel(order.created_at)}</Text>
-              </View>
-              <View className="my-3 border-y border-[#F0F2EF] py-3">
-                <Text className="mb-2 text-[10px] font-extrabold uppercase tracking-wide text-[#7B8A83]">
-                  Products · {itemCount} item{itemCount === 1 ? '' : 's'}
-                </Text>
-                {order.items.map((item, index) => (
-                  <View key={`${String(item.product_id)}-${index}`} className="mb-1 flex-row justify-between">
-                    <Text numberOfLines={1} className="mr-2 flex-1 text-xs text-[#52645F]">
-                      {item.product_name} · Qty {item.quantity}
+            <View key={String(order.id)} className="mb-4 rounded-2xl border border-[#E2E9E4] bg-white p-4 shadow-sm">
+              <View className="flex-row items-start justify-between">
+                <View className="mr-3 flex-1">
+                  <View className="self-start rounded-full bg-[#FFF5E8] px-2.5 py-1">
+                    <Text className="text-[10px] font-extrabold uppercase tracking-wider text-[#A94F2A]">
+                      Take order
                     </Text>
-                    <Text className="text-xs font-bold text-[#173F35]">{currency(item.total_price ?? item.price * item.quantity)}</Text>
+                  </View>
+                  <Text numberOfLines={1} className="mt-2 text-lg font-black text-[#173F35]">
+                    {order.order_no}
+                  </Text>
+                </View>
+                <View className={`rounded-full px-3 py-1.5 ${status === 'Ready' ? 'bg-sky-50' : status === 'Completed' ? 'bg-emerald-50' : 'bg-amber-50'}`}>
+                  <Text className={`text-[10px] font-extrabold ${status === 'Ready' ? 'text-sky-800' : status === 'Completed' ? 'text-emerald-800' : 'text-amber-800'}`}>
+                    {status}
+                  </Text>
+                </View>
+              </View>
+              <View className="mt-3 flex-row items-center rounded-xl bg-[#F7F9F7] p-3">
+                <View className="h-9 w-9 items-center justify-center rounded-full bg-white">
+                  <UserRound size={17} color="#A87927" />
+                </View>
+                <View className="ml-2.5 flex-1">
+                  <Text numberOfLines={1} className="text-sm font-bold text-[#173F35]">
+                    {order.customer.name}
+                  </Text>
+                  <View className="mt-1 flex-row items-center">
+                    <CalendarDays size={13} color="#7B8A83" />
+                    <Text numberOfLines={1} className="ml-1.5 text-xs text-[#6B7E76]">
+                      {dateLabel(order.created_at)}
+                    </Text>
+                  </View>
+                </View>
+                <View className={`rounded-full px-2.5 py-1 ${payment === 'PAID' ? 'bg-emerald-50' : payment === 'PARTIAL' ? 'bg-amber-50' : 'bg-[#ECEFEC]'}`}>
+                  <Text className={`text-[10px] font-extrabold ${payment === 'PAID' ? 'text-emerald-800' : payment === 'PARTIAL' ? 'text-amber-800' : 'text-[#68766F]'}`}>
+                    {payment}
+                  </Text>
+                </View>
+              </View>
+              <View className="mt-3 rounded-xl border border-[#EEF1EE] bg-white p-3">
+                <View className="mb-1 flex-row items-center justify-between">
+                  <Text className="text-[10px] font-extrabold uppercase tracking-wide text-[#7B8A83]">
+                    Products
+                  </Text>
+                  <Text className="rounded-full bg-[#F2F6F3] px-2 py-1 text-[10px] font-bold text-[#52645F]">
+                    {itemCount} item{itemCount === 1 ? '' : 's'}
+                  </Text>
+                </View>
+                {order.items.map((item, index) => (
+                  <View
+                    key={`${String(item.product_id)}-${index}`}
+                    className={`flex-row items-center justify-between py-2 ${index > 0 ? 'border-t border-[#F0F2EF]' : ''}`}>
+                    <Text numberOfLines={1} className="mr-2 flex-1 text-xs text-[#52645F]">
+                      {item.product_name} <Text className="text-[#87938D]">· Qty {item.quantity}</Text>
+                    </Text>
+                    <Text className="text-xs font-extrabold text-[#173F35]">
+                      {currency(item.total_price ?? item.price * item.quantity)}
+                    </Text>
                   </View>
                 ))}
               </View>
-              <View className="mb-3 flex-row justify-between">
-                <View>
-                  <Text className="text-[10px] uppercase text-[#7B8A83]">Paid · {currency(order.advance_amount)}</Text>
-                  <Text className="mt-1 text-xs font-bold text-rose-700">Due · {currency(order.balance_due)}</Text>
+              <View className="mt-3 mb-3 flex-row items-center justify-between rounded-xl bg-[#F7F9F7] p-3">
+                <View className="flex-1">
+                  <Text className="text-[10px] font-bold uppercase tracking-wide text-[#7B8A83]">Paid</Text>
+                  <Text className="mt-0.5 text-xs font-bold text-[#52645F]">
+                    {currency(order.advance_amount)}
+                  </Text>
+                  <Text className="mt-1 text-xs font-extrabold text-rose-700">
+                    Due · {currency(order.balance_due)}
+                  </Text>
                 </View>
-                <View className="items-end">
-                  <Text className="text-[10px] uppercase text-[#7B8A83]">Total</Text>
-                  <Text className="mt-1 text-base font-extrabold text-[#173F35]">{currency(order.total_amount)}</Text>
+                <View className="ml-3 items-end">
+                  <Text className="text-[10px] font-bold uppercase tracking-wide text-[#7B8A83]">
+                    Total
+                  </Text>
+                  <Text className="mt-0.5 text-lg font-black text-[#173F35]">
+                    {currency(order.total_amount)}
+                  </Text>
                 </View>
               </View>
               {status !== 'Completed' ? (
