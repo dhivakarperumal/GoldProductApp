@@ -15,6 +15,7 @@ import {
   Activity,
   CheckCircle2,
   Package,
+  Pencil,
   Search,
   X,
   XCircle,
@@ -40,6 +41,19 @@ type ProductListResponse = {
   stats?: { total?: number; lowStock?: number; outOfStock?: number };
   pagination?: { total?: number };
 };
+
+function stockStatusClasses(status?: string) {
+  switch (status?.trim().toLowerCase()) {
+    case 'in stock':
+      return 'border-emerald-200 bg-emerald-50 text-emerald-800';
+    case 'low stock':
+      return 'border-amber-200 bg-amber-50 text-amber-800';
+    case 'out of stock':
+      return 'border-rose-200 bg-rose-50 text-rose-800';
+    default:
+      return 'border-[#E6E9E3] bg-[#F3F4F1] text-[#52645F]';
+  }
+}
 
 function toVariants(value: unknown): Variant[] {
   if (Array.isArray(value)) return value as Variant[];
@@ -285,7 +299,7 @@ export default function StockDetails({ onBack }: Props) {
                 <Pressable
                   key={String(product.id)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Add stock to ${product.name || 'product'}`}
+                  accessibilityLabel={`Edit stock for ${product.name || 'product'}`}
                   onPress={() => selectProduct(product)}
                   className="mb-3 flex-row items-center rounded-2xl border border-[#E6E9E3] bg-white p-3 shadow-sm">
                   {image ? (
@@ -302,9 +316,20 @@ export default function StockDetails({ onBack }: Props) {
                     <Text className="mt-1 text-xs text-[#6B7E76]">
                       {product.product_code || 'No SKU'}
                     </Text>
-                    <Text className="mt-1 text-xs font-bold text-[#07564B]">
-                      Stock {Number(product.total_stock) || 0} · {product.stock_status || '—'}
-                    </Text>
+                    <View className="mt-1.5 flex-row flex-wrap items-center gap-2">
+                      <View
+                        className={`rounded-full border px-2.5 py-1 ${stockStatusClasses(product.stock_status)}`}>
+                        <Text className="text-[10px] font-extrabold">
+                          {product.stock_status?.trim() || 'Status unavailable'}
+                        </Text>
+                      </View>
+                      <Text className="text-xs font-semibold text-[#6B7E76]">
+                        Qty {Number(product.total_stock) || 0}
+                      </Text>
+                    </View>
+                  </View>
+                  <View className="ml-2 h-10 w-10 items-center justify-center rounded-xl border border-[#E8D596] bg-[#FFF8E7]">
+                    <Pencil size={17} color="#8A5A00" strokeWidth={2.5} />
                   </View>
                 </Pressable>
               );

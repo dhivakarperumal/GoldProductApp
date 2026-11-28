@@ -62,19 +62,6 @@ function firstImage(product: Product): string | undefined {
   return parseArray(firstVariant?.images)[0];
 }
 
-function stockStatusClasses(status?: string) {
-  switch (status?.trim().toLowerCase()) {
-    case 'in stock':
-      return 'border-emerald-200 bg-emerald-50 text-emerald-800';
-    case 'low stock':
-      return 'border-amber-200 bg-amber-50 text-amber-800';
-    case 'out of stock':
-      return 'border-rose-200 bg-rose-50 text-rose-800';
-    default:
-      return 'border-[#E6E9E3] bg-[#F3F4F1] text-[#52645F]';
-  }
-}
-
 export default function AllProducts({ onNavigate }: Props) {
   const { showAlert } = useCustomAlert();
   const [products, setProducts] = useState<Product[]>([]);
@@ -281,7 +268,8 @@ export default function AllProducts({ onNavigate }: Props) {
                 setQuery('');
                 setPage(1);
               }}
-              hitSlop={8}>
+              hitSlop={8}
+              className="h-9 w-9 items-center justify-center rounded-xl border border-[#E8D596] bg-white">
               <X size={18} color="#6B7E76" />
             </Pressable>
           ) : null}
@@ -380,11 +368,13 @@ export default function AllProducts({ onNavigate }: Props) {
           <View className="mb-3 rounded-xl bg-[#FFF1F0] p-3">
             <Text className="text-sm text-[#B42332]">{error || categoryError}</Text>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Retry loading products"
               onPress={() => {
                 loadProducts();
                 loadCategories();
               }}
-              className="mt-2 self-start">
+              className="mt-2 self-start rounded-xl border border-[#E8D596] bg-white px-3 py-2">
               <Text className="font-bold text-[#07564B]">Try again</Text>
             </Pressable>
           </View>
@@ -392,7 +382,6 @@ export default function AllProducts({ onNavigate }: Props) {
 
         {products.map(product => {
           const image = mediaUrl(firstImage(product));
-          const stockStatus = product.stock_status?.trim() || 'Status unavailable';
           return (
             <View key={String(product.id)} className="mb-3 flex-row rounded-2xl border border-[#E6E9E3] bg-white p-3 shadow-sm">
               {image ? (
@@ -415,32 +404,30 @@ export default function AllProducts({ onNavigate }: Props) {
                   </Text>
                 </View>
                 <View className="mt-2 flex-row items-center justify-between">
-                  <View className="mr-2 flex-1 flex-row flex-wrap items-center gap-2">
-                    <View
-                      className={`rounded-full border px-2.5 py-1 ${stockStatusClasses(product.stock_status)}`}>
-                      <Text className="text-[10px] font-extrabold">
-                        {stockStatus}
-                      </Text>
-                    </View>
-                    <Text className="text-xs font-semibold text-[#6B7E76]">
-                      Qty {Number(product.total_stock) || 0}
-                    </Text>
-                  </View>
+                  <Text className="text-xs font-semibold text-[#6B7E76]">
+                    Stock {Number(product.total_stock) || 0} · {product.stock_status || '—'}
+                  </Text>
                   <View className="flex-row gap-2">
-                    <Pressable accessibilityLabel="View product" onPress={() => setSelected(product)}>
-                      <Eye size={18} color="#07564B" />
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`View ${product.name || 'product'}`}
+                      onPress={() => setSelected(product)}
+                      className="h-8 w-8 items-center justify-center rounded-lg border border-[#E8D596] bg-white">
+                      <Eye size={16} color="#07564B" />
                     </Pressable>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel={`Edit ${product.name || 'product'}`}
-                      hitSlop={8}
-                      onPress={() => onNavigate('addProduct', product.id)}>
-                      <View className="h-9 w-9 items-center justify-center rounded-xl border border-[#E8D596] bg-[#FFF8E7]">
-                        <Pencil size={17} color="#8A5A00" strokeWidth={2.5} />
-                      </View>
+                      accessibilityLabel="Edit product"
+                      onPress={() => onNavigate('addProduct', product.id)}
+                      className="h-8 w-8 items-center justify-center rounded-lg border border-[#E8D596] bg-white">
+                      <Pencil size={16} color="#07564B" />
                     </Pressable>
-                    <Pressable accessibilityLabel="Delete product" onPress={() => showDeleteConfirmation(product)}>
-                      <Trash2 size={18} color="#B42332" />
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Delete ${product.name || 'product'}`}
+                      onPress={() => showDeleteConfirmation(product)}
+                      className="h-8 w-8 items-center justify-center rounded-lg border border-[#E8D596] bg-white">
+                      <Trash2 size={16} color="#B42332" />
                     </Pressable>
                   </View>
                 </View>
@@ -461,14 +448,14 @@ export default function AllProducts({ onNavigate }: Props) {
               accessibilityLabel="Previous products page"
               disabled={page <= 1}
               onPress={() => setPage(current => Math.max(1, current - 1))}
-              className="h-10 w-10 items-center justify-center rounded-full bg-white disabled:opacity-40">
+              className="h-10 w-10 items-center justify-center rounded-full border border-[#E8D596] bg-white disabled:opacity-40">
               <ChevronLeft size={18} color="#07564B" />
             </Pressable>
             <Pressable
               accessibilityLabel="Next products page"
               disabled={page >= totalPages}
               onPress={() => setPage(current => Math.min(totalPages, current + 1))}
-              className="h-10 w-10 items-center justify-center rounded-full bg-white disabled:opacity-40">
+              className="h-10 w-10 items-center justify-center rounded-full border border-[#E8D596] bg-white disabled:opacity-40">
               <ChevronRight size={18} color="#07564B" />
             </Pressable>
           </View>
@@ -481,7 +468,11 @@ export default function AllProducts({ onNavigate }: Props) {
           <View className="max-h-[78%] rounded-t-3xl bg-white p-5">
             <View className="mb-3 flex-row items-center justify-between">
               <Text className="flex-1 text-lg font-extrabold text-[#173F35]">{selected.name || 'Product details'}</Text>
-              <Pressable onPress={() => setSelected(null)}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Close product details"
+                onPress={() => setSelected(null)}
+                className="rounded-xl border border-[#E8D596] bg-white px-3 py-2">
                 <Text className="font-bold text-[#07564B]">Close</Text>
               </Pressable>
             </View>
