@@ -25,6 +25,14 @@ type Props = {
 };
 
 type ProductVariant = Record<string, unknown>;
+type ProductTab = 'Overview' | 'Details' | 'Pricing' | 'Inventory';
+
+const PRODUCT_TABS: ProductTab[] = [
+  'Overview',
+  'Details',
+  'Pricing',
+  'Inventory',
+];
 
 function parseVariants(value: unknown): ProductVariant[] {
   let parsed = value;
@@ -93,6 +101,7 @@ function Section({
 export default function ProductDetails({ productId, onBack, onEdit }: Props) {
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [activeTab, setActiveTab] = useState<ProductTab>('Overview');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [retryKey, setRetryKey] = useState(0);
@@ -113,6 +122,7 @@ export default function ProductDetails({ productId, onBack, onEdit }: Props) {
         if (!controller.signal.aborted) {
           setProduct(response.data);
           setSelectedImage(0);
+          setActiveTab('Overview');
         }
       } catch (error) {
         if (!controller.signal.aborted) setLoadError(inventoryError(error));
@@ -274,107 +284,180 @@ export default function ProductDetails({ productId, onBack, onEdit }: Props) {
               </View>
             </View>
 
-            <Section title="Product Information">
-              <Detail label="Brand" value={product.brand} />
-              <Detail label="Product type" value={product.product_type} />
-              <Detail label="Metal type" value={product.metal_type} />
-              <Detail label="Purity" value={product.purity} />
-              <Detail label="SKU / Barcode" value={product.sku_barcode} />
-              <Detail label="Product status" value={product.status} />
-            </Section>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="mb-4 max-h-12"
+              contentContainerClassName="gap-2">
+              {PRODUCT_TABS.map(tab => (
+                <Pressable
+                  key={tab}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: activeTab === tab }}
+                  onPress={() => setActiveTab(tab)}
+                  className={`items-center justify-center rounded-full border px-4 py-2 ${
+                    activeTab === tab
+                      ? 'border-[#07564B] bg-[#07564B]'
+                      : 'border-[#E8D596] bg-white'
+                  }`}>
+                  <Text
+                    className={`text-xs font-bold ${
+                      activeTab === tab ? 'text-white' : 'text-[#52645F]'
+                    }`}>
+                    {tab}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
 
-            <Section title="Weight & Dimensions">
-              <Detail label="Gross weight" value={product.gross_weight ? `${product.gross_weight} g` : undefined} />
-              <Detail
-                label="Net weight"
-                value={
-                  product.net_gold_weight || product.net_weight
-                    ? `${product.net_gold_weight || product.net_weight} g`
-                    : undefined
-                }
-              />
-              <Detail label="Stone weight" value={product.stone_weight ? `${product.stone_weight} g` : undefined} />
-              <Detail label="Stone type" value={product.stone_type} />
-              <Detail label="HUID" value={product.huid} />
-              <Detail label="Available sizes" value={parseArray(product.available_sizes).join(', ')} />
-              <Detail label="Length" value={product.length} />
-              <Detail label="Width" value={product.width} />
-              <Detail label="Height" value={product.height} />
-            </Section>
-
-            <Section title="Pricing Details">
-              <Detail label="MRP" value={currency(product.mrp)} />
-              <Detail label="Offer price" value={currency(product.offer_price)} />
-              <Detail label="Final selling price" value={currency(product.final_selling_price || product.final_price)} />
-              <Detail label="Gold rate / gram" value={currency(product.gold_rate_per_gram)} />
-              <Detail label="Making charges" value={product.making_charge} />
-              <Detail label="Wastage" value={product.wastage} />
-              <Detail label="GST rate" value={product.gst_rate ? `${product.gst_rate}%` : undefined} />
-            </Section>
-
-            <Section title="Inventory">
-              <Detail label="Available quantity" value={product.total_stock} />
-              <Detail label="Stock status" value={stockStatus} />
-              <Detail label="Warehouse" value={product.warehouse} />
-              <Detail label="Featured" value={product.featured} />
-              <Detail label="New arrival" value={product.new_arrival} />
-              <Detail label="Best seller" value={product.best_seller} />
-            </Section>
-
-            {variants.length ? (
-              <Section title="Variants">
-                {variants.map((variant, index) => (
-                  <View
-                    key={`variant-${index}`}
-                    className="mb-2 w-full rounded-xl border border-[#E6E9E3] bg-[#F8F9F6] p-3">
-                    <Text className="font-bold text-[#173F35]">
-                      {displayValue(variant.color || variant.name || `Variant ${index + 1}`)}
+            {activeTab === 'Overview' ? (
+              <>
+                <Section title="Product Information">
+                  <Detail label="Brand" value={product.brand} />
+                  <Detail label="Category" value={product.category} />
+                  <Detail label="Subcategory" value={product.subcategory} />
+                  <Detail label="Product type" value={product.product_type} />
+                  <Detail label="Metal type" value={product.metal_type} />
+                  <Detail label="Purity" value={product.purity} />
+                </Section>
+                {highlights.length ? (
+                  <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4 shadow-sm">
+                    <Text className="mb-3 text-base font-extrabold text-[#173F35]">
+                      Highlights
                     </Text>
-                    <View className="mt-2 flex-row flex-wrap gap-2">
-                      <Detail label="SKU" value={variant.sku} />
-                      <Detail label="Stock" value={variant.stock ?? variant.total_stock} />
-                      <Detail label="Price" value={variant.price == null ? undefined : currency(variant.price)} />
-                      {variant.size ? <Detail label="Size" value={variant.size} /> : null}
-                    </View>
-                    {variant.sizesStock &&
-                    typeof variant.sizesStock === 'object' &&
-                    !Array.isArray(variant.sizesStock) ? (
-                      <Text className="mt-2 text-xs text-[#52645F]">
-                        Sizes: {displayValue(variant.sizesStock)}
+                    {highlights.map((highlight, index) => (
+                      <Text
+                        key={`${highlight}-${index}`}
+                        className="mb-2 text-sm text-[#52645F]">
+                        • {highlight}
                       </Text>
-                    ) : null}
+                    ))}
                   </View>
-                ))}
+                ) : null}
+                {product.full_description || product.description ? (
+                  <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4 shadow-sm">
+                    <Text className="mb-2 text-base font-extrabold text-[#173F35]">
+                      Description
+                    </Text>
+                    <Text className="text-sm leading-6 text-[#52645F]">
+                      {displayValue(product.full_description || product.description)}
+                    </Text>
+                  </View>
+                ) : null}
+              </>
+            ) : null}
+
+            {activeTab === 'Details' ? (
+              <>
+                <Section title="Weight & Dimensions">
+                  <Detail
+                    label="Gross weight"
+                    value={product.gross_weight ? `${product.gross_weight} g` : undefined}
+                  />
+                  <Detail
+                    label="Net weight"
+                    value={
+                      product.net_gold_weight || product.net_weight
+                        ? `${product.net_gold_weight || product.net_weight} g`
+                        : undefined
+                    }
+                  />
+                  <Detail
+                    label="Stone weight"
+                    value={product.stone_weight ? `${product.stone_weight} g` : undefined}
+                  />
+                  <Detail label="Stone type" value={product.stone_type} />
+                  <Detail label="HUID" value={product.huid} />
+                  <Detail
+                    label="Available sizes"
+                    value={parseArray(product.available_sizes).join(', ')}
+                  />
+                  <Detail label="Length" value={product.length} />
+                  <Detail label="Width" value={product.width} />
+                  <Detail label="Height" value={product.height} />
+                  <Detail label="SKU / Barcode" value={product.sku_barcode} />
+                  <Detail label="Product status" value={product.status} />
+                </Section>
+                <Section title="Additional Information">
+                  <Detail label="Specifications" value={product.specifications} />
+                  <Detail label="Care instructions" value={product.care_instructions} />
+                  <Detail label="Warranty" value={product.warranty} />
+                  <Detail label="Certificate" value={product.certificate} />
+                  <Detail label="Video" value={product.video} />
+                </Section>
+              </>
+            ) : null}
+
+            {activeTab === 'Pricing' ? (
+              <Section title="Pricing Details">
+                <Detail label="MRP" value={currency(product.mrp)} />
+                <Detail label="Offer price" value={currency(product.offer_price)} />
+                <Detail
+                  label="Final selling price"
+                  value={currency(product.final_selling_price || product.final_price)}
+                />
+                <Detail label="Gold rate / gram" value={currency(product.gold_rate_per_gram)} />
+                <Detail label="Making charges" value={product.making_charge} />
+                <Detail label="Wastage" value={product.wastage} />
+                <Detail
+                  label="GST rate"
+                  value={product.gst_rate ? `${product.gst_rate}%` : undefined}
+                />
               </Section>
             ) : null}
 
-            {highlights.length ? (
-              <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4 shadow-sm">
-                <Text className="mb-3 text-base font-extrabold text-[#173F35]">Highlights</Text>
-                {highlights.map((highlight, index) => (
-                  <Text key={`${highlight}-${index}`} className="mb-2 text-sm text-[#52645F]">
-                    • {highlight}
-                  </Text>
-                ))}
-              </View>
+            {activeTab === 'Inventory' ? (
+              <>
+                <Section title="Stock Information">
+                  <Detail label="Available quantity" value={product.total_stock} />
+                  <Detail label="Stock status" value={stockStatus} />
+                  <Detail label="Warehouse" value={product.warehouse} />
+                  <Detail label="Featured" value={product.featured} />
+                  <Detail label="New arrival" value={product.new_arrival} />
+                  <Detail label="Best seller" value={product.best_seller} />
+                </Section>
+                {variants.length ? (
+                  <Section title="Variants">
+                    {variants.map((variant, index) => (
+                      <View
+                        key={`variant-${index}`}
+                        className="mb-2 w-full rounded-xl border border-[#E6E9E3] bg-[#F8F9F6] p-3">
+                        <Text className="font-bold text-[#173F35]">
+                          {displayValue(
+                            variant.color || variant.name || `Variant ${index + 1}`,
+                          )}
+                        </Text>
+                        <View className="mt-2 flex-row flex-wrap gap-2">
+                          <Detail label="SKU" value={variant.sku} />
+                          <Detail
+                            label="Stock"
+                            value={variant.stock ?? variant.total_stock}
+                          />
+                          <Detail
+                            label="Price"
+                            value={
+                              variant.price == null
+                                ? undefined
+                                : currency(variant.price)
+                            }
+                          />
+                          {variant.size ? (
+                            <Detail label="Size" value={variant.size} />
+                          ) : null}
+                        </View>
+                        {variant.sizesStock &&
+                        typeof variant.sizesStock === 'object' &&
+                        !Array.isArray(variant.sizesStock) ? (
+                          <Text className="mt-2 text-xs text-[#52645F]">
+                            Sizes: {displayValue(variant.sizesStock)}
+                          </Text>
+                        ) : null}
+                      </View>
+                    ))}
+                  </Section>
+                ) : null}
+              </>
             ) : null}
-
-            {product.full_description || product.description ? (
-              <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4 shadow-sm">
-                <Text className="mb-2 text-base font-extrabold text-[#173F35]">Description</Text>
-                <Text className="text-sm leading-6 text-[#52645F]">
-                  {displayValue(product.full_description || product.description)}
-                </Text>
-              </View>
-            ) : null}
-
-            <Section title="Additional Information">
-              <Detail label="Specifications" value={product.specifications} />
-              <Detail label="Care instructions" value={product.care_instructions} />
-              <Detail label="Warranty" value={product.warranty} />
-              <Detail label="Certificate" value={product.certificate} />
-              <Detail label="Video" value={product.video} />
-            </Section>
           </ScrollView>
           <View className="border-t border-[#E6E9E3] bg-white px-4 py-3">
             <Pressable
