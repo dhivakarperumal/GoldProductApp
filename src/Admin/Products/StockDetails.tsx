@@ -24,7 +24,7 @@ import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SubmitButton } from '../Loans/FormControls';
+import { CustomDropdown, SubmitButton } from '../Loans/FormControls';
 import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import {
   inventoryError,
@@ -41,6 +41,13 @@ type ProductListResponse = {
   stats?: { total?: number; lowStock?: number; outOfStock?: number };
   pagination?: { total?: number };
 };
+
+const STOCK_FILTERS = [
+  { value: 'all', label: 'All stock' },
+  { value: 'in-stock', label: 'In Stock' },
+  { value: 'low-stock', label: 'Low Stock' },
+  { value: 'out-of-stock', label: 'Out of Stock' },
+];
 
 function stockStatusClasses(status?: string) {
   switch (status?.trim().toLowerCase()) {
@@ -77,6 +84,7 @@ export default function StockDetails({ onBack }: Props) {
   const { showAlert } = useCustomAlert();
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
+  const [stockFilter, setStockFilter] = useState('all');
   const [products, setProducts] = useState<Product[]>([]);
   const [stats, setStats] = useState({
     totalProducts: 0,
@@ -95,8 +103,14 @@ export default function StockDetails({ onBack }: Props) {
   const loadProducts = useCallback(async () => {
     setError('');
     try {
+      const params: Record<string, string | number> = {
+        page: 1,
+        limit: 30,
+      };
+      if (query.trim()) params.search = query.trim();
+      if (stockFilter !== 'all') params.stockStatus = stockFilter;
       const response = await api.get<ProductListResponse>('/products/mine', {
-        params: { page: 1, limit: 30, search: query.trim() || undefined },
+        params,
       });
       if (!Array.isArray(response.data.products)) {
         throw new Error('The server returned an invalid product list.');
@@ -122,7 +136,7 @@ export default function StockDetails({ onBack }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  }, [query, stockFilter]);
 
   useEffect(() => {
     const timer = setTimeout(loadProducts, 250);
@@ -281,6 +295,15 @@ export default function StockDetails({ onBack }: Props) {
             </Pressable>
           ) : null}
         </View>
+        <CustomDropdown
+          label="Stock"
+          value={stockFilter}
+          options={STOCK_FILTERS}
+          onSelect={value => {
+            setStockFilter(value);
+            setSelected(null);
+          }}
+        />
         {loading ? (
           <View className="py-5"><ActivityIndicator color="#07564B" /></View>
         ) : null}

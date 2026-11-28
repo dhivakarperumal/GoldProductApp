@@ -202,7 +202,7 @@ export default function Metals({ onBack }: Props) {
                   setSelected(metal);
                   setFormVisible(true);
                 }}
-                className="p-2">
+                className="ml-2 h-9 w-9 items-center justify-center rounded-xl border border-[#E8D596] bg-white">
                 <Pencil size={18} color="#07564B" />
               </Pressable>
               <Pressable
@@ -212,7 +212,7 @@ export default function Metals({ onBack }: Props) {
                   event.stopPropagation();
                   confirmDelete(metal);
                 }}
-                className="p-2">
+                className="ml-2 h-9 w-9 items-center justify-center rounded-xl border border-[#E8D596] bg-white">
                 <Trash2 size={18} color="#B42332" />
               </Pressable>
             </Pressable>
