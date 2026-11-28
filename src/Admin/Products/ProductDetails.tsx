@@ -7,8 +7,9 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Package, Pencil, Star } from 'lucide-react-native';
+import { Package, Pencil, Star, Trash2 } from 'lucide-react-native';
 import api from '../../api';
+import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
 import {
   currency,
@@ -99,10 +100,12 @@ function Section({
 }
 
 export default function ProductDetails({ productId, onBack, onEdit }: Props) {
+  const { showAlert } = useCustomAlert();
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState<ProductTab>('Overview');
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [retryKey, setRetryKey] = useState(0);
 
@@ -154,6 +157,40 @@ export default function ProductDetails({ productId, onBack, onEdit }: Props) {
       )
     : '—';
   const highlights = product ? parseArray(product.highlights) : [];
+
+  const confirmDelete = () => {
+    if (!product) return;
+    showAlert(
+      'Delete product?',
+      `Delete ${product.name || 'this product'}? This cannot be undone.`,
+      {
+        variant: 'warning',
+        buttons: [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              setDeleting(true);
+              try {
+                await api.delete(`/products/${productId}`);
+                showAlert('Product deleted', 'The product was removed successfully.', {
+                  variant: 'success',
+                });
+                onBack();
+              } catch (error) {
+                showAlert('Could not delete product', inventoryError(error), {
+                  variant: 'error',
+                });
+              } finally {
+                setDeleting(false);
+              }
+            },
+          },
+        ],
+      },
+    );
+  };
 
   return (
     <View className="flex-1 bg-[#F8F7F2]">
@@ -460,14 +497,32 @@ export default function ProductDetails({ productId, onBack, onEdit }: Props) {
             ) : null}
           </ScrollView>
           <View className="border-t border-[#E6E9E3] bg-white px-4 py-3">
+            <View className="flex-row gap-3">
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Edit ${product.name || 'product'}`}
+              disabled={deleting}
               onPress={onEdit}
-              className="min-h-12 flex-row items-center justify-center rounded-xl bg-[#07564B] px-5">
+              className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-[#07564B] bg-[#07564B] px-3 disabled:opacity-60">
               <Pencil size={17} color="white" />
               <Text className="ml-2 text-sm font-extrabold text-white">Edit Product</Text>
             </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Delete ${product.name || 'product'}`}
+              disabled={deleting}
+              onPress={confirmDelete}
+              className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-3 disabled:opacity-60">
+              {deleting ? (
+                <ActivityIndicator size="small" color="#B42332" />
+              ) : (
+                <Trash2 size={17} color="#B42332" />
+              )}
+              <Text className="ml-2 text-sm font-extrabold text-[#B42332]">
+                Delete Product
+              </Text>
+            </Pressable>
+            </View>
           </View>
         </>
       ) : null}
