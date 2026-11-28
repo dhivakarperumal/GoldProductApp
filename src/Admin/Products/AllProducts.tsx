@@ -62,6 +62,19 @@ function firstImage(product: Product): string | undefined {
   return parseArray(firstVariant?.images)[0];
 }
 
+function stockStatusClasses(status?: string) {
+  switch (status?.trim().toLowerCase()) {
+    case 'in stock':
+      return 'border-emerald-200 bg-emerald-50 text-emerald-800';
+    case 'low stock':
+      return 'border-amber-200 bg-amber-50 text-amber-800';
+    case 'out of stock':
+      return 'border-rose-200 bg-rose-50 text-rose-800';
+    default:
+      return 'border-[#E6E9E3] bg-[#F3F4F1] text-[#52645F]';
+  }
+}
+
 export default function AllProducts({ onNavigate }: Props) {
   const { showAlert } = useCustomAlert();
   const [products, setProducts] = useState<Product[]>([]);
@@ -404,9 +417,17 @@ export default function AllProducts({ onNavigate }: Props) {
                   </Text>
                 </View>
                 <View className="mt-2 flex-row items-center justify-between">
-                  <Text className="text-xs font-semibold text-[#6B7E76]">
-                    Stock {Number(product.total_stock) || 0} · {product.stock_status || '—'}
-                  </Text>
+                  <View className="mr-2 flex-1 flex-row flex-wrap items-center gap-2">
+                    <View
+                      className={`rounded-full border px-2.5 py-1 ${stockStatusClasses(product.stock_status)}`}>
+                      <Text className="text-[10px] font-extrabold">
+                        {product.stock_status?.trim() || 'Status unavailable'}
+                      </Text>
+                    </View>
+                    <Text className="text-xs font-semibold text-[#6B7E76]">
+                      Qty {Number(product.total_stock) || 0}
+                    </Text>
+                  </View>
                   <View className="flex-row gap-2">
                     <Pressable
                       accessibilityRole="button"
