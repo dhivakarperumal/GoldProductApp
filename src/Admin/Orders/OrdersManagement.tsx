@@ -2434,6 +2434,17 @@ export default function OrdersManagement({
                                 <Package size={24} color="#07564B" />
                               </View>
                             )}
+                            {isAdded ? (
+                              <View
+                                testID={`take-order-product-added-${String(product.id)}`}
+                                pointerEvents="none"
+                                className="absolute right-2 top-2 z-10 flex-row items-center rounded-full border border-[#DDE6E0] bg-white px-2 py-1">
+                                <CheckCircle2 size={13} color="#07564B" />
+                                <Text className="ml-1 text-[10px] font-bold text-[#07564B]">
+                                  Added · Qty {addedQuantity}
+                                </Text>
+                              </View>
+                            ) : null}
                             <View className="p-2.5">
                               <Text numberOfLines={1} className="text-sm font-extrabold text-[#173F35]">
                                 {product.name}
@@ -2444,16 +2455,6 @@ export default function OrdersManagement({
                               <Text numberOfLines={1} className="mt-1 text-[10px] text-[#6B7E76]">
                                 {product.metal_type || 'Metal'} / {product.purity || 'Purity'}
                               </Text>
-                              {isAdded ? (
-                                <View
-                                  testID={`take-order-product-added-${String(product.id)}`}
-                                  className="mt-2 flex-row items-center">
-                                  <CheckCircle2 size={13} color="#07564B" />
-                                  <Text className="ml-1 text-[10px] font-bold text-[#07564B]">
-                                    Added · Qty {addedQuantity}
-                                  </Text>
-                                </View>
-                              ) : null}
                               <View className="mt-2 flex-row items-center justify-between">
                                 <Text numberOfLines={1} className="mr-1 flex-1 text-xs font-extrabold text-[#07564B]">
                                   {currency(productPrice(product))}
