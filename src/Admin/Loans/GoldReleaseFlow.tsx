@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
@@ -17,6 +16,7 @@ import { Check, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import { Field, errorMessage } from './FormControls';
 
 type Loan = {
@@ -346,12 +346,7 @@ export default function GoldReleaseFlow({
             </Pressable>
           </View>
           {loading ? (
-            <View className="items-center p-8">
-              <ActivityIndicator color="#07564B" />
-              <Text className="mt-2 text-sm text-[#6B7E76]">
-                Loading gold release details...
-              </Text>
-            </View>
+            <AdminLoadingSkeleton variant="form" count={4} className="p-4" />
           ) : !loan ? (
             <View className="p-5">
               <Text className="text-sm text-[#B42332]">

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import CompleteLoan from './CompleteLoan';
 import GoldRelease from './GoldRelease';
 import KycReview from './KycReview';
@@ -415,12 +416,7 @@ export default function Loans({
             ) : null}
 
             {loading ? (
-              <View className="items-center py-10">
-                <ActivityIndicator color="#07564B" />
-                <Text className="mt-2 text-sm text-[#6B7280]">
-                  Loading loans...
-                </Text>
-              </View>
+              <AdminLoadingSkeleton variant="list" />
             ) : visibleLoans.length > 0 ? (
               visibleLoans.map(loan => (
                 <View

@@ -10,6 +10,7 @@ import { Pencil, Printer } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import { errorMessage } from './FormControls';
 import { LoanAgreementData, printLoanAgreement } from './loanActions';
 
@@ -127,10 +128,9 @@ export default function LoanDetails({ loanId, onBack, onEdit }: Props) {
         onBack={onBack}
       />
       {loading && !loan ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#07564B" />
-          <Text className="mt-3 text-sm text-[#6B7E76]">Loading loan details...</Text>
-        </View>
+        <ScrollView className="flex-1 p-4">
+          <AdminLoadingSkeleton variant="detail" />
+        </ScrollView>
       ) : loadError && !loan ? (
         <View className="flex-1 items-center justify-center px-6">
           <Text className="mb-4 text-center text-sm text-[#991B1B]">{loadError}</Text>

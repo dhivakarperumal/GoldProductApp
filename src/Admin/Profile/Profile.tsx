@@ -32,6 +32,7 @@ import {
   UserRound,
 } from 'lucide-react-native';
 import api, { API_BASE_URL } from '../../api';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 
 type ProfileData = {
   user_id?: string;
@@ -431,11 +432,8 @@ export default function Profile({ onLogout }: { onLogout: () => void }) {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#F8F7F2]">
-        <ActivityIndicator color="#B8860B" />
-        <Text className="mt-3 text-sm text-[#6B7280]">
-          Loading your profile…
-        </Text>
+      <View className="flex-1 bg-[#F8F7F2] p-4">
+        <AdminLoadingSkeleton variant="form" count={6} />
       </View>
     );
   }

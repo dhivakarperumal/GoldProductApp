@@ -11,6 +11,7 @@ import { Package, Pencil, Star, Trash2 } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import {
   currency,
   inventoryError,
@@ -247,10 +248,9 @@ export default function ProductDetails({ productId, onBack, onEdit }: Props) {
         onBack={onBack}
       />
       {loading && !product ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#07564B" />
-          <Text className="mt-3 text-sm text-[#6B7E76]">Loading product details...</Text>
-        </View>
+        <ScrollView className="flex-1 p-4">
+          <AdminLoadingSkeleton variant="detail" />
+        </ScrollView>
       ) : loadError && !product ? (
         <View className="flex-1 items-center justify-center px-6">
           <Text className="mb-4 text-center text-sm text-[#991B1B]">{loadError}</Text>

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Image,
   Pressable,
   RefreshControl,
@@ -22,6 +21,7 @@ import {
 } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import InnerHeader from '../../Components/InnerHeader';
 import { CustomDropdown } from '../Loans/FormControls';
 import MetalForm from './MetalForm';
@@ -103,7 +103,9 @@ export default function Metals({ onBack }: Props) {
     <View className="flex-1 bg-[#F8F7F2]">
       <InnerHeader title="Metals" sectionLabel="Shop Inventory" onBack={onBack} />
       {loading ? (
-        <View className="flex-1 items-center justify-center"><ActivityIndicator color="#07564B" /></View>
+        <ScrollView contentContainerClassName="p-4">
+          <AdminLoadingSkeleton variant="list" />
+        </ScrollView>
       ) : (
         <ScrollView
           contentContainerClassName="p-4 pb-24"

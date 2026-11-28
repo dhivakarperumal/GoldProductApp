@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -22,6 +21,7 @@ import {
 } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import InnerHeader from '../../Components/InnerHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CustomDropdown, SubmitButton } from '../Loans/FormControls';
@@ -305,7 +305,7 @@ export default function StockDetails({ onBack }: Props) {
           }}
         />
         {loading ? (
-          <View className="py-5"><ActivityIndicator color="#07564B" /></View>
+          <AdminLoadingSkeleton variant="grid" count={4} />
         ) : null}
         {error ? (
           <View className="mb-3 rounded-xl bg-[#FFF1F0] p-3">
@@ -402,10 +402,7 @@ export default function StockDetails({ onBack }: Props) {
               </Pressable>
             </View>
             {loadingProduct ? (
-              <View className="items-center p-8">
-                <ActivityIndicator color="#07564B" />
-                <Text className="mt-2 text-sm text-[#6B7E76]">Loading product details...</Text>
-              </View>
+              <AdminLoadingSkeleton variant="detail" className="p-4" />
             ) : selected ? (
               <ScrollView
                 className="shrink"

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Image,
   Pressable,
   RefreshControl,
@@ -24,6 +23,7 @@ import {
 } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import { CustomDropdown } from '../Loans/FormControls';
 import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import {
@@ -197,8 +197,8 @@ export default function AllProducts({ onNavigate }: Props) {
 
   if (loading && products.length === 0) {
     return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator color="#07564B" />
+      <View className="flex-1 p-4">
+        <AdminLoadingSkeleton variant="grid" count={6} />
       </View>
     );
   }

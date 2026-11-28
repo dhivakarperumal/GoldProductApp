@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   ImageBackground,
   Pressable,
   RefreshControl,
@@ -34,6 +33,7 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 import api from '../../api';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import type { AdminTab } from '../Navigation/AdminTabBar';
 
 type DashboardMetric = {
@@ -510,12 +510,12 @@ export default function Home({ onNavigate }: HomeProps) {
         </View>
       ) : null}
 
-      {loading ? (
-        <View className="mb-5 items-center py-4">
-          <ActivityIndicator color="#B8860B" />
-        </View>
+      {loading && !dashboard ? (
+        <AdminLoadingSkeleton variant="dashboard" />
       ) : null}
 
+      {loading && !dashboard ? null : (
+        <>
       <View className="mb-3 flex-row items-center">
         <View className="h-px flex-1 bg-[#D7AA3D]" />
         <View className="mx-3 h-2 w-2 rotate-45 bg-[#D7AA3D]" />
@@ -739,6 +739,8 @@ export default function Home({ onNavigate }: HomeProps) {
           </Pressable>
         ))}
       </View>
+        </>
+      )}
     </ScrollView>
   );
 }

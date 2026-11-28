@@ -30,6 +30,7 @@ import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import { CustomDropdown, DatePicker, Field } from '../Loans/FormControls';
 import { currency, inventoryError } from '../Products/inventory';
 import { shareCsvFile } from '../../utils/shareCsv';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 
 type Props = { onBack: () => void };
 type Dealer = {
@@ -796,7 +797,7 @@ export default function DealerPurchases({ onBack }: Props) {
           </View>
         ) : null}
         {loading && purchases.length === 0 ? (
-          <ActivityIndicator className="py-8" color="#07564B" />
+          <AdminLoadingSkeleton variant="list" />
         ) : visiblePurchases.length ? (
           visiblePurchases.map((item, index) =>
             viewMode === 'list' ? (

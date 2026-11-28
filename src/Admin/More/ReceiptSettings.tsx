@@ -13,6 +13,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import { Field } from '../Loans/FormControls';
 import { inventoryError, mediaUrl } from '../Products/inventory';
 
@@ -202,6 +203,10 @@ export default function ReceiptSettings({ onBack }: Props) {
             tintColor="#07564B"
           />
         }>
+        {loading && !refreshing ? (
+          <AdminLoadingSkeleton variant="form" count={7} />
+        ) : (
+          <>
         <View className="mb-4 rounded-2xl bg-[#07564B] p-4">
           <Text className="text-xs font-bold uppercase tracking-wide text-[#EAD78A]">Print preferences</Text>
           <Text className="mt-1 text-xl font-extrabold text-white">Receipt Settings</Text>
@@ -285,11 +290,10 @@ export default function ReceiptSettings({ onBack }: Props) {
               className="min-h-12 flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-[#07564B] px-4 py-3 disabled:opacity-50">
               {saving ? <ActivityIndicator color="white" /> : <Save size={16} color="white" />}
               <Text className="text-sm font-extrabold text-white">
-                {loading ? 'Loading...' : saving ? 'Saving...' : 'Save Settings'}
+                {saving ? 'Saving...' : 'Save Settings'}
               </Text>
             </Pressable>
           </View>
-          {loading ? <ActivityIndicator className="mt-3" color="#07564B" /> : null}
         </View>
 
         <View className="rounded-2xl border border-[#E6E9E3] bg-white p-4">
@@ -350,6 +354,8 @@ export default function ReceiptSettings({ onBack }: Props) {
             {settings.footerMessage}
           </Text>
         </View>
+          </>
+        )}
       </ScrollView>
     </View>
   );

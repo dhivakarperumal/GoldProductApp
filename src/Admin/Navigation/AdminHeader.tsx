@@ -39,6 +39,7 @@ import {
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCustomAlert } from '../../Components/CustomAlert';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import api from '../../api';
 import type { MoreScreen } from '../More/More';
 import type { AdminTab } from './AdminTabBar';
@@ -941,12 +942,7 @@ export default function AdminHeader({
 
               {activeDropdown === 'low-stock' ? (
                 loadingLowStock && lowStockProducts.length === 0 ? (
-                  <View className="items-center py-9">
-                    <ActivityIndicator size="large" color="#B8860B" />
-                    <Text className="mt-3 text-xs font-medium text-[#6B7280]">
-                      Loading low-stock products…
-                    </Text>
-                  </View>
+                  <AdminLoadingSkeleton variant="list" count={3} className="p-3" />
                 ) : lowStockError ? (
                   <View className="items-center px-5 py-8">
                     <Text className="text-center text-xs font-semibold text-[#B42332]">
@@ -1039,12 +1035,7 @@ export default function AdminHeader({
                   </ScrollView>
                 )
               ) : loadingTackOrders && todayTackOrders.length === 0 ? (
-                <View className="items-center py-9">
-                  <ActivityIndicator size="large" color="#B8860B" />
-                  <Text className="mt-3 text-xs font-medium text-[#6B7280]">
-                    Loading today&apos;s take orders…
-                  </Text>
-                </View>
+                <AdminLoadingSkeleton variant="list" count={3} className="p-3" />
               ) : tackOrdersError ? (
                 <View className="items-center px-5 py-8">
                   <Text className="text-center text-xs font-semibold text-[#B42332]">

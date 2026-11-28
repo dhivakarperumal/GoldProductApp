@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Image,
   Modal,
   Pressable,
@@ -26,6 +25,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api, { API_BASE_URL } from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import { errorMessage } from './FormControls';
 import LoanListFilters from './LoanListFilters';
 import LoanStatCard from './LoanStatCard';
@@ -468,12 +468,7 @@ export default function KycReview() {
         ) : null}
 
         {loading ? (
-          <View className="items-center py-10">
-            <ActivityIndicator color="#07564B" />
-            <Text className="mt-2 text-sm text-[#6B7E76]">
-              Loading KYC applications...
-            </Text>
-          </View>
+          <AdminLoadingSkeleton variant="list" />
         ) : applications.length ? (
           applications.map((application, index) => (
             <View
@@ -642,11 +637,8 @@ export default function KycReview() {
             </View>
 
             {detailsLoading ? (
-              <View className="flex-1 items-center justify-center p-8">
-                <ActivityIndicator color="#07564B" />
-                <Text className="mt-2 text-sm text-[#6B7E76]">
-                  Loading application details...
-                </Text>
+              <View className="flex-1 p-4">
+                <AdminLoadingSkeleton variant="detail" />
               </View>
             ) : detailsError && !selected ? (
               <View className="p-5">

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -33,6 +32,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import {
   CustomDropdown,
@@ -795,9 +795,7 @@ export default function FundManagement({ onBack }: Props) {
           </View>
         ) : null}
         {loading && transactions.length === 0 ? (
-          <View className="py-8">
-            <ActivityIndicator color="#07564B" />
-          </View>
+          <AdminLoadingSkeleton variant="list" />
         ) : transactions.length ? (
           <View>
             {transactions.map((transaction, index) => (

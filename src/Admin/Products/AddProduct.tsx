@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -14,6 +13,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { isErrorWithCode, pick, types } from '@react-native-documents/picker';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import InnerHeader from '../../Components/InnerHeader';
 import {
   ChoiceChips,
@@ -617,7 +617,9 @@ export default function AddProduct({ productId, onBack, onSaved }: Props) {
     return (
       <View className="flex-1 bg-[#F8F7F2]">
         <InnerHeader title={productId ? 'Edit Product' : 'Add Product'} sectionLabel="Shop Inventory" onBack={onBack} />
-        <View className="flex-1 items-center justify-center"><ActivityIndicator color="#07564B" /></View>
+        <ScrollView className="flex-1 p-4">
+          <AdminLoadingSkeleton variant="form" count={6} />
+        </ScrollView>
       </View>
     );
   }

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
@@ -11,6 +10,7 @@ import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import api from '../../api';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import {
   CustomDropdown,
   Field,
@@ -420,12 +420,7 @@ export default function LoanRenewalFlow({
             </Pressable>
           </View>
           {loading ? (
-            <View className="items-center p-8">
-              <ActivityIndicator color="#07564B" />
-              <Text className="mt-2 text-sm text-[#6B7E76]">
-                Loading loan details...
-              </Text>
-            </View>
+            <AdminLoadingSkeleton variant="form" count={4} className="p-4" />
           ) : loadError || !loan || !preview ? (
             <View className="p-5">
               <Text className="text-sm text-[#B42332]">

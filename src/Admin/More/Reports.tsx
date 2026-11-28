@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -19,6 +18,7 @@ import {
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import { CustomDropdown, DatePicker } from '../Loans/FormControls';
 import { shareCsvFile } from '../../utils/shareCsv';
@@ -357,10 +357,7 @@ export default function Reports({ onBack }: Props) {
         ) : null}
 
         {loading && !reportsData ? (
-          <View className="items-center py-10">
-            <ActivityIndicator color="#07564B" />
-            <Text className="mt-3 text-sm text-[#6B7E76]">Loading reports…</Text>
-          </View>
+          <AdminLoadingSkeleton variant="dashboard" />
         ) : null}
 
         {reportsData ? (

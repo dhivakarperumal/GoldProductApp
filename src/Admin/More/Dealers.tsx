@@ -29,6 +29,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import DashboardMetricGrid from '../Components/DashboardMetricGrid';
 import { CustomDropdown, DatePicker, Field } from '../Loans/FormControls';
 import { currency, inventoryError } from '../Products/inventory';
@@ -638,7 +639,7 @@ export default function Dealers({ onBack }: Props) {
           </View>
         ) : null}
         {loading && dealers.length === 0 ? (
-          <ActivityIndicator className="py-8" color="#07564B" />
+          <AdminLoadingSkeleton variant="list" />
         ) : dealers.length ? (
           dealers.map(dealer => (
             <View
@@ -1093,7 +1094,9 @@ export default function Dealers({ onBack }: Props) {
               </Pressable>
             </View>
             {profileLoading ? (
-              <ActivityIndicator className="py-10" color="#07564B" />
+              <ScrollView contentContainerClassName="p-4">
+                <AdminLoadingSkeleton variant="detail" />
+              </ScrollView>
             ) : profile ? (
               <ScrollView
                 contentContainerClassName="p-4"
@@ -1203,7 +1206,9 @@ export default function Dealers({ onBack }: Props) {
               </Pressable>
             </View>
             {statementLoading ? (
-              <ActivityIndicator className="py-10" color="#07564B" />
+              <ScrollView contentContainerClassName="p-4">
+                <AdminLoadingSkeleton variant="list" count={3} />
+              </ScrollView>
             ) : statement ? (
               <ScrollView contentContainerClassName="p-4">
                 <Text className="mb-2 text-base font-extrabold text-[#07564B]">

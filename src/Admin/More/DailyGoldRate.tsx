@@ -25,6 +25,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import { CustomDropdown, DatePicker, Field } from '../Loans/FormControls';
 import { inventoryError } from '../Products/inventory';
 import { TimePickerField } from './FundManagement';
@@ -722,7 +723,7 @@ export default function DailyGoldRate({ onBack }: Props) {
           </View>
         ) : null}
         {historyLoading ? (
-          <ActivityIndicator className="py-5" color="#07564B" />
+          <AdminLoadingSkeleton variant="list" count={3} />
         ) : (
           <>
             <Pressable

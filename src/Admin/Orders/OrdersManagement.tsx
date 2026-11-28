@@ -35,6 +35,7 @@ import {
 import type { LucideIcon } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import { mediaUrl, parseArray as parseImageArray } from '../Products/inventory';
 import DashboardMetricCard, {
   dashboardMetricPalettes,
@@ -1600,10 +1601,7 @@ export default function OrdersManagement({
             </Pressable>
           </View>
         ) : billsLoading && bills.length === 0 ? (
-          <View className="items-center rounded-2xl bg-white py-10">
-            <ActivityIndicator color="#07564B" />
-            <Text className="mt-3 text-sm text-[#6B7E76]">Loading invoices…</Text>
-          </View>
+          <AdminLoadingSkeleton variant="list" />
         ) : filteredBills.length === 0 ? (
           <View className="items-center rounded-2xl border border-dashed border-[#D7E2DC] bg-white px-5 py-10">
             <FileText size={28} color="#7B8A83" />
@@ -1756,10 +1754,7 @@ export default function OrdersManagement({
                   />
                 </View>
                 {catalogLoading ? (
-                  <View className="items-center py-8">
-                    <ActivityIndicator color="#07564B" />
-                    <Text className="mt-2 text-xs text-[#6B7E76]">Loading products…</Text>
-                  </View>
+                  <AdminLoadingSkeleton variant="grid" count={4} />
                 ) : catalogError ? (
                   <View className="py-2">
                     <Text className="text-sm text-rose-700">{catalogError}</Text>
@@ -2270,10 +2265,7 @@ export default function OrdersManagement({
             </Pressable>
           </View>
         ) : ordersLoading && orders.length === 0 ? (
-          <View className="items-center rounded-2xl bg-white py-10">
-            <ActivityIndicator color="#07564B" />
-            <Text className="mt-3 text-sm text-[#6B7E76]">Loading take orders…</Text>
-          </View>
+          <AdminLoadingSkeleton variant="list" />
         ) : filteredOrders.length === 0 ? (
           <View className="items-center rounded-2xl border border-dashed border-[#D7E2DC] bg-white px-5 py-10">
             <Package size={28} color="#7B8A83" />
@@ -2453,10 +2445,7 @@ export default function OrdersManagement({
                     />
                   </View>
                   {catalogLoading ? (
-                    <View className="items-center py-8">
-                      <ActivityIndicator color="#07564B" />
-                      <Text className="mt-2 text-xs text-[#6B7E76]">Loading products…</Text>
-                    </View>
+                    <AdminLoadingSkeleton variant="grid" count={4} />
                   ) : catalogError ? (
                     <View className="py-3">
                       <Text className="text-sm text-rose-700">{catalogError}</Text>

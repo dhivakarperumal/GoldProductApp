@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -15,6 +14,7 @@ import {
   Users,
 } from 'lucide-react-native';
 import api from '../../api';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import { errorMessage } from './FormControls';
 import GoldReleaseFlow from './GoldReleaseFlow';
 import LoanListFilters from './LoanListFilters';
@@ -233,12 +233,7 @@ export default function GoldReleaseList({
           </View>
         ) : null}
         {loading ? (
-          <View className="items-center py-10">
-            <ActivityIndicator color="#07564B" />
-            <Text className="mt-2 text-sm text-[#6B7280]">
-              Loading loans...
-            </Text>
-          </View>
+          <AdminLoadingSkeleton variant="list" />
         ) : filteredLoans.length ? (
           filteredLoans.map(loan => {
             const completed = isCompleted(loan);

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Image as RNImage,
   Keyboard,
   KeyboardAvoidingView,
@@ -14,6 +13,7 @@ import { Camera, RotateCcw, Upload } from 'lucide-react-native';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
+import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
 import {
   CustomDropdown,
   DatePicker,
@@ -1022,10 +1022,7 @@ export default function CreateLoan({
           </View>
         ) : null}
         {loadingOptions ? (
-          <View className="mb-4 flex-row items-center">
-            <ActivityIndicator color="#07564B" />
-            <Text className="ml-2 text-sm text-[#6B7280]">Loading loan options...</Text>
-          </View>
+          <AdminLoadingSkeleton variant="compact" className="mb-4" />
         ) : null}
 
         <Section
