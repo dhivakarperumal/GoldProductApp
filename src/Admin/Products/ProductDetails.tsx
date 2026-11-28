@@ -99,6 +99,18 @@ function Section({
   );
 }
 
+function TextSection({ title, value }: { title: string; value: unknown }) {
+  if (value == null || value === '') return null;
+  return (
+    <View className="mb-3 rounded-2xl border border-[#E6E9E3] bg-white p-4 shadow-sm">
+      <Text className="mb-2 text-sm font-extrabold text-[#173F35]">{title}</Text>
+      <Text className="text-sm leading-6 text-[#52645F]">
+        {displayValue(value)}
+      </Text>
+    </View>
+  );
+}
+
 export default function ProductDetails({ productId, onBack, onEdit }: Props) {
   const { showAlert } = useCustomAlert();
   const [product, setProduct] = useState<Product | null>(null);
@@ -415,13 +427,14 @@ export default function ProductDetails({ productId, onBack, onEdit }: Props) {
                   <Detail label="SKU / Barcode" value={product.sku_barcode} />
                   <Detail label="Product status" value={product.status} />
                 </Section>
-                <Section title="Additional Information">
-                  <Detail label="Specifications" value={product.specifications} />
-                  <Detail label="Care instructions" value={product.care_instructions} />
-                  <Detail label="Warranty" value={product.warranty} />
-                  <Detail label="Certificate" value={product.certificate} />
-                  <Detail label="Video" value={product.video} />
-                </Section>
+                <TextSection title="Specifications" value={product.specifications} />
+                <TextSection
+                  title="Care Instructions"
+                  value={product.care_instructions}
+                />
+                <TextSection title="Warranty" value={product.warranty} />
+                <TextSection title="Certificate" value={product.certificate} />
+                <TextSection title="Video" value={product.video} />
               </>
             ) : null}
 
