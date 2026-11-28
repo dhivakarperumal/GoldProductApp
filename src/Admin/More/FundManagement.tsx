@@ -53,7 +53,6 @@ const styles = StyleSheet.create({
   floatingActionButton: { bottom: 20, zIndex: 100, elevation: 100 },
   transactionCard: {
     borderWidth: 2,
-    borderLeftWidth: 5,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 9,
@@ -63,13 +62,11 @@ const styles = StyleSheet.create({
 
 function transactionCardStyle(
   borderColor: string,
-  sideBorder: string,
   glowColor: string,
 ) {
   return {
     ...styles.transactionCard,
     borderColor,
-    borderLeftColor: sideBorder,
     shadowColor: glowColor,
   };
 }
@@ -493,7 +490,6 @@ export default function FundManagement({ onBack }: Props) {
       ? {
           borderColor: '#E3A4A7',
           glowColor: '#C94B52',
-          sideBorder: '#C94B52',
           iconBackground: 'bg-[#FFF0F0]',
           iconColor: '#B42332',
           labelBackground: 'bg-[#FFF0F0]',
@@ -506,7 +502,6 @@ export default function FundManagement({ onBack }: Props) {
       ? {
           borderColor: '#8DCBA5',
           glowColor: '#168653',
-          sideBorder: '#168653',
           iconBackground: 'bg-[#EAF7EF]',
           iconColor: '#087443',
           labelBackground: 'bg-[#EAF7EF]',
@@ -518,7 +513,6 @@ export default function FundManagement({ onBack }: Props) {
       : {
           borderColor: '#E6C966',
           glowColor: '#C79A2B',
-          sideBorder: '#C79A2B',
           iconBackground: 'bg-[#FFF7DF]',
           iconColor: '#A77B15',
           labelBackground: 'bg-[#FFF7DF]',
@@ -533,7 +527,6 @@ export default function FundManagement({ onBack }: Props) {
         key={String(transaction.id)}
         style={transactionCardStyle(
           theme.borderColor,
-          theme.sideBorder,
           theme.glowColor,
         )}
         className="mb-4 rounded-2xl border-2 bg-white"
