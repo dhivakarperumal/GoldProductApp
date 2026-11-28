@@ -11,7 +11,9 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import DateTimePicker, {
+  DateTimePickerAndroid,
+} from '@react-native-community/datetimepicker';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -29,7 +31,12 @@ import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import InnerHeader from '../../Components/InnerHeader';
 import DashboardMetricGrid from '../Components/DashboardMetricGrid';
-import { CustomDropdown, DatePicker, Field, SubmitButton } from '../Loans/FormControls';
+import {
+  CustomDropdown,
+  DatePicker,
+  Field,
+  SubmitButton,
+} from '../Loans/FormControls';
 import { inventoryError } from '../Products/inventory';
 
 type Props = { onBack: () => void };
@@ -79,7 +86,14 @@ const TRANSACTION_TYPES = [
   { value: 'CREDIT', label: 'Credit' },
   { value: 'DEBIT', label: 'Debit' },
 ];
-const PAYMENT_METHODS = ['Cash', 'UPI', 'Card', 'Bank Transfer', 'Cheque', 'Other'];
+const PAYMENT_METHODS = [
+  'Cash',
+  'UPI',
+  'Card',
+  'Bank Transfer',
+  'Cheque',
+  'Other',
+];
 
 function localDate(date: Date) {
   const year = date.getFullYear();
@@ -96,7 +110,10 @@ function dateOffset(days: number) {
 
 function currency(value: unknown) {
   const amount = Number(value || 0);
-  return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `₹${amount.toLocaleString('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 function displayDate(value: string) {
@@ -119,7 +136,13 @@ function emptyEntry(): Entry {
   };
 }
 
-export function TimePickerField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+export function TimePickerField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(new Date());
   const insets = useSafeAreaInsets();
@@ -127,7 +150,12 @@ export function TimePickerField({ value, onChange }: { value: string; onChange: 
   const selectedTime = useMemo(() => {
     const [hours, minutes] = value.split(':').map(Number);
     const date = new Date();
-    date.setHours(Number.isFinite(hours) ? hours : 12, Number.isFinite(minutes) ? minutes : 0, 0, 0);
+    date.setHours(
+      Number.isFinite(hours) ? hours : 12,
+      Number.isFinite(minutes) ? minutes : 0,
+      0,
+      0,
+    );
     return date;
   }, [value]);
 
@@ -139,7 +167,11 @@ export function TimePickerField({ value, onChange }: { value: string; onChange: 
         is24Hour: true,
         onChange: (event, date) => {
           if (event.type === 'set' && date) {
-            onChange(`${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`);
+            onChange(
+              `${String(date.getHours()).padStart(2, '0')}:${String(
+                date.getMinutes(),
+              ).padStart(2, '0')}`,
+            );
           }
         },
       });
@@ -152,20 +184,33 @@ export function TimePickerField({ value, onChange }: { value: string; onChange: 
   return (
     <>
       <View className="mb-4">
-        <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]">Time</Text>
+        <Text className="mb-1.5 text-xs font-bold uppercase tracking-wide text-[#52645F]">
+          Time
+        </Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Choose time"
           onPress={openPicker}
-          className="min-h-12 justify-center rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3">
+          className="min-h-12 justify-center rounded-xl border border-[#E6E9E3] bg-white px-3.5 py-3"
+        >
           <Text className="text-sm text-[#173F35]">{value}</Text>
         </Pressable>
       </View>
       {Platform.OS === 'ios' ? (
-        <Modal transparent animationType="fade" visible={open} onRequestClose={() => setOpen(false)}>
+        <Modal
+          transparent
+          animationType="fade"
+          visible={open}
+          onRequestClose={() => setOpen(false)}
+        >
           <View className="flex-1 items-center justify-center bg-black/40 px-5">
-            <View style={{ paddingBottom: Math.max(insets.bottom, 24) }} className="w-full rounded-3xl bg-white p-5">
-              <Text className="mb-3 text-lg font-extrabold text-[#173F35]">Choose time</Text>
+            <View
+              style={{ paddingBottom: Math.max(insets.bottom, 24) }}
+              className="w-full rounded-3xl bg-white p-5"
+            >
+              <Text className="mb-3 text-lg font-extrabold text-[#173F35]">
+                Choose time
+              </Text>
               <DateTimePicker
                 value={draft}
                 mode="time"
@@ -175,15 +220,23 @@ export function TimePickerField({ value, onChange }: { value: string; onChange: 
                 }}
               />
               <View className="mt-4 flex-row justify-end gap-2">
-                <Pressable onPress={() => setOpen(false)} className="rounded-xl bg-[#F3F4F1] px-4 py-3">
+                <Pressable
+                  onPress={() => setOpen(false)}
+                  className="rounded-xl bg-[#F3F4F1] px-4 py-3"
+                >
                   <Text className="font-bold text-[#52645F]">Cancel</Text>
                 </Pressable>
                 <Pressable
                   onPress={() => {
-                    onChange(`${String(draft.getHours()).padStart(2, '0')}:${String(draft.getMinutes()).padStart(2, '0')}`);
+                    onChange(
+                      `${String(draft.getHours()).padStart(2, '0')}:${String(
+                        draft.getMinutes(),
+                      ).padStart(2, '0')}`,
+                    );
                     setOpen(false);
                   }}
-                  className="rounded-xl bg-[#07564B] px-4 py-3">
+                  className="rounded-xl bg-[#07564B] px-4 py-3"
+                >
                   <Text className="font-bold text-white">Confirm</Text>
                 </Pressable>
               </View>
@@ -207,7 +260,10 @@ export default function FundManagement({ onBack }: Props) {
     endDate: '',
   });
   const [preset, setPreset] = useState('all');
-  const [customRange, setCustomRange] = useState({ startDate: '', endDate: '' });
+  const [customRange, setCustomRange] = useState({
+    startDate: '',
+    endDate: '',
+  });
   const [transactionType, setTransactionType] = useState('ALL');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -228,25 +284,31 @@ export default function FundManagement({ onBack }: Props) {
       };
       const [summaryResponse, transactionResponse] = await Promise.all([
         api.get<FundSummary>('/funds/summary', { params }),
-        api.get<{ transactions?: Transaction[]; total?: number }>('/funds/transactions', {
-          params: {
-            ...params,
-            page,
-            page_size: PAGE_SIZE,
-            transaction_type: transactionType,
-            search: search.trim(),
+        api.get<{ transactions?: Transaction[]; total?: number }>(
+          '/funds/transactions',
+          {
+            params: {
+              ...params,
+              page,
+              page_size: PAGE_SIZE,
+              transaction_type: transactionType,
+              search: search.trim(),
+            },
           },
-        }),
+        ),
       ]);
       if (!Array.isArray(transactionResponse.data.transactions)) {
-        throw new Error('The server returned an invalid fund transaction list.');
+        throw new Error(
+          'The server returned an invalid fund transaction list.',
+        );
       }
       setSummary(summaryResponse.data);
       setTransactions(transactionResponse.data.transactions);
       setTotal(Number(transactionResponse.data.total) || 0);
     } catch (error) {
       setLoadError(inventoryError(error));
-      if (__DEV__) console.warn('[FundManagement] Could not load fund data:', error);
+      if (__DEV__)
+        console.warn('[FundManagement] Could not load fund data:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -262,12 +324,55 @@ export default function FundManagement({ onBack }: Props) {
   const firstItem = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const lastItem = Math.min(page * PAGE_SIZE, total);
   const statCards = [
-    { id: 'fund-opening', label: 'Opening Balance', value: summary?.opening_balance, detail: 'Opening ledger balance', icon: Wallet, palette: 'gold_stock_value' as const },
-    { id: 'fund-added', label: 'Fund Added', value: summary?.fund_added, detail: 'Funds added to ledger', icon: Plus, palette: 'total_customers' as const },
-    { id: 'fund-credits', label: 'Total Credits', value: summary?.total_credit, detail: 'Credit transactions', icon: ArrowDownLeft, palette: 'total_products' as const },
-    { id: 'fund-debits', label: 'Total Debits', value: summary?.total_debit, detail: 'Debit transactions', icon: ArrowUpRight, palette: 'low_stock_products' as const, trendUp: false },
-    { id: 'fund-available', label: 'Available Balance', value: summary?.current_balance, detail: 'Current ledger balance', icon: Wallet, palette: 'active_gold_loans' as const },
-    { id: 'fund-entry-count', label: 'Entries Found', value: total, detail: 'Matching fund entries', icon: List, palette: 'total_categories' as const },
+    {
+      id: 'fund-opening',
+      label: 'Opening Balance',
+      value: summary?.opening_balance,
+      detail: 'Opening ledger balance',
+      icon: Wallet,
+      palette: 'gold_stock_value' as const,
+    },
+    {
+      id: 'fund-added',
+      label: 'Fund Added',
+      value: summary?.fund_added,
+      detail: 'Funds added to ledger',
+      icon: Plus,
+      palette: 'total_customers' as const,
+    },
+    {
+      id: 'fund-credits',
+      label: 'Total Credits',
+      value: summary?.total_credit,
+      detail: 'Credit transactions',
+      icon: ArrowDownLeft,
+      palette: 'total_products' as const,
+    },
+    {
+      id: 'fund-debits',
+      label: 'Total Debits',
+      value: summary?.total_debit,
+      detail: 'Debit transactions',
+      icon: ArrowUpRight,
+      palette: 'low_stock_products' as const,
+      trendUp: false,
+    },
+    {
+      id: 'fund-available',
+      label: 'Available Balance',
+      value: summary?.current_balance,
+      detail: 'Current ledger balance',
+      icon: Wallet,
+      palette: 'active_gold_loans' as const,
+    },
+    {
+      id: 'fund-entry-count',
+      label: 'Entries Found',
+      value: total,
+      detail: 'Matching fund entries',
+      icon: List,
+      palette: 'total_categories' as const,
+    },
   ];
 
   const selectPreset = (value: string) => {
@@ -286,8 +391,14 @@ export default function FundManagement({ onBack }: Props) {
   };
 
   const applyCustomRange = () => {
-    if (!customRange.startDate || !customRange.endDate || customRange.startDate > customRange.endDate) {
-      showAlert('Invalid date range', 'Choose a valid start and end date.', { variant: 'warning' });
+    if (
+      !customRange.startDate ||
+      !customRange.endDate ||
+      customRange.startDate > customRange.endDate
+    ) {
+      showAlert('Invalid date range', 'Choose a valid start and end date.', {
+        variant: 'warning',
+      });
       return;
     }
     setDateRange({ preset: 'custom', ...customRange });
@@ -297,35 +408,54 @@ export default function FundManagement({ onBack }: Props) {
   const saveEntry = async () => {
     const amount = Number(entry.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
-      showAlert('Invalid amount', 'Enter an amount greater than zero.', { variant: 'warning' });
+      showAlert('Invalid amount', 'Enter an amount greater than zero.', {
+        variant: 'warning',
+      });
       return;
     }
     if (!entry.description.trim() || entry.description.trim().length > 2000) {
-      showAlert('Description required', 'Enter a description of up to 2,000 characters.', { variant: 'warning' });
+      showAlert(
+        'Description required',
+        'Enter a description of up to 2,000 characters.',
+        { variant: 'warning' },
+      );
       return;
     }
     if (entry.related_reference.trim().length > 100) {
-      showAlert('Reference is too long', 'The related reference must be 100 characters or fewer.', { variant: 'warning' });
+      showAlert(
+        'Reference is too long',
+        'The related reference must be 100 characters or fewer.',
+        { variant: 'warning' },
+      );
       return;
     }
     setSaving(true);
     try {
-      const idempotencyKey = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+      const idempotencyKey = `${Date.now().toString(36)}-${Math.random()
+        .toString(36)
+        .slice(2)}`;
       await api.post('/funds/transactions', {
         ...entry,
-        transaction_date: entry.transaction_date.length === 16
-          ? `${entry.transaction_date}:00`
-          : entry.transaction_date,
+        transaction_date:
+          entry.transaction_date.length === 16
+            ? `${entry.transaction_date}:00`
+            : entry.transaction_date,
         amount,
         idempotency_key: idempotencyKey,
       });
       setFormOpen(false);
       setEntry(emptyEntry());
-      showAlert('Fund entry recorded', 'The transaction was added to your fund ledger.', { variant: 'success' });
+      showAlert(
+        'Fund entry recorded',
+        'The transaction was added to your fund ledger.',
+        { variant: 'success' },
+      );
       setPage(1);
       await loadData();
     } catch (error) {
-      showAlert('Could not save fund entry', inventoryError(error), { variant: 'error' });
+      showAlert('Could not save fund entry', inventoryError(error), {
+        variant: 'error',
+      });
     } finally {
       setSaving(false);
     }
@@ -340,21 +470,43 @@ export default function FundManagement({ onBack }: Props) {
     const isDebit = transaction.transaction_type === 'DEBIT';
     const amountColor = isDebit ? '#B42332' : '#087443';
     return (
-      <View key={String(transaction.id)} className="mb-3 rounded-2xl border border-[#E6E9E3] bg-white p-4">
+      <View
+        key={String(transaction.id)}
+        className="mb-3 rounded-2xl border border-[#E6E9E3] bg-white p-4"
+      >
         <View className="flex-row items-start justify-between gap-3">
           <View className="flex-1">
-            <Text className="text-xs font-semibold text-[#8A8F8B]">Entry {(page - 1) * PAGE_SIZE + index + 1}</Text>
-            <Text className="mt-1 font-bold text-[#173F35]">{typeLabel(transaction.transaction_type)}</Text>
+            <Text className="text-xs font-semibold text-[#8A8F8B]">
+              Entry {(page - 1) * PAGE_SIZE + index + 1}
+            </Text>
+            <Text className="mt-1 font-bold text-[#173F35]">
+              {typeLabel(transaction.transaction_type)}
+            </Text>
           </View>
-          <Text style={{ color: amountColor }} className="text-base font-extrabold">{currency(transaction.amount)}</Text>
+          <Text
+            style={{ color: amountColor }}
+            className="text-base font-extrabold"
+          >
+            {currency(transaction.amount)}
+          </Text>
         </View>
-        <Text className="mt-2 text-xs text-[#6B7E76]">{displayDate(transaction.transaction_date)}</Text>
+        <Text className="mt-2 text-xs text-[#6B7E76]">
+          {displayDate(transaction.transaction_date)}
+        </Text>
         <View className="mt-3 border-t border-[#F1F2EE] pt-3">
-          <Text className="text-sm text-[#52645F]">Payment: {transaction.payment_method || '—'}</Text>
-          <Text className="mt-1 text-sm text-[#52645F]">Admin: {transaction.admin_name || '—'}</Text>
-          <Text className="mt-1 text-sm text-[#52645F]">Description: {transaction.description || '—'}</Text>
+          <Text className="text-sm text-[#52645F]">
+            Payment: {transaction.payment_method || '—'}
+          </Text>
+          <Text className="mt-1 text-sm text-[#52645F]">
+            Admin: {transaction.admin_name || '—'}
+          </Text>
+          <Text className="mt-1 text-sm text-[#52645F]">
+            Description: {transaction.description || '—'}
+          </Text>
           {transaction.related_reference ? (
-            <Text className="mt-1 text-sm text-[#52645F]">Reference: {transaction.related_reference}</Text>
+            <Text className="mt-1 text-sm text-[#52645F]">
+              Reference: {transaction.related_reference}
+            </Text>
           ) : null}
           <Text className="mt-2 text-sm font-bold text-[#173F35]">
             Running Balance: {currency(transaction.running_balance)}
@@ -366,7 +518,11 @@ export default function FundManagement({ onBack }: Props) {
 
   return (
     <View className="flex-1 bg-[#F8F7F2]">
-      <InnerHeader title="Fund Management" sectionLabel="More" onBack={onBack} />
+      <InnerHeader
+        title="Fund Management"
+        sectionLabel="More"
+        onBack={onBack}
+      />
       <ScrollView
         className="flex-1"
         contentContainerClassName="p-4 pb-28"
@@ -380,20 +536,28 @@ export default function FundManagement({ onBack }: Props) {
             tintColor="#07564B"
           />
         }
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+      >
         <DashboardMetricGrid
           containerClassName="mb-4"
-          metrics={statCards.map(({ id, label, value, detail, icon, palette, trendUp }) => ({
-            id,
-            label,
-            value: id === 'fund-entry-count'
-              ? loading ? '—' : Number(value || 0).toLocaleString('en-IN')
-              : loading && value == null ? '—' : currency(value),
-            icon,
-            palette,
-            trend: detail,
-            trendUp,
-          }))}
+          metrics={statCards.map(
+            ({ id, label, value, detail, icon, palette, trendUp }) => ({
+              id,
+              label,
+              value:
+                id === 'fund-entry-count'
+                  ? loading
+                    ? '—'
+                    : Number(value || 0).toLocaleString('en-IN')
+                  : loading && value == null
+                  ? '—'
+                  : currency(value),
+              icon,
+              palette,
+              trend: detail,
+              trendUp,
+            }),
+          )}
         />
 
         <View className="mb-3 flex-row items-center rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm">
@@ -417,7 +581,8 @@ export default function FundManagement({ onBack }: Props) {
                 setSearch('');
                 setPage(1);
               }}
-              hitSlop={8}>
+              hitSlop={8}
+            >
               <X size={18} color="#6B7E76" />
             </Pressable>
           ) : null}
@@ -461,7 +626,12 @@ export default function FundManagement({ onBack }: Props) {
                 <DatePicker
                   label="Start date"
                   value={customRange.startDate}
-                  onChange={value => setCustomRange(current => ({ ...current, startDate: value }))}
+                  onChange={value =>
+                    setCustomRange(current => ({
+                      ...current,
+                      startDate: value,
+                    }))
+                  }
                   maximumDate={null}
                 />
               </View>
@@ -469,13 +639,22 @@ export default function FundManagement({ onBack }: Props) {
                 <DatePicker
                   label="End date"
                   value={customRange.endDate}
-                  onChange={value => setCustomRange(current => ({ ...current, endDate: value }))}
-                  minimumDate={customRange.startDate ? new Date(`${customRange.startDate}T00:00:00`) : undefined}
+                  onChange={value =>
+                    setCustomRange(current => ({ ...current, endDate: value }))
+                  }
+                  minimumDate={
+                    customRange.startDate
+                      ? new Date(`${customRange.startDate}T00:00:00`)
+                      : undefined
+                  }
                   maximumDate={null}
                 />
               </View>
             </View>
-            <Pressable onPress={applyCustomRange} className="mb-4 min-h-11 items-center justify-center rounded-xl bg-[#07564B]">
+            <Pressable
+              onPress={applyCustomRange}
+              className="mb-4 min-h-11 items-center justify-center rounded-xl bg-[#07564B]"
+            >
               <Text className="font-bold text-white">Apply date filter</Text>
             </Pressable>
           </>
@@ -488,16 +667,28 @@ export default function FundManagement({ onBack }: Props) {
               accessibilityLabel="Show transactions as a list"
               accessibilityState={{ selected: viewMode === 'list' }}
               onPress={() => setViewMode('list')}
-              className={`h-10 w-11 items-center justify-center rounded-lg ${viewMode === 'list' ? 'bg-[#07564B]' : ''}`}>
-              <List size={18} color={viewMode === 'list' ? 'white' : '#6B7E76'} />
+              className={`h-10 w-11 items-center justify-center rounded-lg ${
+                viewMode === 'list' ? 'bg-[#07564B]' : ''
+              }`}
+            >
+              <List
+                size={18}
+                color={viewMode === 'list' ? 'white' : '#6B7E76'}
+              />
             </Pressable>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Show transactions as cards"
               accessibilityState={{ selected: viewMode === 'grid' }}
               onPress={() => setViewMode('grid')}
-              className={`h-10 w-11 items-center justify-center rounded-lg ${viewMode === 'grid' ? 'bg-[#07564B]' : ''}`}>
-              <LayoutGrid size={18} color={viewMode === 'grid' ? 'white' : '#6B7E76'} />
+              className={`h-10 w-11 items-center justify-center rounded-lg ${
+                viewMode === 'grid' ? 'bg-[#07564B]' : ''
+              }`}
+            >
+              <LayoutGrid
+                size={18}
+                color={viewMode === 'grid' ? 'white' : '#6B7E76'}
+              />
             </Pressable>
           </View>
         </View>
@@ -511,19 +702,32 @@ export default function FundManagement({ onBack }: Props) {
           </View>
         ) : null}
         {loading && transactions.length === 0 ? (
-          <View className="py-8"><ActivityIndicator color="#07564B" /></View>
+          <View className="py-8">
+            <ActivityIndicator color="#07564B" />
+          </View>
         ) : transactions.length ? (
-          <View className={viewMode === 'grid' ? 'flex-row flex-wrap justify-between' : ''}>
+          <View
+            className={
+              viewMode === 'grid' ? 'flex-row flex-wrap justify-between' : ''
+            }
+          >
             {transactions.map((transaction, index) => (
-              <View key={String(transaction.id)} className={viewMode === 'grid' ? 'w-[48%]' : 'w-full'}>
+              <View
+                key={String(transaction.id)}
+                className={viewMode === 'grid' ? 'w-[48%]' : 'w-full'}
+              >
                 {renderTransaction(transaction, index)}
               </View>
             ))}
           </View>
         ) : !loadError ? (
           <View className="items-center rounded-2xl bg-white p-8">
-            <Text className="font-bold text-[#173F35]">No fund entries found</Text>
-            <Text className="mt-1 text-sm text-[#6B7E76]">Try changing the filters or add a new entry.</Text>
+            <Text className="font-bold text-[#173F35]">
+              No fund entries found
+            </Text>
+            <Text className="mt-1 text-sm text-[#6B7E76]">
+              Try changing the filters or add a new entry.
+            </Text>
           </View>
         ) : null}
         <View className="mt-2 flex-row items-center justify-between">
@@ -535,15 +739,21 @@ export default function FundManagement({ onBack }: Props) {
               accessibilityLabel="Previous fund page"
               disabled={page <= 1}
               onPress={() => setPage(current => Math.max(1, current - 1))}
-              className="h-10 w-10 items-center justify-center rounded-full bg-white disabled:opacity-40">
+              className="h-10 w-10 items-center justify-center rounded-full bg-white disabled:opacity-40"
+            >
               <ChevronLeft size={18} color="#07564B" />
             </Pressable>
-            <Text className="text-xs font-bold text-[#52645F]">{page} / {pageCount}</Text>
+            <Text className="text-xs font-bold text-[#52645F]">
+              {page} / {pageCount}
+            </Text>
             <Pressable
               accessibilityLabel="Next fund page"
               disabled={page >= pageCount}
-              onPress={() => setPage(current => Math.min(pageCount, current + 1))}
-              className="h-10 w-10 items-center justify-center rounded-full bg-white disabled:opacity-40">
+              onPress={() =>
+                setPage(current => Math.min(pageCount, current + 1))
+              }
+              className="h-10 w-10 items-center justify-center rounded-full bg-white disabled:opacity-40"
+            >
               <ChevronRight size={18} color="#07564B" />
             </Pressable>
           </View>
@@ -553,67 +763,96 @@ export default function FundManagement({ onBack }: Props) {
       <View
         pointerEvents="box-none"
         collapsable={false}
-        style={styles.floatingActionButtonLayer}>
+        style={styles.floatingActionButtonLayer}
+      >
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Add fund entry"
           accessibilityHint="Opens the form to record a fund transaction"
           onPress={openEntryForm}
           hitSlop={10}
-          style={[styles.floatingActionButton, { bottom: Math.max(insets.bottom, 20) }]}
-          className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
+          style={[styles.floatingActionButton, { bottom: 20 }]}
+          className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg"
+        >
           <Plus size={24} color="white" />
         </Pressable>
       </View>
 
-      <Modal visible={formOpen} animationType="slide" onRequestClose={() => { if (!saving) setFormOpen(false); }}>
+      <Modal
+        visible={formOpen}
+        animationType="slide"
+        onRequestClose={() => {
+          if (!saving) setFormOpen(false);
+        }}
+      >
         <View className="flex-1 bg-[#F8F7F2]">
           <View className="flex-row items-center justify-between bg-[#173F35] px-5 pb-4 pt-12">
             <View>
-              <Text className="text-xs font-bold uppercase tracking-wide text-[#EAD78A]">Fund Management</Text>
-              <Text className="mt-1 text-lg font-extrabold text-white">Add Fund Entry</Text>
+              <Text className="text-xs font-bold uppercase tracking-wide text-[#EAD78A]">
+                Fund Management
+              </Text>
+              <Text className="mt-1 text-lg font-extrabold text-white">
+                Add Fund Entry
+              </Text>
             </View>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Close fund entry form"
               disabled={saving}
-              onPress={() => setFormOpen(false)}>
+              onPress={() => setFormOpen(false)}
+            >
               <X size={22} color="#EAD78A" />
             </Pressable>
           </View>
           <ScrollView
             contentContainerClassName="p-4 pb-10"
             keyboardShouldPersistTaps="handled"
-            automaticallyAdjustKeyboardInsets>
+            automaticallyAdjustKeyboardInsets
+          >
             <View className="rounded-2xl bg-white p-4">
-              <Text className="mb-4 text-sm text-[#6B7E76]">This entry will be attached to your admin account.</Text>
+              <Text className="mb-4 text-sm text-[#6B7E76]">
+                This entry will be attached to your admin account.
+              </Text>
               <CustomDropdown
                 label="Transaction type"
                 value={entry.transaction_type}
                 options={TRANSACTION_TYPES}
-                onSelect={value => setEntry(current => ({ ...current, transaction_type: value }))}
+                onSelect={value =>
+                  setEntry(current => ({ ...current, transaction_type: value }))
+                }
                 required
               />
               <DatePicker
                 label="Transaction date"
                 value={entry.transaction_date.slice(0, 10)}
-                onChange={value => setEntry(current => ({
-                  ...current,
-                  transaction_date: `${value}T${current.transaction_date.slice(11, 16) || '12:00'}`,
-                }))}
+                onChange={value =>
+                  setEntry(current => ({
+                    ...current,
+                    transaction_date: `${value}T${
+                      current.transaction_date.slice(11, 16) || '12:00'
+                    }`,
+                  }))
+                }
                 maximumDate={null}
               />
               <TimePickerField
                 value={entry.transaction_date.slice(11, 16) || '12:00'}
-                onChange={value => setEntry(current => ({
-                  ...current,
-                  transaction_date: `${current.transaction_date.slice(0, 10)}T${value}`,
-                }))}
+                onChange={value =>
+                  setEntry(current => ({
+                    ...current,
+                    transaction_date: `${current.transaction_date.slice(
+                      0,
+                      10,
+                    )}T${value}`,
+                  }))
+                }
               />
               <Field
                 label="Amount"
                 value={entry.amount}
-                onChangeText={value => setEntry(current => ({ ...current, amount: value }))}
+                onChangeText={value =>
+                  setEntry(current => ({ ...current, amount: value }))
+                }
                 keyboardType="decimal-pad"
                 placeholder="0.00"
                 required
@@ -621,14 +860,21 @@ export default function FundManagement({ onBack }: Props) {
               <CustomDropdown
                 label="Payment method"
                 value={entry.payment_method}
-                options={PAYMENT_METHODS.map(value => ({ value, label: value }))}
-                onSelect={value => setEntry(current => ({ ...current, payment_method: value }))}
+                options={PAYMENT_METHODS.map(value => ({
+                  value,
+                  label: value,
+                }))}
+                onSelect={value =>
+                  setEntry(current => ({ ...current, payment_method: value }))
+                }
                 required
               />
               <Field
                 label="Description"
                 value={entry.description}
-                onChangeText={value => setEntry(current => ({ ...current, description: value }))}
+                onChangeText={value =>
+                  setEntry(current => ({ ...current, description: value }))
+                }
                 multiline
                 placeholder="Describe this fund entry"
                 required
@@ -636,12 +882,21 @@ export default function FundManagement({ onBack }: Props) {
               <Field
                 label="Related reference (optional)"
                 value={entry.related_reference}
-                onChangeText={value => setEntry(current => ({ ...current, related_reference: value }))}
+                onChangeText={value =>
+                  setEntry(current => ({
+                    ...current,
+                    related_reference: value,
+                  }))
+                }
                 placeholder="Invoice, receipt, or reference number"
               />
             </View>
             <View className="mt-4">
-              <SubmitButton label="Save Entry" loading={saving} onPress={saveEntry} />
+              <SubmitButton
+                label="Save Entry"
+                loading={saving}
+                onPress={saveEntry}
+              />
             </View>
           </ScrollView>
         </View>

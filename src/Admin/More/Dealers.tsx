@@ -35,7 +35,12 @@ import { currency, inventoryError } from '../Products/inventory';
 
 type Props = { onBack: () => void };
 type Category = { id: number | string; name: string; active?: boolean };
-type Address = { line1?: string; city?: string; state?: string; pincode?: string };
+type Address = {
+  line1?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+};
 type Dealer = {
   id: number | string;
   dealer_code?: string;
@@ -177,8 +182,11 @@ function emptyForm(categoryId = ''): DealerForm {
   };
 }
 
-function addressField(address: Address | null | undefined, field: keyof Address) {
-  return typeof address?.[field] === 'string' ? address[field] as string : '';
+function addressField(
+  address: Address | null | undefined,
+  field: keyof Address,
+) {
+  return typeof address?.[field] === 'string' ? (address[field] as string) : '';
 }
 
 function formFromDealer(dealer: Dealer, categories: Category[]): DealerForm {
@@ -224,7 +232,10 @@ export default function Dealers({ onBack }: Props) {
   const [dealers, setDealers] = useState<Dealer[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [summary, setSummary] = useState<DealerSummary | null>(null);
-  const [pageInfo, setPageInfo] = useState<PageInfo>({ total: 0, totalPages: 1 });
+  const [pageInfo, setPageInfo] = useState<PageInfo>({
+    total: 0,
+    totalPages: 1,
+  });
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -255,21 +266,30 @@ export default function Dealers({ onBack }: Props) {
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
       };
-      const [categoriesResponse, summaryResponse, dealersResponse] = await Promise.all([
-        api.get<Category[]>('/dealers/categories'),
-        api.get<DealerSummary>('/dealers/summary'),
-        api.get<{ dealers?: Dealer[]; pagination?: PageInfo }>('/dealers', { params }),
-      ]);
-      if (!Array.isArray(categoriesResponse.data) || !Array.isArray(dealersResponse.data.dealers)) {
+      const [categoriesResponse, summaryResponse, dealersResponse] =
+        await Promise.all([
+          api.get<Category[]>('/dealers/categories'),
+          api.get<DealerSummary>('/dealers/summary'),
+          api.get<{ dealers?: Dealer[]; pagination?: PageInfo }>('/dealers', {
+            params,
+          }),
+        ]);
+      if (
+        !Array.isArray(categoriesResponse.data) ||
+        !Array.isArray(dealersResponse.data.dealers)
+      ) {
         throw new Error('The server returned invalid dealer data.');
       }
       setCategories(categoriesResponse.data);
       setSummary(summaryResponse.data);
       setDealers(dealersResponse.data.dealers);
-      setPageInfo(dealersResponse.data.pagination || { total: 0, totalPages: 1 });
+      setPageInfo(
+        dealersResponse.data.pagination || { total: 0, totalPages: 1 },
+      );
     } catch (error) {
       setLoadError(inventoryError(error));
-      if (__DEV__) console.warn('[Dealers] Could not load dealer management data:', error);
+      if (__DEV__)
+        console.warn('[Dealers] Could not load dealer management data:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -281,13 +301,18 @@ export default function Dealers({ onBack }: Props) {
     return () => clearTimeout(timer);
   }, [loadData]);
 
-  const activeCategories = useMemo(() => categories.filter(category => category.active !== false), [categories]);
+  const activeCategories = useMemo(
+    () => categories.filter(category => category.active !== false),
+    [categories],
+  );
 
   const startDealerEdit = (dealer: Dealer | null = null) => {
     setEditingDealer(dealer);
-    setForm(dealer
-      ? formFromDealer(dealer, categories)
-      : emptyForm(String(activeCategories[0]?.id || '')));
+    setForm(
+      dealer
+        ? formFromDealer(dealer, categories)
+        : emptyForm(String(activeCategories[0]?.id || '')),
+    );
     setFormOpen(true);
   };
 
@@ -296,8 +321,17 @@ export default function Dealers({ onBack }: Props) {
   };
 
   const saveDealer = async () => {
-    if (!form.name.trim() || !form.contact_person.trim() || !form.phone.trim() || !form.category_id) {
-      showAlert('Required details missing', 'Enter the dealer name, category, contact person, and phone number.', { variant: 'warning' });
+    if (
+      !form.name.trim() ||
+      !form.contact_person.trim() ||
+      !form.phone.trim() ||
+      !form.category_id
+    ) {
+      showAlert(
+        'Required details missing',
+        'Enter the dealer name, category, contact person, and phone number.',
+        { variant: 'warning' },
+      );
       return;
     }
     setSaving(true);
@@ -322,13 +356,16 @@ export default function Dealers({ onBack }: Props) {
         account_number: form.bank_account_number,
         ifsc: form.bank_ifsc,
       },
-      opening_metal_balances: !editingDealer && form.opening_metal_weight
-        ? [{
-            metal_type: form.opening_metal_type,
-            purity: form.opening_metal_purity,
-            weight: Number(form.opening_metal_weight),
-          }]
-        : [],
+      opening_metal_balances:
+        !editingDealer && form.opening_metal_weight
+          ? [
+              {
+                metal_type: form.opening_metal_type,
+                purity: form.opening_metal_purity,
+                weight: Number(form.opening_metal_weight),
+              },
+            ]
+          : [],
     };
     try {
       if (editingDealer) {
@@ -346,7 +383,9 @@ export default function Dealers({ onBack }: Props) {
       );
       await loadData();
     } catch (error) {
-      showAlert('Could not save dealer', inventoryError(error), { variant: 'error' });
+      showAlert('Could not save dealer', inventoryError(error), {
+        variant: 'error',
+      });
     } finally {
       setSaving(false);
     }
@@ -364,9 +403,15 @@ export default function Dealers({ onBack }: Props) {
       if (!Array.isArray(documents.data) || !Array.isArray(audit.data)) {
         throw new Error('The server returned invalid dealer profile history.');
       }
-      setProfile({ ...detail.data, documents: documents.data, audit: audit.data });
+      setProfile({
+        ...detail.data,
+        documents: documents.data,
+        audit: audit.data,
+      });
     } catch (error) {
-      showAlert('Could not load dealer profile', inventoryError(error), { variant: 'error' });
+      showAlert('Could not load dealer profile', inventoryError(error), {
+        variant: 'error',
+      });
     } finally {
       setProfileLoading(false);
     }
@@ -377,22 +422,35 @@ export default function Dealers({ onBack }: Props) {
     setStatementDealer(dealer);
     setStatement(null);
     try {
-      const response = await api.get<Statement>(`/dealers/${dealer.id}/statement`);
-      if (!Array.isArray(response.data.financial) || !Array.isArray(response.data.metal)) {
+      const response = await api.get<Statement>(
+        `/dealers/${dealer.id}/statement`,
+      );
+      if (
+        !Array.isArray(response.data.financial) ||
+        !Array.isArray(response.data.metal)
+      ) {
         throw new Error('The server returned an invalid dealer statement.');
       }
       setStatement(response.data);
     } catch (error) {
       setStatementDealer(null);
-      showAlert('Could not load dealer statement', inventoryError(error), { variant: 'error' });
+      showAlert('Could not load dealer statement', inventoryError(error), {
+        variant: 'error',
+      });
     } finally {
       setStatementLoading(false);
     }
   };
 
   const applyDateRange = () => {
-    if ((rangeStart && !rangeEnd) || (!rangeStart && rangeEnd) || (rangeStart && rangeEnd && rangeStart > rangeEnd)) {
-      showAlert('Invalid date range', 'Choose a valid start and end date.', { variant: 'warning' });
+    if (
+      (rangeStart && !rangeEnd) ||
+      (!rangeStart && rangeEnd) ||
+      (rangeStart && rangeEnd && rangeStart > rangeEnd)
+    ) {
+      showAlert('Invalid date range', 'Choose a valid start and end date.', {
+        variant: 'warning',
+      });
       return;
     }
     setPage(1);
@@ -400,12 +458,59 @@ export default function Dealers({ onBack }: Props) {
   };
 
   const summaryCards = [
-    { id: 'dealers-active', label: 'Active dealers', value: summary?.dealers?.active ?? '—', note: 'Currently active', icon: Store, palette: 'total_customers' as const },
-    { id: 'dealers-payables', label: 'Supplier payables', value: summary ? currency(summary.payables) : '—', note: 'Outstanding balance', icon: Wallet, palette: 'active_gold_loans' as const },
-    { id: 'dealers-receivables', label: 'Dealer receivables', value: summary ? currency(summary.receivables) : '—', note: 'Amount to receive', icon: ArrowRightLeft, palette: 'gold_stock_value' as const },
-    { id: 'dealers-purchases', label: 'Purchases this month', value: summary ? currency(summary.purchases_this_month) : '—', note: 'Monthly total', icon: Coins, palette: 'total_products' as const },
-    { id: 'dealers-overdue', label: 'Overdue invoices', value: summary ? `${summary.overdue?.count || 0} · ${currency(summary.overdue?.amount)}` : '—', note: 'Invoices past due', icon: AlertTriangle, palette: 'low_stock_products' as const, trendUp: false },
-    { id: 'dealers-jobs', label: 'Open job orders', value: summary?.pending_jobs ?? '—', note: 'Awaiting completion', icon: ClipboardList, palette: 'total_categories' as const },
+    {
+      id: 'dealers-active',
+      label: 'Active dealers',
+      value: summary?.dealers?.active ?? '—',
+      note: 'Currently active',
+      icon: Store,
+      palette: 'total_customers' as const,
+    },
+    {
+      id: 'dealers-payables',
+      label: 'Supplier payables',
+      value: summary ? currency(summary.payables) : '—',
+      note: 'Outstanding balance',
+      icon: Wallet,
+      palette: 'active_gold_loans' as const,
+    },
+    {
+      id: 'dealers-receivables',
+      label: 'Dealer receivables',
+      value: summary ? currency(summary.receivables) : '—',
+      note: 'Amount to receive',
+      icon: ArrowRightLeft,
+      palette: 'gold_stock_value' as const,
+    },
+    {
+      id: 'dealers-purchases',
+      label: 'Purchases this month',
+      value: summary ? currency(summary.purchases_this_month) : '—',
+      note: 'Monthly total',
+      icon: Coins,
+      palette: 'total_products' as const,
+    },
+    {
+      id: 'dealers-overdue',
+      label: 'Overdue invoices',
+      value: summary
+        ? `${summary.overdue?.count || 0} · ${currency(
+            summary.overdue?.amount,
+          )}`
+        : '—',
+      note: 'Invoices past due',
+      icon: AlertTriangle,
+      palette: 'low_stock_products' as const,
+      trendUp: false,
+    },
+    {
+      id: 'dealers-jobs',
+      label: 'Open job orders',
+      value: summary?.pending_jobs ?? '—',
+      note: 'Awaiting completion',
+      icon: ClipboardList,
+      palette: 'total_categories' as const,
+    },
   ];
 
   const closeProfile = () => setProfile(null);
@@ -416,7 +521,11 @@ export default function Dealers({ onBack }: Props) {
 
   return (
     <View className="flex-1 bg-[#F8F7F2]">
-      <InnerHeader title="Dealer Management" sectionLabel="More · Dealers" onBack={onBack} />
+      <InnerHeader
+        title="Dealer Management"
+        sectionLabel="More · Dealers"
+        onBack={onBack}
+      />
       <ScrollView
         className="flex-1"
         contentContainerClassName="p-4 pb-28"
@@ -430,17 +539,20 @@ export default function Dealers({ onBack }: Props) {
             }}
             tintColor="#07564B"
           />
-        }>
+        }
+      >
         <DashboardMetricGrid
-          metrics={summaryCards.map(({ id, label, value, note, icon, palette, trendUp }) => ({
-            id,
-            label,
-            value: String(value),
-            icon,
-            palette,
-            trend: note,
-            trendUp,
-          }))}
+          metrics={summaryCards.map(
+            ({ id, label, value, note, icon, palette, trendUp }) => ({
+              id,
+              label,
+              value: String(value),
+              icon,
+              palette,
+              trend: note,
+              trendUp,
+            }),
+          )}
         />
 
         <View className="mb-3 flex-row items-center rounded-2xl border border-[#E8D596] bg-white px-4 shadow-sm">
@@ -464,7 +576,8 @@ export default function Dealers({ onBack }: Props) {
                 setPage(1);
                 setSearch('');
               }}
-              hitSlop={8}>
+              hitSlop={8}
+            >
               <X size={18} color="#6B7E76" />
             </Pressable>
           ) : null}
@@ -483,21 +596,36 @@ export default function Dealers({ onBack }: Props) {
             setStatusFilter(value);
           }}
         />
-        <Text className="mb-2 text-xs font-bold uppercase tracking-wide text-[#52645F]">Created date range</Text>
+        <Text className="mb-2 text-xs font-bold uppercase tracking-wide text-[#52645F]">
+          Created date range
+        </Text>
         <View className="flex-row gap-3">
           <View className="min-w-0 flex-1">
-            <DatePicker label="From" value={rangeStart} onChange={setRangeStart} maximumDate={null} />
+            <DatePicker
+              label="From"
+              value={rangeStart}
+              onChange={setRangeStart}
+              maximumDate={null}
+            />
           </View>
           <View className="min-w-0 flex-1">
-            <DatePicker label="To" value={rangeEnd} onChange={setRangeEnd} maximumDate={null} />
+            <DatePicker
+              label="To"
+              value={rangeEnd}
+              onChange={setRangeEnd}
+              maximumDate={null}
+            />
           </View>
         </View>
         <Pressable
           accessibilityRole="button"
           onPress={applyDateRange}
-          className="mb-4 min-h-11 items-center justify-center rounded-xl bg-[#07564B]">
+          className="mb-4 min-h-11 items-center justify-center rounded-xl bg-[#07564B]"
+        >
           <Text className="text-sm font-bold text-white">
-            {dateRange.startDate || dateRange.endDate ? 'Apply date range' : 'Apply date filter'}
+            {dateRange.startDate || dateRange.endDate
+              ? 'Apply date range'
+              : 'Apply date filter'}
           </Text>
         </Pressable>
 
@@ -513,41 +641,75 @@ export default function Dealers({ onBack }: Props) {
           <ActivityIndicator className="py-8" color="#07564B" />
         ) : dealers.length ? (
           dealers.map(dealer => (
-            <View key={String(dealer.id)} className="mb-3 rounded-2xl border border-[#E6E9E3] bg-white p-4">
+            <View
+              key={String(dealer.id)}
+              className="mb-3 rounded-2xl border border-[#E6E9E3] bg-white p-4"
+            >
               <View className="flex-row items-start justify-between gap-2">
-                <Pressable onPress={() => openDealerProfile(dealer)} className="flex-1">
-                  <Text className="font-extrabold text-[#07564B]">{dealer.name}</Text>
-                  <Text className="mt-1 text-xs text-[#6B7E76]">{dealer.dealer_code || 'Dealer'} · {dealer.category_name || 'Uncategorized'}</Text>
+                <Pressable
+                  onPress={() => openDealerProfile(dealer)}
+                  className="flex-1"
+                >
+                  <Text className="font-extrabold text-[#07564B]">
+                    {dealer.name}
+                  </Text>
+                  <Text className="mt-1 text-xs text-[#6B7E76]">
+                    {dealer.dealer_code || 'Dealer'} ·{' '}
+                    {dealer.category_name || 'Uncategorized'}
+                  </Text>
                 </Pressable>
-                <Text className={`rounded-full px-3 py-1 text-[10px] font-extrabold ${
-                  dealer.status === 'Active' ? 'bg-[#EAF3EF] text-[#07564B]' : 'bg-[#F3F4F1] text-[#6B7E76]'
-                }`}>{dealer.status}</Text>
+                <Text
+                  className={`rounded-full px-3 py-1 text-[10px] font-extrabold ${
+                    dealer.status === 'Active'
+                      ? 'bg-[#EAF3EF] text-[#07564B]'
+                      : 'bg-[#F3F4F1] text-[#6B7E76]'
+                  }`}
+                >
+                  {dealer.status}
+                </Text>
               </View>
               <View className="mt-3 border-t border-[#F1F2EE] pt-3">
-                <Text className="text-sm text-[#52645F]">{dealer.contact_person || 'Contact unavailable'} · {dealer.phone || 'No phone'}</Text>
-                <Text className="mt-1 text-xs text-[#6B7E76]">GSTIN: {dealer.gstin || 'Not recorded'}</Text>
+                <Text className="text-sm text-[#52645F]">
+                  {dealer.contact_person || 'Contact unavailable'} ·{' '}
+                  {dealer.phone || 'No phone'}
+                </Text>
+                <Text className="mt-1 text-xs text-[#6B7E76]">
+                  GSTIN: {dealer.gstin || 'Not recorded'}
+                </Text>
               </View>
               <View className="mt-3 flex-row gap-2">
                 <View className="flex-1 rounded-xl bg-[#F8F7F2] p-3">
-                  <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">Payable</Text>
-                  <Text className="mt-1 font-extrabold text-[#173F35]">{currency(dealer.payable_balance)}</Text>
+                  <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">
+                    Payable
+                  </Text>
+                  <Text className="mt-1 font-extrabold text-[#173F35]">
+                    {currency(dealer.payable_balance)}
+                  </Text>
                 </View>
                 <View className="flex-1 rounded-xl bg-[#F8F7F2] p-3">
-                  <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">Receivable</Text>
-                  <Text className="mt-1 font-extrabold text-[#173F35]">{currency(dealer.receivable_balance)}</Text>
+                  <Text className="text-[10px] font-bold uppercase text-[#6B7E76]">
+                    Receivable
+                  </Text>
+                  <Text className="mt-1 font-extrabold text-[#173F35]">
+                    {currency(dealer.receivable_balance)}
+                  </Text>
                 </View>
               </View>
               <View className="mt-3 flex-row justify-end gap-2">
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => openStatement(dealer)}
-                  className="rounded-lg border border-[#E6E9E3] px-3 py-2">
-                  <Text className="text-xs font-bold text-[#52645F]">Statement</Text>
+                  className="rounded-lg border border-[#E6E9E3] px-3 py-2"
+                >
+                  <Text className="text-xs font-bold text-[#52645F]">
+                    Statement
+                  </Text>
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => startDealerEdit(dealer)}
-                  className="flex-row items-center gap-1 rounded-lg bg-[#07564B] px-3 py-2">
+                  className="flex-row items-center gap-1 rounded-lg bg-[#07564B] px-3 py-2"
+                >
                   <Pencil size={14} color="white" />
                   <Text className="text-xs font-bold text-white">Edit</Text>
                 </Pressable>
@@ -556,26 +718,37 @@ export default function Dealers({ onBack }: Props) {
           ))
         ) : !loadError ? (
           <View className="items-center rounded-2xl bg-white p-8">
-            <Text className="font-bold text-[#173F35]">No dealer records found</Text>
-            <Text className="mt-1 text-sm text-[#6B7E76]">Try changing the filters or register a dealer.</Text>
+            <Text className="font-bold text-[#173F35]">
+              No dealer records found
+            </Text>
+            <Text className="mt-1 text-sm text-[#6B7E76]">
+              Try changing the filters or register a dealer.
+            </Text>
           </View>
         ) : null}
 
         <View className="mt-2 flex-row items-center justify-between">
-          <Text className="text-xs text-[#6B7E76]">{pageInfo.total} dealer records · Page {page} of {pageInfo.totalPages}</Text>
+          <Text className="text-xs text-[#6B7E76]">
+            {pageInfo.total} dealer records · Page {page} of{' '}
+            {pageInfo.totalPages}
+          </Text>
           <View className="flex-row gap-2">
             <Pressable
               accessibilityLabel="Previous dealer page"
               disabled={page <= 1}
               onPress={() => setPage(current => Math.max(1, current - 1))}
-              className="h-10 w-10 items-center justify-center rounded-full bg-white disabled:opacity-40">
+              className="h-10 w-10 items-center justify-center rounded-full bg-white disabled:opacity-40"
+            >
               <ChevronLeft size={18} color="#07564B" />
             </Pressable>
             <Pressable
               accessibilityLabel="Next dealer page"
               disabled={page >= pageInfo.totalPages}
-              onPress={() => setPage(current => Math.min(pageInfo.totalPages, current + 1))}
-              className="h-10 w-10 items-center justify-center rounded-full bg-white disabled:opacity-40">
+              onPress={() =>
+                setPage(current => Math.min(pageInfo.totalPages, current + 1))
+              }
+              className="h-10 w-10 items-center justify-center rounded-full bg-white disabled:opacity-40"
+            >
               <ChevronRight size={18} color="#07564B" />
             </Pressable>
           </View>
@@ -586,80 +759,237 @@ export default function Dealers({ onBack }: Props) {
         accessibilityRole="button"
         accessibilityLabel="Register dealer"
         onPress={() => startDealerEdit()}
-        style={{ bottom: Math.max(insets.bottom, 20) }}
-        className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg">
+        style={{ bottom: 20 }}
+        className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-[#07564B] shadow-lg"
+      >
         <Plus size={24} color="white" />
       </Pressable>
 
-      <Modal visible={formOpen} animationType="slide" onRequestClose={() => { if (!saving) setFormOpen(false); }}>
-        <KeyboardAvoidingView className="flex-1 bg-[#F8F7F2]" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={{ paddingTop: insets.top + 10 }} className="flex-row items-center justify-between bg-[#173F35] px-5 pb-4">
+      <Modal
+        visible={formOpen}
+        animationType="slide"
+        onRequestClose={() => {
+          if (!saving) setFormOpen(false);
+        }}
+      >
+        <KeyboardAvoidingView
+          className="flex-1 bg-[#F8F7F2]"
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View
+            style={{ paddingTop: insets.top + 10 }}
+            className="flex-row items-center justify-between bg-[#173F35] px-5 pb-4"
+          >
             <View className="flex-1">
-              <Text className="text-xs font-bold uppercase tracking-wide text-[#EAD78A]">Dealer Management</Text>
-              <Text className="mt-1 text-lg font-extrabold text-white">{editingDealer ? 'Update Dealer Profile' : 'Register Dealer'}</Text>
+              <Text className="text-xs font-bold uppercase tracking-wide text-[#EAD78A]">
+                Dealer Management
+              </Text>
+              <Text className="mt-1 text-lg font-extrabold text-white">
+                {editingDealer ? 'Update Dealer Profile' : 'Register Dealer'}
+              </Text>
             </View>
-            <Pressable accessibilityLabel="Close dealer form" disabled={saving} onPress={() => setFormOpen(false)}>
+            <Pressable
+              accessibilityLabel="Close dealer form"
+              disabled={saving}
+              onPress={() => setFormOpen(false)}
+            >
               <X size={22} color="#EAD78A" />
             </Pressable>
           </View>
-          <ScrollView contentContainerClassName="p-4 pb-10" keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+          <ScrollView
+            contentContainerClassName="p-4 pb-10"
+            keyboardShouldPersistTaps="handled"
+            automaticallyAdjustKeyboardInsets
+          >
             <View className="rounded-2xl bg-white p-4">
-              <Text className="mb-1 text-base font-extrabold text-[#173F35]">Dealer details</Text>
-              <Text className="mb-4 text-xs leading-5 text-[#6B7E76]">
-                Financial and metal opening balances are recorded once in separate ledgers.
+              <Text className="mb-1 text-base font-extrabold text-[#173F35]">
+                Dealer details
               </Text>
-              <Field label="Dealer / firm name" value={form.name} onChangeText={value => setField('name', value.slice(0, 200))} required />
+              <Text className="mb-4 text-xs leading-5 text-[#6B7E76]">
+                Financial and metal opening balances are recorded once in
+                separate ledgers.
+              </Text>
+              <Field
+                label="Dealer / firm name"
+                value={form.name}
+                onChangeText={value => setField('name', value.slice(0, 200))}
+                required
+              />
               <CustomDropdown
                 label="Dealer category"
                 value={form.category_id}
-                options={activeCategories.map(category => ({ value: String(category.id), label: category.name }))}
+                options={activeCategories.map(category => ({
+                  value: String(category.id),
+                  label: category.name,
+                }))}
                 onSelect={value => setField('category_id', value)}
-                placeholder={activeCategories.length ? 'Choose category' : 'No active categories'}
+                placeholder={
+                  activeCategories.length
+                    ? 'Choose category'
+                    : 'No active categories'
+                }
                 required
               />
               <CustomDropdown
                 label="Status"
                 value={form.status}
-                options={['Active', 'Inactive', 'On Hold'].map(value => ({ value, label: value }))}
+                options={['Active', 'Inactive', 'On Hold'].map(value => ({
+                  value,
+                  label: value,
+                }))}
                 onSelect={value => setField('status', value)}
               />
-              <Field label="Contact person" value={form.contact_person} onChangeText={value => setField('contact_person', value.slice(0, 150))} required />
-              <Field label="Phone" value={form.phone} onChangeText={value => setField('phone', value.slice(0, 32))} keyboardType="phone-pad" required />
-              <Field label="Alternate phone" value={form.alternate_phone} onChangeText={value => setField('alternate_phone', value.slice(0, 32))} keyboardType="phone-pad" />
-              <Field label="Email" value={form.email} onChangeText={value => setField('email', value.slice(0, 254))} keyboardType="email-address" autoCapitalize="none" />
-              <Field label="GSTIN" value={form.gstin} onChangeText={value => setField('gstin', value.toUpperCase().slice(0, 15))} autoCapitalize="characters" />
-              <Field label="PAN" value={form.pan} onChangeText={value => setField('pan', value.toUpperCase().slice(0, 10))} autoCapitalize="characters" />
+              <Field
+                label="Contact person"
+                value={form.contact_person}
+                onChangeText={value =>
+                  setField('contact_person', value.slice(0, 150))
+                }
+                required
+              />
+              <Field
+                label="Phone"
+                value={form.phone}
+                onChangeText={value => setField('phone', value.slice(0, 32))}
+                keyboardType="phone-pad"
+                required
+              />
+              <Field
+                label="Alternate phone"
+                value={form.alternate_phone}
+                onChangeText={value =>
+                  setField('alternate_phone', value.slice(0, 32))
+                }
+                keyboardType="phone-pad"
+              />
+              <Field
+                label="Email"
+                value={form.email}
+                onChangeText={value => setField('email', value.slice(0, 254))}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              <Field
+                label="GSTIN"
+                value={form.gstin}
+                onChangeText={value =>
+                  setField('gstin', value.toUpperCase().slice(0, 15))
+                }
+                autoCapitalize="characters"
+              />
+              <Field
+                label="PAN"
+                value={form.pan}
+                onChangeText={value =>
+                  setField('pan', value.toUpperCase().slice(0, 10))
+                }
+                autoCapitalize="characters"
+              />
             </View>
 
             <View className="mt-4 rounded-2xl bg-white p-4">
-              <Text className="mb-4 text-base font-extrabold text-[#173F35]">Billing Address</Text>
-              <Field label="Billing address" value={form.billing_address_line1} onChangeText={value => setField('billing_address_line1', value)} />
-              <Field label="Billing city" value={form.billing_city} onChangeText={value => setField('billing_city', value)} />
-              <Field label="Billing state" value={form.billing_state} onChangeText={value => setField('billing_state', value)} />
-              <Field label="Billing pincode" value={form.billing_pincode} onChangeText={value => setField('billing_pincode', value)} keyboardType="numeric" />
+              <Text className="mb-4 text-base font-extrabold text-[#173F35]">
+                Billing Address
+              </Text>
+              <Field
+                label="Billing address"
+                value={form.billing_address_line1}
+                onChangeText={value => setField('billing_address_line1', value)}
+              />
+              <Field
+                label="Billing city"
+                value={form.billing_city}
+                onChangeText={value => setField('billing_city', value)}
+              />
+              <Field
+                label="Billing state"
+                value={form.billing_state}
+                onChangeText={value => setField('billing_state', value)}
+              />
+              <Field
+                label="Billing pincode"
+                value={form.billing_pincode}
+                onChangeText={value => setField('billing_pincode', value)}
+                keyboardType="numeric"
+              />
             </View>
 
             <View className="mt-4 rounded-2xl bg-white p-4">
-              <Text className="mb-4 text-base font-extrabold text-[#173F35]">Shipping Address</Text>
-              <Field label="Shipping address" value={form.shipping_address_line1} onChangeText={value => setField('shipping_address_line1', value)} />
-              <Field label="Shipping city" value={form.shipping_city} onChangeText={value => setField('shipping_city', value)} />
-              <Field label="Shipping state" value={form.shipping_state} onChangeText={value => setField('shipping_state', value)} />
-              <Field label="Shipping pincode" value={form.shipping_pincode} onChangeText={value => setField('shipping_pincode', value)} keyboardType="numeric" />
+              <Text className="mb-4 text-base font-extrabold text-[#173F35]">
+                Shipping Address
+              </Text>
+              <Field
+                label="Shipping address"
+                value={form.shipping_address_line1}
+                onChangeText={value =>
+                  setField('shipping_address_line1', value)
+                }
+              />
+              <Field
+                label="Shipping city"
+                value={form.shipping_city}
+                onChangeText={value => setField('shipping_city', value)}
+              />
+              <Field
+                label="Shipping state"
+                value={form.shipping_state}
+                onChangeText={value => setField('shipping_state', value)}
+              />
+              <Field
+                label="Shipping pincode"
+                value={form.shipping_pincode}
+                onChangeText={value => setField('shipping_pincode', value)}
+                keyboardType="numeric"
+              />
             </View>
 
             <View className="mt-4 rounded-2xl bg-white p-4">
-              <Text className="mb-4 text-base font-extrabold text-[#173F35]">Financial & Banking</Text>
-              <Field label="Credit limit (₹)" value={form.credit_limit} onChangeText={value => setField('credit_limit', value)} keyboardType="decimal-pad" />
-              <Field label="Payment terms (days)" value={form.payment_terms_days} onChangeText={value => setField('payment_terms_days', value)} keyboardType="numeric" />
-              <Field label="Bank name" value={form.bank_name} onChangeText={value => setField('bank_name', value)} />
-              <Field label="Account holder" value={form.bank_account_name} onChangeText={value => setField('bank_account_name', value)} />
-              <Field label="Account number" value={form.bank_account_number} onChangeText={value => setField('bank_account_number', value)} keyboardType="numeric" />
-              <Field label="IFSC" value={form.bank_ifsc} onChangeText={value => setField('bank_ifsc', value.toUpperCase())} autoCapitalize="characters" />
+              <Text className="mb-4 text-base font-extrabold text-[#173F35]">
+                Financial & Banking
+              </Text>
+              <Field
+                label="Credit limit (₹)"
+                value={form.credit_limit}
+                onChangeText={value => setField('credit_limit', value)}
+                keyboardType="decimal-pad"
+              />
+              <Field
+                label="Payment terms (days)"
+                value={form.payment_terms_days}
+                onChangeText={value => setField('payment_terms_days', value)}
+                keyboardType="numeric"
+              />
+              <Field
+                label="Bank name"
+                value={form.bank_name}
+                onChangeText={value => setField('bank_name', value)}
+              />
+              <Field
+                label="Account holder"
+                value={form.bank_account_name}
+                onChangeText={value => setField('bank_account_name', value)}
+              />
+              <Field
+                label="Account number"
+                value={form.bank_account_number}
+                onChangeText={value => setField('bank_account_number', value)}
+                keyboardType="numeric"
+              />
+              <Field
+                label="IFSC"
+                value={form.bank_ifsc}
+                onChangeText={value =>
+                  setField('bank_ifsc', value.toUpperCase())
+                }
+                autoCapitalize="characters"
+              />
             </View>
 
             {!editingDealer ? (
               <View className="mt-4 rounded-2xl bg-white p-4">
-                <Text className="mb-4 text-base font-extrabold text-[#173F35]">Opening Balances</Text>
+                <Text className="mb-4 text-base font-extrabold text-[#173F35]">
+                  Opening Balances
+                </Text>
                 <CustomDropdown
                   label="Opening financial balance side"
                   value={form.opening_balance_side}
@@ -669,11 +999,19 @@ export default function Dealers({ onBack }: Props) {
                   ]}
                   onSelect={value => setField('opening_balance_side', value)}
                 />
-                <Field label="Opening financial balance (₹)" value={form.opening_balance} onChangeText={value => setField('opening_balance', value)} keyboardType="decimal-pad" />
+                <Field
+                  label="Opening financial balance (₹)"
+                  value={form.opening_balance}
+                  onChangeText={value => setField('opening_balance', value)}
+                  keyboardType="decimal-pad"
+                />
                 <CustomDropdown
                   label="Opening metal type"
                   value={form.opening_metal_type}
-                  options={['Gold', 'Silver'].map(value => ({ value, label: value }))}
+                  options={['Gold', 'Silver'].map(value => ({
+                    value,
+                    label: value,
+                  }))}
                   onSelect={value => setField('opening_metal_type', value)}
                 />
                 <CustomDropdown
@@ -682,57 +1020,149 @@ export default function Dealers({ onBack }: Props) {
                   options={PURITIES.map(value => ({ value, label: value }))}
                   onSelect={value => setField('opening_metal_purity', value)}
                 />
-                <Field label="Opening metal weight (g, optional)" value={form.opening_metal_weight} onChangeText={value => setField('opening_metal_weight', value)} keyboardType="decimal-pad" />
+                <Field
+                  label="Opening metal weight (g, optional)"
+                  value={form.opening_metal_weight}
+                  onChangeText={value =>
+                    setField('opening_metal_weight', value)
+                  }
+                  keyboardType="decimal-pad"
+                />
               </View>
             ) : null}
 
             <View className="mt-4 rounded-2xl bg-white p-4">
-              <Field label="Account notes" value={form.notes} onChangeText={value => setField('notes', value.slice(0, 5000))} multiline />
+              <Field
+                label="Account notes"
+                value={form.notes}
+                onChangeText={value => setField('notes', value.slice(0, 5000))}
+                multiline
+              />
             </View>
             <View className="mt-4 flex-row gap-3">
-              <Pressable disabled={saving} onPress={() => setFormOpen(false)} className="min-h-12 flex-1 items-center justify-center rounded-xl border border-[#E6E9E3] bg-white">
+              <Pressable
+                disabled={saving}
+                onPress={() => setFormOpen(false)}
+                className="min-h-12 flex-1 items-center justify-center rounded-xl border border-[#E6E9E3] bg-white"
+              >
                 <Text className="font-bold text-[#52645F]">Cancel</Text>
               </Pressable>
-              <Pressable disabled={saving} onPress={saveDealer} className="min-h-12 flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-[#07564B] disabled:opacity-50">
-                {saving ? <ActivityIndicator color="white" /> : <Text className="font-extrabold text-white">{editingDealer ? 'Save Profile' : 'Create Dealer'}</Text>}
+              <Pressable
+                disabled={saving}
+                onPress={saveDealer}
+                className="min-h-12 flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-[#07564B] disabled:opacity-50"
+              >
+                {saving ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="font-extrabold text-white">
+                    {editingDealer ? 'Save Profile' : 'Create Dealer'}
+                  </Text>
+                )}
               </Pressable>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
 
-      <Modal visible={profileLoading || profile !== null} transparent animationType="slide" onRequestClose={closeProfile}>
+      <Modal
+        visible={profileLoading || profile !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={closeProfile}
+      >
         <View className="flex-1 justify-end bg-black/40">
-          <View style={{ paddingBottom: Math.max(insets.bottom, 16) }} className="max-h-[88%] rounded-t-3xl bg-[#F8F7F2]">
+          <View
+            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+            className="max-h-[88%] rounded-t-3xl bg-[#F8F7F2]"
+          >
             <View className="flex-row items-center justify-between rounded-t-3xl bg-[#173F35] px-5 py-4">
-              <Text className="text-lg font-extrabold text-white">Dealer Profile</Text>
-              <Pressable accessibilityLabel="Close dealer profile" onPress={closeProfile}><X size={22} color="#EAD78A" /></Pressable>
+              <Text className="text-lg font-extrabold text-white">
+                Dealer Profile
+              </Text>
+              <Pressable
+                accessibilityLabel="Close dealer profile"
+                onPress={closeProfile}
+              >
+                <X size={22} color="#EAD78A" />
+              </Pressable>
             </View>
-            {profileLoading ? <ActivityIndicator className="py-10" color="#07564B" /> : profile ? (
-              <ScrollView contentContainerClassName="p-4" keyboardShouldPersistTaps="handled">
+            {profileLoading ? (
+              <ActivityIndicator className="py-10" color="#07564B" />
+            ) : profile ? (
+              <ScrollView
+                contentContainerClassName="p-4"
+                keyboardShouldPersistTaps="handled"
+              >
                 <View className="rounded-2xl bg-white p-4">
-                  <Text className="text-xl font-extrabold text-[#173F35]">{profile.name}</Text>
-                  <Text className="mt-1 text-xs text-[#6B7E76]">{profile.dealer_code} · {profile.category_name}</Text>
-                  <Text className="mt-3 text-sm text-[#52645F]">Contact: {profile.contact_person || '—'} · {profile.phone || '—'}</Text>
-                  <Text className="mt-1 text-sm text-[#52645F]">Email: {profile.email || '—'}</Text>
-                  <Text className="mt-1 text-sm text-[#52645F]">GSTIN: {profile.gstin || '—'} · PAN: {profile.pan || '—'}</Text>
-                  <Text className="mt-1 text-sm text-[#52645F]">Status: {profile.status}</Text>
-                  <Text className="mt-3 text-xs font-bold uppercase text-[#6B7E76]">Billing address</Text>
-                  <Text className="mt-1 text-sm text-[#52645F]">
-                    {[profile.billing_address?.line1, profile.billing_address?.city, profile.billing_address?.state, profile.billing_address?.pincode].filter(Boolean).join(', ') || '—'}
+                  <Text className="text-xl font-extrabold text-[#173F35]">
+                    {profile.name}
                   </Text>
-                  <Text className="mt-3 text-xs font-bold uppercase text-[#6B7E76]">Private dealer documents</Text>
-                  {profile.documents?.length ? profile.documents.map(document => (
-                    <Text key={String(document.id)} className="mt-2 text-sm text-[#52645F]">
-                      {document.document_type}: {document.original_name}
+                  <Text className="mt-1 text-xs text-[#6B7E76]">
+                    {profile.dealer_code} · {profile.category_name}
+                  </Text>
+                  <Text className="mt-3 text-sm text-[#52645F]">
+                    Contact: {profile.contact_person || '—'} ·{' '}
+                    {profile.phone || '—'}
+                  </Text>
+                  <Text className="mt-1 text-sm text-[#52645F]">
+                    Email: {profile.email || '—'}
+                  </Text>
+                  <Text className="mt-1 text-sm text-[#52645F]">
+                    GSTIN: {profile.gstin || '—'} · PAN: {profile.pan || '—'}
+                  </Text>
+                  <Text className="mt-1 text-sm text-[#52645F]">
+                    Status: {profile.status}
+                  </Text>
+                  <Text className="mt-3 text-xs font-bold uppercase text-[#6B7E76]">
+                    Billing address
+                  </Text>
+                  <Text className="mt-1 text-sm text-[#52645F]">
+                    {[
+                      profile.billing_address?.line1,
+                      profile.billing_address?.city,
+                      profile.billing_address?.state,
+                      profile.billing_address?.pincode,
+                    ]
+                      .filter(Boolean)
+                      .join(', ') || '—'}
+                  </Text>
+                  <Text className="mt-3 text-xs font-bold uppercase text-[#6B7E76]">
+                    Private dealer documents
+                  </Text>
+                  {profile.documents?.length ? (
+                    profile.documents.map(document => (
+                      <Text
+                        key={String(document.id)}
+                        className="mt-2 text-sm text-[#52645F]"
+                      >
+                        {document.document_type}: {document.original_name}
+                      </Text>
+                    ))
+                  ) : (
+                    <Text className="mt-1 text-sm text-[#6B7E76]">
+                      No documents on file.
                     </Text>
-                  )) : <Text className="mt-1 text-sm text-[#6B7E76]">No documents on file.</Text>}
-                  <Text className="mb-1 mt-4 text-xs font-bold uppercase text-[#6B7E76]">Account audit history</Text>
-                  {profile.audit?.length ? profile.audit.map(item => (
-                    <Text key={String(item.id)} className="border-t border-[#F1F2EE] py-2 text-xs leading-5 text-[#52645F]">
-                      {item.action} by {item.actor || 'Unknown'} · {displayDate(item.created_at)}{item.reason ? ` · ${item.reason}` : ''}
+                  )}
+                  <Text className="mb-1 mt-4 text-xs font-bold uppercase text-[#6B7E76]">
+                    Account audit history
+                  </Text>
+                  {profile.audit?.length ? (
+                    profile.audit.map(item => (
+                      <Text
+                        key={String(item.id)}
+                        className="border-t border-[#F1F2EE] py-2 text-xs leading-5 text-[#52645F]"
+                      >
+                        {item.action} by {item.actor || 'Unknown'} ·{' '}
+                        {displayDate(item.created_at)}
+                        {item.reason ? ` · ${item.reason}` : ''}
+                      </Text>
+                    ))
+                  ) : (
+                    <Text className="text-sm text-[#6B7E76]">
+                      No account changes recorded.
                     </Text>
-                  )) : <Text className="text-sm text-[#6B7E76]">No account changes recorded.</Text>}
+                  )}
                 </View>
               </ScrollView>
             ) : null}
@@ -740,41 +1170,101 @@ export default function Dealers({ onBack }: Props) {
         </View>
       </Modal>
 
-      <Modal visible={statementLoading || statement !== null} transparent animationType="slide" onRequestClose={closeStatement}>
+      <Modal
+        visible={statementLoading || statement !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={closeStatement}
+      >
         <View className="flex-1 justify-end bg-black/40">
-          <View style={{ paddingBottom: Math.max(insets.bottom, 16) }} className="max-h-[90%] rounded-t-3xl bg-[#F8F7F2]">
+          <View
+            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+            className="max-h-[90%] rounded-t-3xl bg-[#F8F7F2]"
+          >
             <View className="flex-row items-center justify-between rounded-t-3xl bg-[#173F35] px-5 py-4">
               <View className="flex-1">
-                <Text className="text-base font-extrabold text-white">Dealer Statement</Text>
-                <Text className="mt-1 text-xs text-[#DCE8E4]">{statementDealer?.name} · money and metal shown separately</Text>
+                <Text className="text-base font-extrabold text-white">
+                  Dealer Statement
+                </Text>
+                <Text className="mt-1 text-xs text-[#DCE8E4]">
+                  {statementDealer?.name} · money and metal shown separately
+                </Text>
               </View>
-              <Pressable accessibilityLabel="Close dealer statement" onPress={closeStatement}><X size={22} color="#EAD78A" /></Pressable>
+              <Pressable
+                accessibilityLabel="Close dealer statement"
+                onPress={closeStatement}
+              >
+                <X size={22} color="#EAD78A" />
+              </Pressable>
             </View>
-            {statementLoading ? <ActivityIndicator className="py-10" color="#07564B" /> : statement ? (
+            {statementLoading ? (
+              <ActivityIndicator className="py-10" color="#07564B" />
+            ) : statement ? (
               <ScrollView contentContainerClassName="p-4">
-                <Text className="mb-2 text-base font-extrabold text-[#07564B]">Financial ledger (₹)</Text>
+                <Text className="mb-2 text-base font-extrabold text-[#07564B]">
+                  Financial ledger (₹)
+                </Text>
                 {statement.financial.map(row => (
-                  <View key={String(row.id)} className="mb-2 rounded-xl bg-white p-3">
-                    <Text className="font-bold text-[#173F35]">{row.entry_number || 'Ledger entry'} · {displayDate(row.created_at)}</Text>
-                    <Text className="mt-1 text-xs text-[#52645F]">{row.description || '—'}</Text>
-                    <Text className="mt-2 text-xs text-[#52645F]">
-                      Payable Δ {currency(row.payable_delta)} · Receivable Δ {currency(row.receivable_delta)}
+                  <View
+                    key={String(row.id)}
+                    className="mb-2 rounded-xl bg-white p-3"
+                  >
+                    <Text className="font-bold text-[#173F35]">
+                      {row.entry_number || 'Ledger entry'} ·{' '}
+                      {displayDate(row.created_at)}
                     </Text>
-                    <Text className="mt-1 text-xs font-bold text-[#173F35]">Balance payable {currency(row.payable_balance)}</Text>
+                    <Text className="mt-1 text-xs text-[#52645F]">
+                      {row.description || '—'}
+                    </Text>
+                    <Text className="mt-2 text-xs text-[#52645F]">
+                      Payable Δ {currency(row.payable_delta)} · Receivable Δ{' '}
+                      {currency(row.receivable_delta)}
+                    </Text>
+                    <Text className="mt-1 text-xs font-bold text-[#173F35]">
+                      Balance payable {currency(row.payable_balance)}
+                    </Text>
                   </View>
                 ))}
-                {statement.financial.length === 0 ? <Text className="mb-4 rounded-xl bg-white p-4 text-sm text-[#6B7E76]">No financial ledger entries for this period.</Text> : null}
-                <Text className="mb-2 mt-4 text-base font-extrabold text-[#07564B]">Metal ledger (grams by purity)</Text>
+                {statement.financial.length === 0 ? (
+                  <Text className="mb-4 rounded-xl bg-white p-4 text-sm text-[#6B7E76]">
+                    No financial ledger entries for this period.
+                  </Text>
+                ) : null}
+                <Text className="mb-2 mt-4 text-base font-extrabold text-[#07564B]">
+                  Metal ledger (grams by purity)
+                </Text>
                 {statement.metal.map(row => (
-                  <View key={String(row.id)} className="mb-2 rounded-xl bg-white p-3">
-                    <Text className="font-bold text-[#173F35]">{row.entry_number || 'Metal entry'} · {displayDate(row.created_at)}</Text>
-                    <Text className="mt-1 text-xs text-[#52645F]">{row.metal_type} {row.purity} · {row.movement || 'Movement'}</Text>
-                    <Text className="mt-2 text-xs text-[#52645F]">Weight Δ {Number(row.weight_delta || 0).toFixed(3)} g · Fine-gold Δ {Number(row.fine_gold_delta || 0).toFixed(3)} g</Text>
-                    <Text className="mt-1 text-xs text-[#52645F]">{row.reconciliation_status || '—'} · Closing {Number(row.closing_weight || 0).toFixed(3)} g</Text>
+                  <View
+                    key={String(row.id)}
+                    className="mb-2 rounded-xl bg-white p-3"
+                  >
+                    <Text className="font-bold text-[#173F35]">
+                      {row.entry_number || 'Metal entry'} ·{' '}
+                      {displayDate(row.created_at)}
+                    </Text>
+                    <Text className="mt-1 text-xs text-[#52645F]">
+                      {row.metal_type} {row.purity} ·{' '}
+                      {row.movement || 'Movement'}
+                    </Text>
+                    <Text className="mt-2 text-xs text-[#52645F]">
+                      Weight Δ {Number(row.weight_delta || 0).toFixed(3)} g ·
+                      Fine-gold Δ {Number(row.fine_gold_delta || 0).toFixed(3)}{' '}
+                      g
+                    </Text>
+                    <Text className="mt-1 text-xs text-[#52645F]">
+                      {row.reconciliation_status || '—'} · Closing{' '}
+                      {Number(row.closing_weight || 0).toFixed(3)} g
+                    </Text>
                   </View>
                 ))}
-                {statement.metal.length === 0 ? <Text className="rounded-xl bg-white p-4 text-sm text-[#6B7E76]">No metal ledger entries for this period.</Text> : null}
-                <Text className="mt-3 text-right text-[10px] text-[#6B7E76]">Generated {displayDate(statement.generated_at)}</Text>
+                {statement.metal.length === 0 ? (
+                  <Text className="rounded-xl bg-white p-4 text-sm text-[#6B7E76]">
+                    No metal ledger entries for this period.
+                  </Text>
+                ) : null}
+                <Text className="mt-3 text-right text-[10px] text-[#6B7E76]">
+                  Generated {displayDate(statement.generated_at)}
+                </Text>
               </ScrollView>
             ) : null}
           </View>

@@ -31,7 +31,6 @@ import {
   Trash2,
   UserRound,
 } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import api, { API_BASE_URL } from '../../api';
 
 type ProfileData = {
@@ -469,7 +468,7 @@ export default function Profile({ onLogout }: { onLogout: () => void }) {
 
   return (
     <>
-      <SafeAreaView edges={['bottom']} className="flex-1 bg-[#F8F7F2]">
+      <View className="flex-1 bg-[#F8F7F2]">
         <ScrollView
           testID="admin-profile"
           className="flex-1 bg-[#F8F7F2]"
@@ -916,7 +915,7 @@ export default function Profile({ onLogout }: { onLogout: () => void }) {
             </View>
           ) : null}
         </ScrollView>
-      </SafeAreaView>
+      </View>
 
       <Modal
         visible={showDeactivationModal}
