@@ -999,9 +999,10 @@ export default function CreateLoan({
         onBack={onBack}
       />
       <ScrollView
+        className="flex-1"
         keyboardShouldPersistTaps="handled"
         contentContainerClassName="px-4"
-        contentContainerStyle={{ paddingBottom: keyboardHeight + 32 }}
+        contentContainerStyle={{ paddingBottom: keyboardHeight + 20 }}
         automaticallyAdjustKeyboardInsets>
         <Text className="mb-4 text-sm leading-5 text-[#6B7280]">
           Add customer details, record pledged jewellery and define the loan terms.
@@ -1538,34 +1539,34 @@ export default function CreateLoan({
           )}
         </View>
 
-        <View className="mb-6 flex-row gap-2">
+      </ScrollView>
+      <View className="flex-row gap-2 border-t border-[#E6E9E3] bg-[#F8F7F2] px-4 py-3">
+        <Pressable
+          accessibilityRole="button"
+          disabled={saving}
+          onPress={onBack}
+          className="min-h-11 flex-1 items-center justify-center rounded-xl border border-[#DDBB57] bg-white px-3">
+          <Text className="text-sm font-bold text-[#173F35]">Cancel</Text>
+        </Pressable>
+        {!loanId ? (
           <Pressable
             accessibilityRole="button"
             disabled={saving}
-            onPress={onBack}
-            className="min-h-10 flex-1 items-center justify-center rounded-xl border border-[#DDBB57] bg-white px-3">
-            <Text className="text-sm font-bold text-[#173F35]">Cancel</Text>
+            onPress={resetForm}
+            className="min-h-11 flex-1 flex-row items-center justify-center rounded-xl border border-[#A7D6C9] bg-[#EFF9F5] px-3">
+            <RotateCcw size={15} color="#07564B" />
+            <Text className="ml-1.5 text-sm font-bold text-[#173F35]">Reset</Text>
           </Pressable>
-          {!loanId ? (
-            <Pressable
-              accessibilityRole="button"
-              disabled={saving}
-              onPress={resetForm}
-              className="min-h-10 flex-1 flex-row items-center justify-center rounded-xl border border-[#A7D6C9] bg-[#EFF9F5] px-3">
-              <RotateCcw size={15} color="#07564B" />
-              <Text className="ml-1.5 text-sm font-bold text-[#173F35]">Reset</Text>
-            </Pressable>
-          ) : null}
-          <View className="flex-[1.4]">
-            <SubmitButton
-              label={loanId ? 'Update Loan' : 'Save Loan'}
-              loading={saving}
-              onPress={saveLoan}
-              compact
-            />
-          </View>
+        ) : null}
+        <View className="flex-[1.4] justify-center">
+          <SubmitButton
+            label={loanId ? 'Update Loan' : 'Save Loan'}
+            loading={saving}
+            onPress={saveLoan}
+            compact
+          />
         </View>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }

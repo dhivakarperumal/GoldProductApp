@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCustomAlert } from '../../Components/CustomAlert';
 import api from '../../api';
@@ -410,12 +411,12 @@ export default function LoanRenewalFlow({
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Close"
+              accessibilityLabel="Close loan renewal form"
               disabled={saving || savingReview}
               onPress={onClose}
-              className="rounded-full bg-white/10 px-3 py-2"
+              className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
             >
-              <Text className="font-bold text-white">Close</Text>
+              <X size={20} color="#EAD78A" />
             </Pressable>
           </View>
           {loading ? (
@@ -551,11 +552,6 @@ export default function LoanRenewalFlow({
                         </Text>
                       </View>
                     ) : null}
-                    <SubmitButton
-                      label="Record Payment & Renew"
-                      loading={saving}
-                      onPress={submitPayment}
-                    />
                     {!canPay && paymentAmount ? (
                       <Text className="-mt-4 mb-3 text-xs text-[#B42332]">
                         Payment must cover accrued interest and cannot exceed
@@ -605,22 +601,6 @@ export default function LoanRenewalFlow({
                     placeholder="Record who was contacted and any response"
                     multiline
                   />
-                  <Pressable
-                    accessibilityRole="button"
-                    disabled={
-                      savingReview ||
-                      !customerMessage.trim() ||
-                      !reviewNotes.trim()
-                    }
-                    onPress={() => submitReviewAction('notice_sent')}
-                    className="mb-4 min-h-11 items-center justify-center rounded-xl bg-[#064A41] px-3 py-2 disabled:opacity-50"
-                  >
-                    <Text className="text-center text-xs font-bold text-white">
-                      {savingReview
-                        ? 'Saving...'
-                        : 'Confirm Notice Sent & Save Record'}
-                    </Text>
-                  </Pressable>
                   {loan.loan_status === 'Suspended' ? (
                     <>
                       <Text className="mb-2 rounded-lg bg-[#FFF8E7] p-3 text-xs text-[#70540D]">
@@ -633,16 +613,6 @@ export default function LoanRenewalFlow({
                         onChangeText={setReviewActionNotes}
                         multiline
                       />
-                      <Pressable
-                        accessibilityRole="button"
-                        disabled={savingReview || !reviewActionNotes.trim()}
-                        onPress={() => submitReviewAction('reinstate')}
-                        className="min-h-11 items-center justify-center rounded-xl border border-[#07564B] px-3 py-2 disabled:opacity-50"
-                      >
-                        <Text className="text-xs font-bold text-[#07564B]">
-                          Reinstate Renewal
-                        </Text>
-                      </Pressable>
                     </>
                   ) : (
                     <>
@@ -658,20 +628,6 @@ export default function LoanRenewalFlow({
                         placeholder="Reason for suspending renewal access"
                         multiline
                       />
-                      <Pressable
-                        accessibilityRole="button"
-                        disabled={
-                          savingReview ||
-                          !hasNotice ||
-                          !reviewActionNotes.trim()
-                        }
-                        onPress={() => submitReviewAction('suspend')}
-                        className="min-h-11 items-center justify-center rounded-xl bg-[#A16207] px-3 py-2 disabled:opacity-50"
-                      >
-                        <Text className="text-xs font-bold text-white">
-                          Suspend Renewal
-                        </Text>
-                      </Pressable>
                     </>
                   )}
                   {details.reviewActions?.length ? (
@@ -709,6 +665,69 @@ export default function LoanRenewalFlow({
               ) : null}
             </ScrollView>
           )}
+          {!loading &&
+          loan &&
+          preview &&
+          (preview.current_principal > 0 ||
+            (allowReview && manualReviewDue)) ? (
+            <View className="gap-2 border-t border-[#E6E9E3] bg-[#F8F7F2] px-4 pt-3">
+              {preview.current_principal > 0 ? (
+                <SubmitButton
+                  label="Record Payment & Renew"
+                  loading={saving}
+                  onPress={submitPayment}
+                  compact
+                />
+              ) : null}
+              {allowReview && manualReviewDue ? (
+                <>
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={
+                      savingReview ||
+                      !customerMessage.trim() ||
+                      !reviewNotes.trim()
+                    }
+                    onPress={() => submitReviewAction('notice_sent')}
+                    className="min-h-11 items-center justify-center rounded-xl bg-[#064A41] px-3 py-2 disabled:opacity-50"
+                  >
+                    <Text className="text-center text-xs font-bold text-white">
+                      {savingReview
+                        ? 'Saving...'
+                        : 'Confirm Notice Sent & Save Record'}
+                    </Text>
+                  </Pressable>
+                  {loan.loan_status === 'Suspended' ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      disabled={savingReview || !reviewActionNotes.trim()}
+                      onPress={() => submitReviewAction('reinstate')}
+                      className="min-h-11 items-center justify-center rounded-xl border border-[#07564B] px-3 py-2 disabled:opacity-50"
+                    >
+                      <Text className="text-xs font-bold text-[#07564B]">
+                        Reinstate Renewal
+                      </Text>
+                    </Pressable>
+                  ) : (
+                    <Pressable
+                      accessibilityRole="button"
+                      disabled={
+                        savingReview ||
+                        !hasNotice ||
+                        !reviewActionNotes.trim()
+                      }
+                      onPress={() => submitReviewAction('suspend')}
+                      className="min-h-11 items-center justify-center rounded-xl bg-[#A16207] px-3 py-2 disabled:opacity-50"
+                    >
+                      <Text className="text-xs font-bold text-white">
+                        Suspend Renewal
+                      </Text>
+                    </Pressable>
+                  )}
+                </>
+              ) : null}
+            </View>
+          ) : null}
         </View>
       </View>
     </Modal>

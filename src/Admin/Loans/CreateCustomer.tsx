@@ -275,9 +275,10 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <InnerHeader title="Create Customer" onBack={onBack} />
       <ScrollView
+        className="flex-1"
         keyboardShouldPersistTaps="handled"
         contentContainerClassName="px-4"
-        contentContainerStyle={{ paddingBottom: keyboardHeight + 32 }}
+        contentContainerStyle={{ paddingBottom: keyboardHeight + 20 }}
         automaticallyAdjustKeyboardInsets>
         <Text className="mb-4 text-sm leading-5 text-[#6B7280]">
           Add the borrower’s contact, address, guarantor, and photo details.
@@ -383,8 +384,15 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
           onSelect={value => setField('kyc_status', value)}
           required
         />
-        <SubmitButton label="Create Customer" loading={saving} onPress={saveCustomer} />
       </ScrollView>
+      <View className="border-t border-[#E6E9E3] bg-[#F8F7F2] px-4 py-3">
+        <SubmitButton
+          label="Create Customer"
+          loading={saving}
+          onPress={saveCustomer}
+          compact
+        />
+      </View>
     </KeyboardAvoidingView>
   );
 }

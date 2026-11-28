@@ -13,7 +13,7 @@ import {
   pick,
   types,
 } from '@react-native-documents/picker';
-import { Check } from 'lucide-react-native';
+import { Check, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../api';
 import { useCustomAlert } from '../../Components/CustomAlert';
@@ -337,11 +337,12 @@ export default function GoldReleaseFlow({
             </View>
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel="Close gold release form"
               disabled={saving}
               onPress={onClose}
-              className="rounded-full bg-white/10 px-3 py-2"
+              className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
             >
-              <Text className="font-bold text-white">Close</Text>
+              <X size={20} color="#EAD78A" />
             </Pressable>
           </View>
           {loading ? (
@@ -363,7 +364,7 @@ export default function GoldReleaseFlow({
           ) : (
             <ScrollView
               keyboardShouldPersistTaps="handled"
-              contentContainerClassName="p-4"
+              contentContainerClassName="p-4 pb-6"
               className="shrink"
             >
               <View className="mb-4 rounded-2xl border border-[#E6E9E3] bg-white p-4">
@@ -529,28 +530,32 @@ export default function GoldReleaseFlow({
                       identity, and actual handover of the pledged gold.
                     </Text>
                   </Pressable>
-                  <Pressable
-                    accessibilityRole="button"
-                    disabled={
-                      !fullyPaid ||
-                      !signatureReceived ||
-                      !recipient.trim() ||
-                      !signedDocument ||
-                      saving
-                    }
-                    onPress={recordRelease}
-                    className="min-h-12 items-center justify-center rounded-xl bg-[#064A41] px-4 py-3 disabled:opacity-50"
-                  >
-                    <Text className="text-center text-sm font-extrabold text-white">
-                      {saving
-                        ? 'Recording Release...'
-                        : 'Confirm Gold Released & Complete Loan'}
-                    </Text>
-                  </Pressable>
                 </View>
               )}
             </ScrollView>
           )}
+          {!loading && loan && !release ? (
+            <View className="border-t border-[#E6E9E3] bg-[#F8F7F2] px-4 pt-3">
+              <Pressable
+                accessibilityRole="button"
+                disabled={
+                  !fullyPaid ||
+                  !signatureReceived ||
+                  !recipient.trim() ||
+                  !signedDocument ||
+                  saving
+                }
+                onPress={recordRelease}
+                className="min-h-12 flex-row items-center justify-center rounded-xl bg-[#064A41] px-4 py-3 disabled:opacity-50"
+              >
+                <Text className="text-center text-sm font-extrabold text-white">
+                  {saving
+                    ? 'Recording Release...'
+                    : 'Confirm Gold Released & Complete Loan'}
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
         </View>
       </View>
     </Modal>

@@ -7,7 +7,13 @@ import {
   Text,
   View,
 } from 'react-native';
-import { CheckCircle2, Clock3, IndianRupee, Users } from 'lucide-react-native';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  IndianRupee,
+  Users,
+} from 'lucide-react-native';
 import api from '../../api';
 import { errorMessage } from './FormControls';
 import GoldReleaseFlow from './GoldReleaseFlow';
@@ -299,13 +305,16 @@ export default function GoldReleaseList({
                   </View>
                 </View>
                 <View className="mt-3 flex-row justify-end border-t border-[#F1F2EE] pt-3">
-                  <Text className="text-xs font-extrabold text-[#07564B]">
-                    {completed
-                      ? 'View Completion Record ›'
-                      : completionPage
-                      ? 'Complete Loan ›'
-                      : 'Prepare Release ›'}
-                  </Text>
+                  <View className="min-h-10 flex-row items-center rounded-xl bg-[#07564B] px-3 py-2">
+                    <Text className="mr-2 text-xs font-extrabold text-white">
+                      {completed
+                        ? 'View Completion Record'
+                        : completionPage
+                        ? 'Complete Loan'
+                        : 'Prepare Release'}
+                    </Text>
+                    <ArrowRight size={15} color="#FFFFFF" />
+                  </View>
                 </View>
               </Pressable>
             );
