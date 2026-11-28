@@ -262,7 +262,7 @@ export default function CreateCustomer({ onBack, onCreated }: CreateCustomerProp
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-[#F8F7F2]"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <InnerHeader title="Create Customer" onBack={onBack} />
       <ScrollView
         className="flex-1"

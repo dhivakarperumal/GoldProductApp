@@ -77,7 +77,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F7F2',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: '#EAE4D3',
-    paddingTop: 4,
   },
   barShadow: {
     elevation: 10,
@@ -88,6 +87,7 @@ const styles = StyleSheet.create({
   },
   centerPosition: {
     left: '50%',
+    top: -14,
   },
   centerButtonIdle: {
     elevation: 8,
@@ -210,7 +210,7 @@ export default function AdminTabBar({
       ]}
       className="px-3.5"
     >
-      <View className="relative h-[82px] justify-end">
+      <View className="relative h-[64px] justify-end">
         <View style={styles.barShadow} className="rounded-[28px]">
           <View className="h-[64px] flex-row items-center overflow-hidden rounded-[28px] border border-[#EAD78A]/45 bg-[#153B35] px-2">
             <Image
@@ -267,7 +267,7 @@ export default function AdminTabBar({
             styles.centerPosition,
             { transform: [{ translateX: -28.5 }, { scale: centerScale }] },
           ]}
-          className="absolute top-0 rounded-full bg-[#F8F7F2] p-[3.5px]"
+          className="absolute rounded-full bg-[#F8F7F2] p-[3.5px]"
         >
           <Pressable
             accessibilityRole="button"

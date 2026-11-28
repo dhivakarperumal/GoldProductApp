@@ -46,6 +46,25 @@ function AdminTabBarHarness({
   );
 }
 
+test('removes the empty spacer above the bottom bar while keeping the orders button floating', async () => {
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<AdminTabBarHarness />);
+  });
+
+  expect(
+    renderer.root.findByProps({
+      className: 'relative h-[64px] justify-end',
+    }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findByProps({
+      className: 'absolute rounded-full bg-[#F8F7F2] p-[3.5px]',
+    }).props.style[0],
+  ).toMatchObject({ left: '50%', top: -14 });
+});
+
 test('switches side tabs directly and opens bottom sheet on plus tap for Billing or Take Order', async () => {
   const onOrdersOptionSelect = jest.fn();
   let renderer!: ReactTestRenderer.ReactTestRenderer;
