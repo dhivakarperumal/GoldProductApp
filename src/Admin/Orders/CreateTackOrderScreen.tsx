@@ -18,6 +18,7 @@ export default function CreateTackOrderScreen({
         sectionLabel="Order management"
         onBack={onBack}
         backAccessibilityLabel="Back to Take Orders"
+        bottomSpacing={false}
       />
       <View className="flex-1">{children}</View>
     </View>

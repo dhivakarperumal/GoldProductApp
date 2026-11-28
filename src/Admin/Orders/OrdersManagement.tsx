@@ -2412,14 +2412,17 @@ export default function OrdersManagement({
                     <View className="flex-row flex-wrap justify-between">
                       {orderProductResults.map(product => {
                         const image = mediaUrl(firstCatalogImage(product));
-                        const isAdded = orderDraft.items.some(
-                          item => String(item.product_id) === String(product.id),
-                        );
+                        const addedQuantity = orderDraft.items
+                          .filter(item => String(item.product_id) === String(product.id))
+                          .reduce((total, item) => total + item.quantity, 0);
+                        const isAdded = addedQuantity > 0;
                         return (
                           <View
                             testID={`take-order-product-${String(product.id)}`}
                             key={String(product.id)}
-                            className="mb-3 w-[48%] overflow-hidden rounded-xl border border-[#E6E9E3] bg-white">
+                            className={`mb-3 w-[48%] overflow-hidden rounded-xl border bg-white ${
+                              isAdded ? 'border-[#07564B]' : 'border-[#E6E9E3]'
+                            }`}>
                             {image ? (
                               <Image
                                 source={{ uri: image }}
@@ -2441,6 +2444,16 @@ export default function OrdersManagement({
                               <Text numberOfLines={1} className="mt-1 text-[10px] text-[#6B7E76]">
                                 {product.metal_type || 'Metal'} / {product.purity || 'Purity'}
                               </Text>
+                              {isAdded ? (
+                                <View
+                                  testID={`take-order-product-added-${String(product.id)}`}
+                                  className="mt-2 flex-row items-center">
+                                  <CheckCircle2 size={13} color="#07564B" />
+                                  <Text className="ml-1 text-[10px] font-bold text-[#07564B]">
+                                    Added · Qty {addedQuantity}
+                                  </Text>
+                                </View>
+                              ) : null}
                               <View className="mt-2 flex-row items-center justify-between">
                                 <Text numberOfLines={1} className="mr-1 flex-1 text-xs font-extrabold text-[#07564B]">
                                   {currency(productPrice(product))}
@@ -2448,9 +2461,16 @@ export default function OrdersManagement({
                                 <Pressable
                                   accessibilityRole="button"
                                   accessibilityLabel={`${isAdded ? 'Add another' : 'Add'} ${product.name} to take order`}
+                                  accessibilityState={{ selected: isAdded }}
                                   onPress={() => addOrderProduct(product)}
-                                  className="h-9 w-9 items-center justify-center rounded-lg bg-[#07564B]">
-                                  <Plus size={18} color="white" />
+                                  className={`h-9 w-9 items-center justify-center rounded-lg ${
+                                    isAdded ? 'bg-[#0A7A69]' : 'bg-[#07564B]'
+                                  }`}>
+                                  {isAdded ? (
+                                    <Check size={18} color="white" />
+                                  ) : (
+                                    <Plus size={18} color="white" />
+                                  )}
                                 </Pressable>
                               </View>
                             </View>

@@ -7,6 +7,7 @@ type InnerHeaderProps = {
   onBack: () => void;
   sectionLabel?: string;
   backAccessibilityLabel?: string;
+  bottomSpacing?: boolean;
 };
 
 export default function InnerHeader({
@@ -14,13 +15,14 @@ export default function InnerHeader({
   onBack,
   sectionLabel = 'Loan Management',
   backAccessibilityLabel = 'Back to all loans',
+  bottomSpacing = true,
 }: InnerHeaderProps) {
   const insets = useSafeAreaInsets();
 
   return (
     <View
       style={{ paddingTop: insets.top + 10 }}
-      className="mb-5 flex-row items-center bg-[#173F35] px-4 pb-4">
+      className={`${bottomSpacing ? 'mb-5' : 'mb-0'} flex-row items-center bg-[#173F35] px-4 pb-4`}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={backAccessibilityLabel}

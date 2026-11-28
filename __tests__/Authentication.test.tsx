@@ -597,6 +597,12 @@ test('routes shop admins to the admin dashboard and its API', async () => {
       .props.onPress();
   });
   expect(
+    renderer.root.findByProps({ testID: 'take-order-product-added-14' }),
+  ).toBeDefined();
+  expect(
+    renderer.root.findByProps({ title: 'New Take Order' }).props.bottomSpacing,
+  ).toBe(false);
+  expect(
     renderer.root.findByProps({ testID: 'take-order-next-button' }).props.disabled,
   ).toBe(false);
   const weightInput = renderer.root.findByProps({
