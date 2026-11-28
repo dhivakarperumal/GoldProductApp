@@ -580,27 +580,31 @@ export default function FundManagement({ onBack }: Props) {
             </Text>
           </View>
           <View className="mt-3 flex-row gap-2">
-            <View className="min-w-0 flex-1 rounded-xl bg-[#F7F9F7] p-3">
-              <View className="flex-row items-center">
-                <CreditCard size={13} color="#52645F" />
-                <Text className="ml-1 text-[10px] font-extrabold uppercase tracking-wide text-[#52645F]">
+            <View className="min-w-0 flex-1 flex-row items-center rounded-xl bg-[#F7F9F7] p-2.5">
+              <View className="mr-2 h-9 w-9 items-center justify-center rounded-full bg-white">
+                <CreditCard size={18} color="#07564B" />
+              </View>
+              <View className="min-w-0 flex-1">
+                <Text className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7E76]">
                   Payment
                 </Text>
-              </View>
-              <Text numberOfLines={1} className="mt-1 text-xs font-bold text-[#173F35]">
-                {transaction.payment_method || '—'}
-              </Text>
-            </View>
-            <View className="min-w-0 flex-1 rounded-xl bg-[#F7F9F7] p-3">
-              <View className="flex-row items-center">
-                <UserRound size={13} color="#52645F" />
-                <Text className="ml-1 text-[10px] font-extrabold uppercase tracking-wide text-[#52645F]">
-                  Admin
+                <Text numberOfLines={1} className="mt-0.5 text-sm font-extrabold text-[#173F35]">
+                  {transaction.payment_method || '—'}
                 </Text>
               </View>
-              <Text numberOfLines={1} className="mt-1 text-xs font-bold text-[#173F35]">
-                {transaction.admin_name || '—'}
-              </Text>
+            </View>
+            <View className="min-w-0 flex-1 flex-row items-center rounded-xl bg-[#F7F9F7] p-2.5">
+              <View className="mr-2 h-9 w-9 items-center justify-center rounded-full bg-white">
+                <UserRound size={18} color="#07564B" />
+              </View>
+              <View className="min-w-0 flex-1">
+                <Text className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7E76]">
+                  Admin
+                </Text>
+                <Text numberOfLines={1} className="mt-0.5 text-sm font-extrabold text-[#173F35]">
+                  {transaction.admin_name || '—'}
+                </Text>
+              </View>
             </View>
           </View>
           <View className={`mt-3 rounded-xl p-3 ${theme.descriptionBackground}`}>
