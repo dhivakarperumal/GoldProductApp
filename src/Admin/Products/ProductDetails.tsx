@@ -58,6 +58,20 @@ function displayValue(value: unknown): string {
   return String(value);
 }
 
+function formatTextValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value
+      .map((item, index) => `${index + 1}. ${formatTextValue(item)}`)
+      .join('\n');
+  }
+  if (typeof value === 'object' && value !== null) {
+    return Object.entries(value)
+      .map(([label, detail]) => `${label}: ${displayValue(detail)}`)
+      .join('\n');
+  }
+  return displayValue(value);
+}
+
 function stockStatusClasses(status?: string): string {
   switch (status?.trim().toLowerCase()) {
     case 'in stock':
@@ -99,13 +113,26 @@ function Section({
   );
 }
 
-function TextSection({ title, value }: { title: string; value: unknown }) {
-  if (value == null || value === '') return null;
+function TextSection({
+  title,
+  value,
+  emptyMessage,
+}: {
+  title: string;
+  value: unknown;
+  emptyMessage?: string;
+}) {
+  const formattedValue =
+    value == null || value === ''
+      ? emptyMessage
+      : formatTextValue(value);
+  const content = formattedValue || emptyMessage;
+  if (!content) return null;
   return (
     <View className="mb-3 rounded-2xl border border-[#E6E9E3] bg-white p-4 shadow-sm">
       <Text className="mb-2 text-sm font-extrabold text-[#173F35]">{title}</Text>
       <Text className="text-sm leading-6 text-[#52645F]">
-        {displayValue(value)}
+        {content}
       </Text>
     </View>
   );
@@ -169,6 +196,13 @@ export default function ProductDetails({ productId, onBack, onEdit }: Props) {
       )
     : '—';
   const highlights = product ? parseArray(product.highlights) : [];
+  const specifications = product
+    ? [
+        product.specifications,
+        product.specification,
+        product.product_specifications,
+      ].find(value => value != null && value !== '')
+    : undefined;
 
   const confirmDelete = () => {
     if (!product) return;
@@ -427,7 +461,11 @@ export default function ProductDetails({ productId, onBack, onEdit }: Props) {
                   <Detail label="SKU / Barcode" value={product.sku_barcode} />
                   <Detail label="Product status" value={product.status} />
                 </Section>
-                <TextSection title="Specifications" value={product.specifications} />
+                <TextSection
+                  title="Specifications"
+                  value={specifications}
+                  emptyMessage="No specifications available."
+                />
                 <TextSection
                   title="Care Instructions"
                   value={product.care_instructions}

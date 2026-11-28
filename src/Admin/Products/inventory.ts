@@ -19,6 +19,9 @@ export type Product = {
   images?: unknown;
   variants?: unknown;
   description?: string;
+  specifications?: unknown;
+  specification?: unknown;
+  product_specifications?: unknown;
   care_instructions?: string;
   status?: string;
   [key: string]: unknown;
