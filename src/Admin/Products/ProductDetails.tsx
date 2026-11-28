@@ -498,30 +498,32 @@ export default function ProductDetails({ productId, onBack, onEdit }: Props) {
           </ScrollView>
           <View className="border-t border-[#E6E9E3] bg-white px-4 py-3">
             <View className="flex-row gap-3">
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Edit ${product.name || 'product'}`}
-              disabled={deleting}
-              onPress={onEdit}
-              className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-[#07564B] bg-[#07564B] px-3 disabled:opacity-60">
-              <Pencil size={17} color="white" />
-              <Text className="ml-2 text-sm font-extrabold text-white">Edit Product</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Delete ${product.name || 'product'}`}
-              disabled={deleting}
-              onPress={confirmDelete}
-              className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-3 disabled:opacity-60">
-              {deleting ? (
-                <ActivityIndicator size="small" color="#B42332" />
-              ) : (
-                <Trash2 size={17} color="#B42332" />
-              )}
-              <Text className="ml-2 text-sm font-extrabold text-[#B42332]">
-                Delete Product
-              </Text>
-            </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Edit ${product.name || 'product'}`}
+                disabled={deleting}
+                onPress={onEdit}
+                className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-[#07564B] bg-[#07564B] px-3 disabled:opacity-60">
+                <Pencil size={17} color="white" />
+                <Text className="ml-2 text-sm font-extrabold text-white">
+                  Edit Product
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Delete ${product.name || 'product'}`}
+                disabled={deleting}
+                onPress={confirmDelete}
+                className="min-h-12 flex-1 flex-row items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-3 disabled:opacity-60">
+                {deleting ? (
+                  <ActivityIndicator size="small" color="#B42332" />
+                ) : (
+                  <Trash2 size={17} color="#B42332" />
+                )}
+                <Text className="ml-2 text-sm font-extrabold text-[#B42332]">
+                  Delete Product
+                </Text>
+              </Pressable>
             </View>
           </View>
         </>
