@@ -31,11 +31,15 @@ api.interceptors.request.use(async (config) => {
     }
   }
 
-  const activeToken = storageToken || cachedToken;
+  const explicitAuthorization = config.headers.Authorization;
+  const activeToken =
+    explicitAuthorization || storageToken || cachedToken;
 
   if (activeToken) {
-    cachedToken = activeToken;
-    config.headers.Authorization = `Bearer ${activeToken}`;
+    if (!explicitAuthorization) {
+      cachedToken = activeToken;
+      config.headers.Authorization = `Bearer ${activeToken}`;
+    }
   } else {
     delete config.headers.Authorization;
   }

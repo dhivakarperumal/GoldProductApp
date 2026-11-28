@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  Alert,
   ImageBackground,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -34,6 +36,7 @@ import Svg, {
 } from 'react-native-svg';
 import api from '../../api';
 import AdminLoadingSkeleton from '../Components/AdminLoadingSkeleton';
+import SubscriptionCheckoutModal from '../Components/SubscriptionCheckoutModal';
 import type { AdminTab } from '../Navigation/AdminTabBar';
 
 type DashboardMetric = {
@@ -86,6 +89,15 @@ type Product = {
   stock_status?: string;
 };
 
+type DashboardAccountPlan = {
+  account_plan_type?: string;
+  plan_name?: string;
+  payment_status?: string;
+  trial_active?: boolean;
+  trial_days_remaining?: number;
+  account_end_date?: string;
+};
+
 type DashboardData = {
   stats: DashboardMetric[];
   loanStatusCounts?: Record<string, number>;
@@ -93,6 +105,7 @@ type DashboardData = {
   goldRates?: GoldRate[];
   recentLoans?: RecentLoan[];
   topProducts?: Product[];
+  accountPlan?: DashboardAccountPlan | null;
 };
 
 type HomeProps = {
@@ -196,7 +209,10 @@ const styles = StyleSheet.create({
   },
 });
 
-function getErrorMessage(error: unknown) {
+function getErrorMessage(
+  error: unknown,
+  fallback = 'Dashboard data could not be loaded.',
+) {
   if (
     typeof error === 'object' &&
     error !== null &&
@@ -205,7 +221,7 @@ function getErrorMessage(error: unknown) {
   ) {
     return error.message;
   }
-  return 'Dashboard data could not be loaded.';
+  return fallback;
 }
 
 function formatCurrency(value: string | number | null | undefined) {
@@ -394,6 +410,11 @@ export default function Home({ onNavigate }: HomeProps) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [subscriptionCheckoutVisible, setSubscriptionCheckoutVisible] =
+    useState(false);
+  const [subscriptionRequestBusy, setSubscriptionRequestBusy] = useState(false);
+  const [subscriptionRequestSent, setSubscriptionRequestSent] = useState(false);
+  const [trialWarningDismissed, setTrialWarningDismissed] = useState(false);
 
   const loadDashboard = useCallback(async () => {
     setErrorMessage('');
@@ -467,7 +488,42 @@ export default function Home({ onNavigate }: HomeProps) {
     loans.length > 0 ? loans : dashboard?.recentLoans || []
   ).slice(0, 5);
   const products = dashboard?.topProducts || [];
+  const accountPlan = dashboard?.accountPlan;
+  const trialDaysRemaining = Number(accountPlan?.trial_days_remaining);
+  const isUnpaidTrial =
+    accountPlan?.account_plan_type === 'trial' &&
+    accountPlan.trial_active === true &&
+    accountPlan.payment_status?.toLowerCase() !== 'paid';
+  const showTrialWarning =
+    isUnpaidTrial &&
+    Number.isFinite(trialDaysRemaining) &&
+    trialDaysRemaining >= 0 &&
+    trialDaysRemaining <= 3 &&
+    !trialWarningDismissed &&
+    !subscriptionCheckoutVisible;
+
+  const requestSuperAdminHelp = async () => {
+    if (subscriptionRequestBusy || subscriptionRequestSent) return;
+    setSubscriptionRequestBusy(true);
+    try {
+      const { data } = await api.post('/subscriptions/requests', {});
+      setSubscriptionRequestSent(true);
+      Alert.alert(
+        'Request sent',
+        data?.message || 'Your request has been sent to the Super Admin.',
+      );
+    } catch (error) {
+      Alert.alert(
+        'Could not send request',
+        getErrorMessage(error, 'Could not send your request to the Super Admin.'),
+      );
+    } finally {
+      setSubscriptionRequestBusy(false);
+    }
+  };
+
   return (
+    <>
     <ScrollView
       testID="admin-home"
       className="flex-1 bg-[#F8F7F2]"
@@ -497,6 +553,50 @@ export default function Home({ onNavigate }: HomeProps) {
           </Text>
         </View>
       </ImageBackground>
+
+      {accountPlan ? (
+        <View className="mb-5 rounded-2xl border border-[#DDBB57] bg-white p-4 shadow-sm">
+          <View className="flex-row items-start justify-between">
+            <View className="flex-1 pr-3">
+              <Text className="text-[11px] font-bold uppercase tracking-[0.8px] text-[#8A6A17]">
+                Subscription
+              </Text>
+              <Text className="mt-1 text-base font-extrabold text-[#173F35]">
+                {accountPlan.plan_name || 'Shop plan'}
+              </Text>
+              <Text className="mt-1 text-xs text-[#64748B]">
+                {accountPlan.account_end_date
+                  ? `Valid through ${formatDate(accountPlan.account_end_date)}`
+                  : accountPlan.payment_status?.toLowerCase() === 'paid'
+                    ? 'Paid subscription'
+                    : 'Trial account'}
+              </Text>
+            </View>
+            <View className="rounded-full bg-[#ECFDF5] px-3 py-1.5">
+              <Text className="text-[10px] font-bold uppercase text-[#08745D]">
+                {accountPlan.payment_status?.toLowerCase() === 'paid'
+                  ? 'Paid'
+                  : isUnpaidTrial
+                    ? Number.isFinite(trialDaysRemaining)
+                      ? `${trialDaysRemaining} days left`
+                      : 'Trial'
+                    : accountPlan.account_plan_type || 'Active'}
+              </Text>
+            </View>
+          </View>
+          {isUnpaidTrial ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                setTrialWarningDismissed(true);
+                setSubscriptionCheckoutVisible(true);
+              }}
+              className="mt-4 min-h-11 flex-row items-center justify-center rounded-xl bg-[#07564B] px-4">
+              <Text className="text-sm font-bold text-white">Subscribe now</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
 
       {errorMessage ? (
         <View className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-3">
@@ -742,5 +842,76 @@ export default function Home({ onNavigate }: HomeProps) {
         </>
       )}
     </ScrollView>
+    <Modal
+      visible={showTrialWarning}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={() => setTrialWarningDismissed(true)}>
+      <View className="flex-1 items-center justify-center bg-black/60 px-4">
+        <View className="w-full max-w-md rounded-[26px] border border-[#E6D39A] bg-white p-5 shadow-2xl">
+          <View className="h-12 w-12 items-center justify-center rounded-2xl bg-[#FFF5D6]">
+            <CreditCard size={24} color="#A77B15" />
+          </View>
+          <Text className="mt-4 text-xl font-extrabold text-[#173F35]">
+            Your free trial is ending soon
+          </Text>
+          <Text className="mt-2 text-sm leading-5 text-[#59615D]">
+            {trialDaysRemaining === 0
+              ? 'Your trial ends today. Choose a subscription plan to keep using your shop account.'
+              : `Your trial ends in ${trialDaysRemaining} ${
+                  trialDaysRemaining === 1 ? 'day' : 'days'
+                }. Choose a plan to keep using your shop account.`}
+          </Text>
+          {accountPlan?.account_end_date ? (
+            <Text className="mt-2 text-xs font-semibold text-[#8A6A17]">
+              Trial ends {formatDate(accountPlan.account_end_date)}
+            </Text>
+          ) : null}
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              setTrialWarningDismissed(true);
+              setSubscriptionCheckoutVisible(true);
+            }}
+            className="mt-5 min-h-12 items-center justify-center rounded-2xl bg-[#07564B] px-4">
+            <Text className="text-sm font-extrabold text-white">
+              Subscribe now
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            disabled={subscriptionRequestBusy || subscriptionRequestSent}
+            onPress={requestSuperAdminHelp}
+            className="mt-2 min-h-11 items-center justify-center rounded-2xl border border-[#D8C27B] bg-[#FFFCF2] px-4">
+            <Text className="text-sm font-bold text-[#725614]">
+              {subscriptionRequestBusy
+                ? 'Sending request…'
+                : subscriptionRequestSent
+                  ? 'Request sent'
+                  : 'Ask Super Admin'}
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setTrialWarningDismissed(true)}
+            className="mt-2 min-h-10 items-center justify-center rounded-xl">
+            <Text className="text-sm font-semibold text-[#64748B]">
+              Remind me later
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+    <SubscriptionCheckoutModal
+      visible={subscriptionCheckoutVisible}
+      onClose={() => setSubscriptionCheckoutVisible(false)}
+      onPaymentComplete={async () => {
+        setSubscriptionCheckoutVisible(false);
+        setTrialWarningDismissed(true);
+        await loadDashboard();
+      }}
+    />
+    </>
   );
 }

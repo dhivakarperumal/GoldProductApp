@@ -2,7 +2,9 @@ import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -29,6 +31,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import api, { setTokenCache } from '../api';
+import SubscriptionCheckoutModal from '../Admin/Components/SubscriptionCheckoutModal';
 import useKeyboardScroll from './useKeyboardScroll';
 
 export type LoginUser = {
@@ -46,6 +49,37 @@ type LoginProps = {
 };
 
 type FocusedField = 'identifier' | 'password' | null;
+
+type SubscriptionAccountPlan = {
+  account_plan_type?: string;
+  plan_name?: string;
+  account_end_date?: string;
+};
+
+type SubscriptionFailureCode = 'TRIAL_EXPIRED' | 'SUBSCRIPTION_REQUIRED';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function getApiErrorPayload(error: unknown) {
+  return isRecord(error) && isRecord(error.data) ? error.data : null;
+}
+
+function parseAccountPlan(value: unknown): SubscriptionAccountPlan {
+  if (!isRecord(value)) return {};
+  return {
+    account_plan_type:
+      typeof value.account_plan_type === 'string'
+        ? value.account_plan_type
+        : undefined,
+    plan_name: typeof value.plan_name === 'string' ? value.plan_name : undefined,
+    account_end_date:
+      typeof value.account_end_date === 'string'
+        ? value.account_end_date
+        : undefined,
+  };
+}
 
 function isLoginUser(value: unknown): value is LoginUser {
   if (typeof value !== 'object' || value === null) {
@@ -87,6 +121,14 @@ export default function Login({
   const [focusedField, setFocusedField] = useState<FocusedField>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [subscriptionFailureCode, setSubscriptionFailureCode] =
+    useState<SubscriptionFailureCode | null>(null);
+  const [expiredAccountPlan, setExpiredAccountPlan] =
+    useState<SubscriptionAccountPlan | null>(null);
+  const [checkoutToken, setCheckoutToken] = useState('');
+  const [checkoutVisible, setCheckoutVisible] = useState(false);
+  const [subscriptionActionBusy, setSubscriptionActionBusy] = useState(false);
+  const [subscriptionActionMessage, setSubscriptionActionMessage] = useState('');
   const identifierInputRef = useRef<TextInputInstance>(null);
   const passwordInputRef = useRef<TextInputInstance>(null);
   const { scrollViewRef, onInputFocus, onScroll } = useKeyboardScroll();
@@ -125,13 +167,94 @@ export default function Login({
       if (staySignedIn) {
         await AsyncStorage.setItem('userToken', token);
       }
+      setSubscriptionFailureCode(null);
+      setExpiredAccountPlan(null);
+      setCheckoutToken('');
+      setCheckoutVisible(false);
       setTokenCache(token);
       onLogin(user);
     } catch (error) {
+      const payload = getApiErrorPayload(error);
+      if (
+        payload?.code === 'TRIAL_EXPIRED' ||
+        payload?.code === 'SUBSCRIPTION_REQUIRED'
+      ) {
+        Keyboard.dismiss();
+        setSubscriptionFailureCode(payload.code);
+        setExpiredAccountPlan(parseAccountPlan(payload.accountPlan));
+        setSubscriptionActionMessage('');
+        setErrorMessage('');
+        return;
+      }
       setErrorMessage(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const requestSubscriptionAccess = async () => {
+    const response = await api.post('/auth/subscription-access', {
+      identifier: identifier.trim(),
+      password,
+    });
+    const token: unknown = response.data?.checkoutToken;
+    if (typeof token !== 'string' || token.length === 0) {
+      throw new Error('The server did not return checkout access.');
+    }
+    return token;
+  };
+
+  const startSubscriptionCheckout = async () => {
+    if (subscriptionActionBusy) return;
+    setSubscriptionActionBusy(true);
+    setSubscriptionActionMessage('');
+    try {
+      const token = await requestSubscriptionAccess();
+      setCheckoutToken(token);
+      setCheckoutVisible(true);
+    } catch (error) {
+      setSubscriptionActionMessage(getErrorMessage(error));
+    } finally {
+      setSubscriptionActionBusy(false);
+    }
+  };
+
+  const requestSuperAdminHelp = async () => {
+    if (subscriptionActionBusy) return;
+    setSubscriptionActionBusy(true);
+    setSubscriptionActionMessage('');
+    try {
+      const token = await requestSubscriptionAccess();
+      setCheckoutToken(token);
+      const response = await api.post(
+        '/subscriptions/requests',
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setSubscriptionActionMessage(
+        response.data?.message ||
+          'Your request has been sent to the Super Admin.',
+      );
+    } catch (error) {
+      setSubscriptionActionMessage(getErrorMessage(error));
+    } finally {
+      setSubscriptionActionBusy(false);
+    }
+  };
+
+  const closeSubscriptionFailure = () => {
+    setSubscriptionFailureCode(null);
+    setExpiredAccountPlan(null);
+    setSubscriptionActionMessage('');
+  };
+
+  const handleSubscriptionPaymentComplete = () => {
+    setCheckoutVisible(false);
+    setCheckoutToken('');
+    closeSubscriptionFailure();
+    setErrorMessage(
+      'Subscription payment verified. Please sign in again to continue.',
+    );
   };
 
   return (
@@ -463,6 +586,98 @@ export default function Login({
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      <Modal
+        visible={Boolean(expiredAccountPlan) && !checkoutVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={closeSubscriptionFailure}>
+        <View
+          className="flex-1 items-center justify-center bg-black/65 px-4"
+          style={{
+            paddingTop: Math.max(insets.top, 16),
+            paddingBottom: Math.max(insets.bottom, 16),
+          }}>
+          <View className="w-full max-w-md rounded-[26px] border border-[#E6D39A] bg-white p-5 shadow-2xl">
+            <View className="mb-4 h-12 w-12 items-center justify-center rounded-2xl bg-[#FFF5D6]">
+              <ShieldCheck size={25} color="#A77B15" />
+            </View>
+            <Text className="text-xl font-extrabold text-[#173F35]">
+              {subscriptionFailureCode === 'TRIAL_EXPIRED'
+                ? 'Your free trial has ended'
+                : 'Subscription required'}
+            </Text>
+            <Text className="mt-2 text-sm leading-5 text-[#59615D]">
+              {subscriptionFailureCode === 'TRIAL_EXPIRED'
+                ? 'Choose a plan to continue using your shop account.'
+                : 'A paid subscription is required before this shop account can continue.'}
+            </Text>
+            {expiredAccountPlan?.plan_name ? (
+              <View className="mt-4 rounded-xl border border-[#EFE5C5] bg-[#FFFCF2] p-3">
+                <Text className="text-xs font-semibold text-[#7C6A36]">
+                  Current plan
+                </Text>
+                <Text className="mt-1 text-sm font-bold text-[#173F35]">
+                  {expiredAccountPlan.plan_name}
+                </Text>
+                {expiredAccountPlan.account_end_date ? (
+                  <Text className="mt-1 text-xs text-[#64748B]">
+                    Ended {expiredAccountPlan.account_end_date}
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
+
+            {subscriptionActionMessage ? (
+              <Text
+                accessibilityRole="alert"
+                className="mt-4 rounded-xl border border-[#E7D8AA] bg-[#FFFCF2] px-3 py-2.5 text-sm leading-5 text-[#725614]">
+                {subscriptionActionMessage}
+              </Text>
+            ) : null}
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Subscribe to a plan"
+              disabled={subscriptionActionBusy}
+              onPress={startSubscriptionCheckout}
+              className="mt-5 min-h-12 flex-row items-center justify-center rounded-2xl bg-[#07564B] px-4">
+              {subscriptionActionBusy ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <LockKeyhole size={17} color="#FFE08A" />
+              )}
+              <Text className="ml-2 text-sm font-extrabold text-white">
+                {subscriptionActionBusy ? 'Preparing checkout…' : 'Subscribe now'}
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              disabled={subscriptionActionBusy}
+              onPress={requestSuperAdminHelp}
+              className="mt-2 min-h-11 flex-row items-center justify-center rounded-2xl border border-[#D8C27B] bg-[#FFFCF2] px-4">
+              <Store size={16} color="#8A6812" />
+              <Text className="ml-2 text-sm font-bold text-[#725614]">
+                Ask Super Admin
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={closeSubscriptionFailure}
+              className="mt-3 min-h-10 items-center justify-center rounded-xl">
+              <Text className="text-sm font-semibold text-[#64748B]">
+                Back to sign in
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+      <SubscriptionCheckoutModal
+        visible={checkoutVisible}
+        token={checkoutToken}
+        onClose={() => setCheckoutVisible(false)}
+        onPaymentComplete={handleSubscriptionPaymentComplete}
+      />
     </View>
   );
 }

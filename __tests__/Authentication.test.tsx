@@ -2,6 +2,7 @@ import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import { TextInput } from 'react-native';
 import App from '../App';
+import SubscriptionCheckoutModal from '../src/Admin/Components/SubscriptionCheckoutModal';
 import Login from '../src/Auth/Login';
 import AdminTabBar from '../src/Admin/Navigation/AdminTabBar';
 
@@ -12,6 +13,7 @@ const mockPost = jest.fn();
 const mockGet = jest.fn();
 const mockSetTokenCache = jest.fn();
 const mockClearTokenCache = jest.fn();
+const mockRazorpayOpen = jest.fn();
 
 jest.mock('@react-native-documents/picker', () => ({
   errorCodes: {},
@@ -59,6 +61,13 @@ jest.mock('react-native-blob-util', () => ({
 
 jest.mock('react-native-html-to-pdf', () => ({
   generatePDF: jest.fn(),
+}));
+
+jest.mock('react-native-razorpay', () => ({
+  __esModule: true,
+  default: {
+    open: (...args: unknown[]) => mockRazorpayOpen(...args),
+  },
 }));
 
 jest.mock('../src/SuperAdmin/Home/Home', () => ({
@@ -120,6 +129,7 @@ beforeEach(() => {
   );
   mockSetTokenCache.mockReset();
   mockClearTokenCache.mockReset();
+  mockRazorpayOpen.mockReset();
 });
 
 test('shows Admin navigation tabs in the requested order', async () => {
@@ -697,4 +707,229 @@ test('removes the saved token only when Logout is pressed', async () => {
   expect(
     renderer.root.findByProps({ children: 'Admin Sign In' }),
   ).toBeDefined();
+});
+
+test('opens subscription checkout with scoped access after an expired-trial login', async () => {
+  mockPost.mockImplementation((path: unknown) =>
+    path === '/auth/login'
+      ? Promise.reject({
+          status: 403,
+          message: 'Your free trial has ended.',
+          data: {
+            code: 'TRIAL_EXPIRED',
+            accountPlan: {
+              account_plan_type: 'expired',
+              plan_name: 'Gold Shop',
+              account_end_date: '2026-04-30',
+            },
+          },
+        })
+      : Promise.resolve({ data: { checkoutToken: 'checkout-token' } }),
+  );
+  const onLogin = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+
+  await act(async () => {
+    renderer = ReactTestRenderer.create(
+      <Login onLogin={onLogin} onWelcomePress={jest.fn()} />,
+    );
+  });
+
+  await act(async () => {
+    const inputs = renderer.root.findAllByType(TextInput);
+    inputs[0].props.onChangeText('admin@example.com');
+    inputs[1].props.onChangeText('password');
+  });
+
+  await act(async () => {
+    await renderer.root.findByProps({ testID: 'login-submit' }).props.onPress();
+  });
+
+  expect(
+    renderer.root.findByProps({ children: 'Your free trial has ended' }),
+  ).toBeDefined();
+  await act(async () => {
+    await renderer.root
+      .findByProps({ accessibilityLabel: 'Subscribe to a plan' })
+      .props.onPress();
+    await new Promise<void>(resolve => setImmediate(resolve));
+  });
+
+  expect(mockPost).toHaveBeenNthCalledWith(2, '/auth/subscription-access', {
+    identifier: 'admin@example.com',
+    password: 'password',
+  });
+  expect(mockGet).toHaveBeenCalledWith('/subscriptions/plans', {
+    headers: { Authorization: 'Bearer checkout-token' },
+  });
+  expect(
+    renderer.root.findByProps({ children: 'Choose a subscription' }),
+  ).toBeDefined();
+  expect(onLogin).not.toHaveBeenCalled();
+});
+
+test('creates a server-priced Razorpay order and verifies payment before completing', async () => {
+  mockGet.mockResolvedValue({
+    data: {
+      plans: [
+        {
+          id: 5,
+          plan_name: 'Gold Plan',
+          monthly_price: '99',
+          quarterly_price: '249',
+          half_yearly_price: '449',
+          yearly_price: '799',
+        },
+      ],
+    },
+  });
+  mockPost.mockImplementation((path: unknown) =>
+    Promise.resolve(
+      path === '/subscriptions/orders'
+        ? {
+            data: {
+              order: {
+                orderId: 'order-5',
+                keyId: 'rzp_test_key',
+                amount: 9900,
+                currency: 'INR',
+                planName: 'Gold Plan',
+                prefill: { email: 'admin@example.com' },
+              },
+            },
+          }
+        : { data: { message: 'Subscription payment verified.' } },
+    ),
+  );
+  mockRazorpayOpen.mockResolvedValue({
+    razorpay_payment_id: 'payment-5',
+    razorpay_order_id: 'order-5',
+    razorpay_signature: 'signature-5',
+  });
+  const onPaymentComplete = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+
+  await act(async () => {
+    renderer = ReactTestRenderer.create(
+      <SubscriptionCheckoutModal
+        visible
+        token="checkout-token"
+        onClose={jest.fn()}
+        onPaymentComplete={onPaymentComplete}
+      />,
+    );
+    await new Promise<void>(resolve => setImmediate(resolve));
+  });
+
+  await act(async () => {
+    await renderer.root
+      .findByProps({ testID: 'subscription-checkout-submit' })
+      .props.onPress();
+  });
+
+  expect(mockPost).toHaveBeenNthCalledWith(
+    1,
+    '/subscriptions/orders',
+    { planId: 5, duration: 'monthly' },
+    { headers: { Authorization: 'Bearer checkout-token' } },
+  );
+  expect(mockRazorpayOpen).toHaveBeenCalledWith(
+    expect.objectContaining({
+      key: 'rzp_test_key',
+      amount: 9900,
+      currency: 'INR',
+      order_id: 'order-5',
+      description: 'Gold Plan subscription',
+    }),
+  );
+  expect(mockPost).toHaveBeenNthCalledWith(
+    2,
+    '/subscriptions/verify',
+    {
+      razorpay_payment_id: 'payment-5',
+      razorpay_order_id: 'order-5',
+      razorpay_signature: 'signature-5',
+    },
+    { headers: { Authorization: 'Bearer checkout-token' } },
+  );
+  expect(onPaymentComplete).toHaveBeenCalledTimes(1);
+});
+
+test('retries a failed server verification without creating a second payment order', async () => {
+  mockGet.mockResolvedValue({
+    data: {
+      plans: [
+        {
+          id: 5,
+          plan_name: 'Gold Plan',
+          monthly_price: '99',
+        },
+      ],
+    },
+  });
+  let verificationAttempts = 0;
+  mockPost.mockImplementation((path: unknown) => {
+    if (path === '/subscriptions/orders') {
+      return Promise.resolve({
+        data: {
+          order: {
+            orderId: 'order-5',
+            keyId: 'rzp_test_key',
+            amount: 9900,
+            currency: 'INR',
+            planName: 'Gold Plan',
+          },
+        },
+      });
+    }
+    verificationAttempts += 1;
+    return verificationAttempts === 1
+      ? Promise.reject({ message: 'Temporary verification outage.' })
+      : Promise.resolve({ data: { message: 'Subscription payment verified.' } });
+  });
+  mockRazorpayOpen.mockResolvedValue({
+    razorpay_payment_id: 'payment-5',
+    razorpay_order_id: 'order-5',
+    razorpay_signature: 'signature-5',
+  });
+  const onPaymentComplete = jest.fn();
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+
+  await act(async () => {
+    renderer = ReactTestRenderer.create(
+      <SubscriptionCheckoutModal
+        visible
+        token="checkout-token"
+        onClose={jest.fn()}
+        onPaymentComplete={onPaymentComplete}
+      />,
+    );
+    await new Promise<void>(resolve => setImmediate(resolve));
+  });
+
+  await act(async () => {
+    await renderer.root
+      .findByProps({ testID: 'subscription-checkout-submit' })
+      .props.onPress();
+  });
+  expect(
+    renderer.root.findByProps({
+      children: 'Retry payment verification',
+    }),
+  ).toBeDefined();
+
+  await act(async () => {
+    await renderer.root
+      .findByProps({ testID: 'subscription-checkout-submit' })
+      .props.onPress();
+  });
+
+  expect(
+    mockPost.mock.calls.filter(([path]) => path === '/subscriptions/orders'),
+  ).toHaveLength(1);
+  expect(
+    mockPost.mock.calls.filter(([path]) => path === '/subscriptions/verify'),
+  ).toHaveLength(2);
+  expect(mockRazorpayOpen).toHaveBeenCalledTimes(1);
+  expect(onPaymentComplete).toHaveBeenCalledTimes(1);
 });
