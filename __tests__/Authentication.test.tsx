@@ -2,6 +2,7 @@ import React from 'react';
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import { TextInput } from 'react-native';
 import App from '../App';
+import AdminHome from '../src/Admin/Home/Home';
 import SubscriptionCheckoutModal from '../src/Admin/Components/SubscriptionCheckoutModal';
 import Login from '../src/Auth/Login';
 import AdminTabBar from '../src/Admin/Navigation/AdminTabBar';
@@ -131,6 +132,26 @@ beforeEach(() => {
   mockClearTokenCache.mockReset();
   mockRazorpayOpen.mockReset();
 });
+
+async function renderDashboardWithAccountPlan(
+  accountPlan: Record<string, unknown>,
+) {
+  mockGet.mockImplementation((path: unknown) =>
+    Promise.resolve(
+      path === '/dashboard'
+        ? { data: { stats: [], accountPlan } }
+        : path === '/loans'
+          ? { data: [] }
+          : { data: { rates: [] } },
+    ),
+  );
+  let renderer!: ReactTestRenderer.ReactTestRenderer;
+  await act(async () => {
+    renderer = ReactTestRenderer.create(<AdminHome onNavigate={jest.fn()} />);
+    await new Promise<void>(resolve => setImmediate(resolve));
+  });
+  return renderer;
+}
 
 test('shows Admin navigation tabs in the requested order', async () => {
   const onTabPress = jest.fn();
@@ -766,6 +787,36 @@ test('opens subscription checkout with scoped access after an expired-trial logi
     renderer.root.findByProps({ children: 'Choose a subscription' }),
   ).toBeDefined();
   expect(onLogin).not.toHaveBeenCalled();
+});
+
+test('shows a reminder for an active trial with two days remaining', async () => {
+  const renderer = await renderDashboardWithAccountPlan({
+    account_plan_type: 'trial',
+    trial_active: true,
+    trial_days_remaining: 2,
+    payment_status: 'paid',
+    plan_name: 'Gold Shop',
+    account_end_date: '2026-11-30',
+  });
+
+  expect(
+    renderer.root.findByProps({ children: 'Your free trial is ending soon' }),
+  ).toBeDefined();
+});
+
+test('does not show the trial reminder when three days remain', async () => {
+  const renderer = await renderDashboardWithAccountPlan({
+    account_plan_type: 'trial',
+    trial_active: true,
+    trial_days_remaining: 3,
+    payment_status: 'unpaid',
+  });
+
+  expect(
+    renderer.root.findAllByProps({
+      children: 'Your free trial is ending soon',
+    }),
+  ).toHaveLength(0);
 });
 
 test('creates a server-priced Razorpay order and verifies payment before completing', async () => {

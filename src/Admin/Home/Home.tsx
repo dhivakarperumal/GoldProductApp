@@ -490,15 +490,14 @@ export default function Home({ onNavigate }: HomeProps) {
   const products = dashboard?.topProducts || [];
   const accountPlan = dashboard?.accountPlan;
   const trialDaysRemaining = Number(accountPlan?.trial_days_remaining);
-  const isUnpaidTrial =
+  const isActiveTrial =
     accountPlan?.account_plan_type === 'trial' &&
-    accountPlan.trial_active === true &&
-    accountPlan.payment_status?.toLowerCase() !== 'paid';
+    accountPlan.trial_active === true;
   const showTrialWarning =
-    isUnpaidTrial &&
+    isActiveTrial &&
     Number.isFinite(trialDaysRemaining) &&
     trialDaysRemaining >= 0 &&
-    trialDaysRemaining <= 3 &&
+    trialDaysRemaining < 3 &&
     !trialWarningDismissed &&
     !subscriptionCheckoutVisible;
 
@@ -566,7 +565,7 @@ export default function Home({ onNavigate }: HomeProps) {
               </Text>
               <Text className="mt-1 text-xs text-[#64748B]">
                 {accountPlan.account_end_date
-                  ? `Valid through ${formatDate(accountPlan.account_end_date)}`
+                  ? `${isActiveTrial ? 'Trial ends' : 'Valid through'} ${formatDate(accountPlan.account_end_date)}`
                   : accountPlan.payment_status?.toLowerCase() === 'paid'
                     ? 'Paid subscription'
                     : 'Trial account'}
@@ -574,17 +573,17 @@ export default function Home({ onNavigate }: HomeProps) {
             </View>
             <View className="rounded-full bg-[#ECFDF5] px-3 py-1.5">
               <Text className="text-[10px] font-bold uppercase text-[#08745D]">
-                {accountPlan.payment_status?.toLowerCase() === 'paid'
-                  ? 'Paid'
-                  : isUnpaidTrial
-                    ? Number.isFinite(trialDaysRemaining)
-                      ? `${trialDaysRemaining} days left`
-                      : 'Trial'
+                {isActiveTrial
+                  ? Number.isFinite(trialDaysRemaining)
+                    ? `${trialDaysRemaining} days left`
+                    : 'Trial'
+                  : accountPlan.payment_status?.toLowerCase() === 'paid'
+                    ? 'Paid'
                     : accountPlan.account_plan_type || 'Active'}
               </Text>
             </View>
           </View>
-          {isUnpaidTrial ? (
+          {isActiveTrial ? (
             <Pressable
               accessibilityRole="button"
               onPress={() => {
